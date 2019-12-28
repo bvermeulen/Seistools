@@ -8,6 +8,8 @@ from functools import wraps
 import numpy as np
 import psycopg2
 from recordtype import recordtype
+from decouple import config
+
 
 YEAR = '2019'
 
@@ -91,7 +93,7 @@ class DbUtils:
     '''
     host = 'localhost'
     db_user = 'db_tester'
-    db_user_pw = 'db_tester_pw'
+    db_user_pw = config('DB_PASSWORD')
     database = 'vp_database'
 
     @classmethod
