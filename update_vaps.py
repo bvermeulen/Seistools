@@ -6,6 +6,7 @@ import json
 import os
 from functools import wraps
 import numpy as np
+import pandas as pd
 import psycopg2
 from recordtype import recordtype
 from decouple import config
@@ -485,6 +486,91 @@ class Vaps:
         vaps_record.positioning = vaps_line[150:225]
 
         return vaps_record
+
+class Vp:
+
+    vp_base_folder = ".\\"
+    vp_db = VpDb()
+
+    @classmethod
+    def read_vp(cls):
+        for foldername, _, filenames in os.walk(cls.vp_base_folder):
+            for filename in filenames:
+                if filename[-4:] not in ['.txt', '.TXT']:
+                    continue
+
+                vp_file = FilesVpTable(*[None]*3)
+
+                abs_filename = os.path.abspath(os.path.join(foldername, filename))
+                vp_file.file_name = abs_filename
+                vp_file.file_date = (
+                    datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
+
+                print(vp_file); file_id = 1
+                # file_id = cls.vp_db.update_vp_file(vp_file)
+
+                if file_id == -1:
+                    continue
+
+                progress_message = progress_message_generator(
+                    f'reading vp from {vp_file.file_name}   ')
+
+                vp_records = []
+                with open(abs_filename, mode='rt') as vp:
+                    for vp_line in vp.readlines():
+                        if vp_line[0:9].strip() == 'Line':
+                            continue
+
+                        vp_record = cls.parse_vp_line(vp_line)
+                        if vp_record.line:
+                            vp_record.file_id = file_id
+                            vp_records.append(vp_record)
+
+                        next(progress_message)
+
+                # cls.vp_db.update_vp(vp_records)
+
+    @classmethod
+    def parse_vp_line(cls, vp_line):
+        vp_record = VpTable(*[None]*20)
+
+        try:
+            # create time break date
+            time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
+                vp_line[32:51], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y %H:%M:%S') +  \
+                    '.' + vp_line[52:55] + '000', '%d-%m-%y %H:%M:%S.%f'))
+
+            vp_record.line = int(vp_line[0:9])
+            vp_record.station = int(vp_line[9:19])
+            vp_record.vibrator = int(vp_line[19:29].strip()[4:5])
+            vp_record.time_break = time_break
+            vp_record.planned_easting = float(vp_line[64:79])
+            vp_record.planned_northing = float(vp_line[79:94])
+            vp_record.easting = float(vp_line[109:124])
+            vp_record.northing = float(vp_line[124:139])
+            vp_record.elevation = float(vp_line[139:154])
+            vp_record.offset = float(vp_line[154:166])
+            vp_record.peak_force = int(vp_line[166:178])
+            vp_record.avg_force = int(vp_line[178:190])
+            vp_record.peak_dist = int(vp_line[190:202])
+            vp_record.avg_dist = int(vp_line[202:214])
+            vp_record.peak_phase = int(vp_line[214:226])
+            vp_record.avg_phase = int(vp_line[226:238])
+            vp_record.qc_flag = vp_line[238:248].strip()
+
+        except ValueError:
+            vp_record = VpTable(*[None]*20)
+
+        return vp_record
+
+if __name__ == '__main__':
+    vp_db = VpDb()
+    vp_db.create_table_vp_files()
+    vp_db.create_table_vp()
+
+    vp = Vp()
+    vp.read_vp()
+
 
 if __name__ == '__main__':
     vp_db = VpDb()
