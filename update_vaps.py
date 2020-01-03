@@ -6,12 +6,12 @@ import json
 import os
 from functools import wraps
 import numpy as np
-import pandas as pd
 import psycopg2
 from recordtype import recordtype
 from decouple import config
 
-
+DATA_FILES_VAPS = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VAPS files\\"
+DATA_FILES_VP = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VP Report\\"
 YEAR = '2019'
 
 FilesVpTable = recordtype(
@@ -210,10 +210,10 @@ class VpDb:
             station='station INTEGER',
             vibrator='vibrator INTEGER',
             time_break='time_break TIMESTAMP',
-            planned_easting='planned_easting REAL',
-            planned_northing='planned_northing REAL',
-            easting='easting REAL',
-            northing='northing REAL',
+            planned_easting='planned_easting DOUBLE PRECISION',
+            planned_northing='planned_northing DOUBLE PRECISION',
+            easting='easting DOUBLE PRECISION',
+            northing='northing DOUBLE PRECISION',
             elevation='elevation REAL',
             offset='_offset REAL',
             peak_force='peak_force INTEGER',
@@ -238,6 +238,7 @@ class VpDb:
             f'{vp_tbl.planned_northing}, '
             f'{vp_tbl.easting}, '
             f'{vp_tbl.northing}, '
+            f'{vp_tbl.elevation}, '
             f'{vp_tbl.offset}, '
             f'{vp_tbl.peak_force}, '
             f'{vp_tbl.avg_force}, '
@@ -294,8 +295,8 @@ class VpDb:
             peak_force='peak_force INTEGER',
             avg_stiffness='avg_stiffness INTEGER',
             avg_viscosity='avg_viscosity INTEGER',
-            easting='easting REAL',
-            northing='northing REAL',
+            easting='easting DOUBLE PRECISION',
+            northing='northing DOUBLE PRECISION',
             elevation='elevation REAL',
             time_break='time_break TIMESTAMP',
             hdop='hdop REAL',
@@ -334,6 +335,109 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
+    def update_vp_file(cls, vp_file, *args):
+        ''' method to to check if file_name exists in the database, if it does not then
+            add the filename to the data base
+            returns:
+            -1, if file is found
+            n, new file_id number if no file is found
+        '''
+        cursor = DbUtils().get_cursor(args)
+
+        # check if file exists
+        sql_string = (
+            f'SELECT id FROM {cls.table_vp_files} WHERE '
+            f'file_name=\'{vp_file.file_name}\' AND '
+            f'file_date=\'{vp_file.file_date}\';'
+        )
+        cursor.execute(sql_string)
+        try:
+            # check if id exists
+            _ = cursor.fetchone()[0]
+            return -1
+
+        except TypeError:
+            # no id was found so go on to create one
+            pass
+
+        sql_string = (
+            f'INSERT INTO {cls.table_vp_files} ('
+            f'file_name, file_date) '
+            f'VALUES (%s, %s) '
+            f'RETURNING id;'
+        )
+
+        cursor.execute(sql_string, (vp_file.file_name, vp_file.file_date))
+
+        return cursor.fetchone()[0]
+
+    @classmethod
+    @DbUtils.connect
+    def update_vp(cls, vp_records, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_vp_record = (
+            f'INSERT INTO {cls.table_vp} ('
+            f'file_id, vaps_id, line, station, vibrator, time_break, '
+            f'planned_easting, planned_northing, easting, northing, elevation, _offset, '
+            f'peak_force, avg_force, peak_dist, avg_dist, peak_phase, avg_phase, '
+            f'qc_flag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+            f'%s, %s, %s, %s, %s, %s, %s, %s, %s);'
+        )
+
+        sql_string = (
+            f'SELECT file_name FROM {cls.table_vp_files} WHERE '
+            f'id={vp_records[0].file_id};'
+        )
+        cursor.execute(sql_string)
+        try:
+            file_name = cursor.fetchone()[0]
+        except TypeError:
+            file_name = ''
+
+        progress_message = progress_message_generator(
+            f'update database vp records for file: {file_name}   ')
+
+        for vp_record in vp_records:
+            # get vaps_id for the record
+            sql_string = (
+                f'SELECT id FROM {cls.table_vaps} WHERE '
+                f'time_break=\'{vp_record.time_break}\' AND '
+                f'vibrator={vp_record.vibrator};'
+            )
+            cursor.execute(sql_string)
+            try:
+                vp_record.vaps_id = cursor.fetchone()[0]
+
+            except TypeError:
+                pass
+
+            cursor.execute(sql_vp_record, (
+                vp_record.file_id,
+                vp_record.vaps_id,
+                vp_record.line,
+                vp_record.station,
+                vp_record.vibrator,
+                vp_record.time_break,
+                vp_record.planned_easting,
+                vp_record.planned_northing,
+                vp_record.easting,
+                vp_record.northing,
+                vp_record.elevation,
+                vp_record.offset,
+                vp_record.peak_force,
+                vp_record.avg_force,
+                vp_record.peak_dist,
+                vp_record.avg_dist,
+                vp_record.peak_phase,
+                vp_record.avg_phase,
+                vp_record.qc_flag,
+                ))
+
+            next(progress_message)
+
+    @classmethod
+    @DbUtils.connect
     def update_vaps_file(cls, vaps_file, *args):
         ''' method to to check if file_name exists in the database, if it does not then
             add the filename to the data base
@@ -367,9 +471,8 @@ class VpDb:
         )
 
         cursor.execute(sql_string, (vaps_file.file_name, vaps_file.file_date))
-        file_id = cursor.fetchone()[0]
 
-        return file_id
+        return cursor.fetchone()[0]
 
     @classmethod
     @DbUtils.connect
@@ -398,7 +501,7 @@ class VpDb:
                 vaps_record.avg_phase,
                 vaps_record.peak_phase,
                 vaps_record.avg_dist,
-                vaps_record.peak_phase,
+                vaps_record.peak_dist,
                 vaps_record.avg_force,
                 vaps_record.peak_force,
                 vaps_record.avg_stiffness,
@@ -415,7 +518,7 @@ class VpDb:
 
 class Vaps:
 
-    vaps_base_folder = ".\\"
+    vaps_base_folder = DATA_FILES_VAPS
     vp_db = VpDb()
 
     @classmethod
@@ -432,7 +535,6 @@ class Vaps:
                 vaps_file.file_date = (
                     datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
 
-                print(vaps_file)
                 file_id = cls.vp_db.update_vaps_file(vaps_file)
 
                 if file_id == -1:
@@ -448,48 +550,54 @@ class Vaps:
                             continue
 
                         vaps_record = cls.parse_vaps_line(vaps_line)
-                        vaps_record.file_id = file_id
-                        vaps_records.append(vaps_record)
+                        if  vaps_record.line:
+                            vaps_record.file_id = file_id
+                            vaps_records.append(vaps_record)
 
                         next(progress_message)
 
                 cls.vp_db.update_vaps(vaps_records)
+                print()
 
     @classmethod
     def parse_vaps_line(cls, vaps_line):
         vaps_record = VapsTable(*[None]*22)
 
-        # create time break date
-        time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
-            YEAR + vaps_line[117:120], '%Y%j').strftime('%d-%m-%y') + ' ' +  \
-                vaps_line[120:126] + '.' + vaps_line[144:147], '%d-%m-%y %H%M%S.%f'))
+        try:
+            # create time break date
+            time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
+                YEAR + vaps_line[117:120], '%Y%j').strftime('%d-%m-%y') + ' ' +  \
+                    vaps_line[120:126] + '.' + vaps_line[144:147], '%d-%m-%y %H%M%S.%f'))
 
-        vaps_record.line = int(float(vaps_line[1:17]))
-        vaps_record.point = int(float(vaps_line[17:25]))
-        vaps_record.fleet_nr = vaps_line[26:27]
-        vaps_record.vibrator = int(vaps_line[27:29])
-        vaps_record.drive = int(vaps_line[29:32])
-        vaps_record.avg_phase = int(vaps_line[32:36])
-        vaps_record.peak_phase = int(vaps_line[36:40])
-        vaps_record.avg_dist = int(vaps_line[40:42])
-        vaps_record.peak_dist = int(vaps_line[42:44])
-        vaps_record.avg_force = int(vaps_line[44:46])
-        vaps_record.peak_force = int(vaps_line[46:49])
-        vaps_record.avg_stiffness = int(vaps_line[49:52])
-        vaps_record.avg_viscosity = int(vaps_line[52:55])
-        vaps_record.easting = float(vaps_line[55:64])
-        vaps_record.northing = float(vaps_line[64:74])
-        vaps_record.elevation = float(vaps_line[74:80])
-        vaps_record.time_break = time_break
-        vaps_record.hdop = float(vaps_line[126:130])
-        vaps_record.tb_date = vaps_line[130:150]
-        vaps_record.positioning = vaps_line[150:225]
+            vaps_record.line = int(float(vaps_line[1:17]))
+            vaps_record.point = int(float(vaps_line[17:25]))
+            vaps_record.fleet_nr = vaps_line[26:27]
+            vaps_record.vibrator = int(vaps_line[27:29])
+            vaps_record.drive = int(vaps_line[29:32])
+            vaps_record.avg_phase = int(vaps_line[32:36])
+            vaps_record.peak_phase = int(vaps_line[36:40])
+            vaps_record.avg_dist = int(vaps_line[40:42])
+            vaps_record.peak_dist = int(vaps_line[42:44])
+            vaps_record.avg_force = int(vaps_line[44:46])
+            vaps_record.peak_force = int(vaps_line[46:49])
+            vaps_record.avg_stiffness = int(vaps_line[49:52])
+            vaps_record.avg_viscosity = int(vaps_line[52:55])
+            vaps_record.easting = float(vaps_line[55:64])
+            vaps_record.northing = float(vaps_line[64:74])
+            vaps_record.elevation = float(vaps_line[74:80])
+            vaps_record.time_break = time_break
+            vaps_record.hdop = float(vaps_line[126:130])
+            vaps_record.tb_date = vaps_line[130:150]
+            vaps_record.positioning = vaps_line[150:225]
+
+        except ValueError:
+            vaps_record = VapsTable(*[None]*22)
 
         return vaps_record
 
 class Vp:
 
-    vp_base_folder = ".\\"
+    vp_base_folder = DATA_FILES_VP
     vp_db = VpDb()
 
     @classmethod
@@ -506,8 +614,7 @@ class Vp:
                 vp_file.file_date = (
                     datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
 
-                print(vp_file); file_id = 1
-                # file_id = cls.vp_db.update_vp_file(vp_file)
+                file_id = cls.vp_db.update_vp_file(vp_file)
 
                 if file_id == -1:
                     continue
@@ -528,7 +635,8 @@ class Vp:
 
                         next(progress_message)
 
-                # cls.vp_db.update_vp(vp_records)
+                cls.vp_db.update_vp(vp_records)
+                print()
 
     @classmethod
     def parse_vp_line(cls, vp_line):
@@ -563,19 +671,16 @@ class Vp:
 
         return vp_record
 
-if __name__ == '__main__':
-    vp_db = VpDb()
-    vp_db.create_table_vp_files()
-    vp_db.create_table_vp()
-
-    vp = Vp()
-    vp.read_vp()
-
 
 if __name__ == '__main__':
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
+    vp_db.create_table_vp_files()
+    vp_db.create_table_vp()
 
     vaps = Vaps()
     vaps.read_vaps()
+
+    vp = Vp()
+    vp.read_vp()
