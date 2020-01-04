@@ -5,7 +5,8 @@ import io
 import json
 import os
 from functools import wraps
-import numpy as np
+import pandas as pd
+from sqlalchemy import create_engine
 import psycopg2
 from recordtype import recordtype
 from decouple import config
@@ -122,6 +123,12 @@ class DbUtils:
             return result
 
         return wrapper
+
+    @classmethod
+    def get_engine(cls):
+        return create_engine(
+            f'postgresql+psycopg2://{cls.db_user}:{cls.db_user_pw}'
+            f'@{cls.host}/{cls.database}')
 
     @staticmethod
     def get_cursor(cursor):
@@ -473,6 +480,13 @@ class VpDb:
         cursor.execute(sql_string, (vaps_file.file_name, vaps_file.file_date))
 
         return cursor.fetchone()[0]
+
+    @classmethod
+    def get_vaps_data_by_date(cls, production_date):
+        engine = DbUtils().get_engine()
+        sql_string = (f'SELECT * FROM {cls.table_vaps} WHERE '
+                      f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
+        return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
     @DbUtils.connect
