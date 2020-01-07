@@ -11,7 +11,7 @@ class VpAttributes:
 
     @classmethod
     def select_data(cls, production_date):
-        cls.vaps_records_df = vp_database.VpDb().get_vaps_data_by_date(production_date)
+        cls.vaps_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
 
     @classmethod
     def plot_vaps_data(cls):
