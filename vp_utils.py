@@ -75,9 +75,8 @@ class MapTools:
         p3 = (AREA_EASTING_MAX, AREA_NORTHING_MIN)
         p4 = (AREA_EASTING_MIN, AREA_NORTHING_MIN)
         area_polygon = Polygon([p1, p2, p3, p4])
-        crs = f'epsg:{EPSG_UTM_40N}'
         area_gpd = GeoDataFrame(geometry=GeoSeries(area_polygon))
-        area_gpd.crs = crs
+        area_gpd.crs = f'epsg:{EPSG_UTM_40N}'
 
         return area_gpd
 
