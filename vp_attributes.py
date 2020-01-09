@@ -28,25 +28,27 @@ class VpAttributes:
 
         # plt.subplots_adjust(hspace=10)
 
-        for i_plt, plt_setting in enumerate(plt_settings):
+        for i_plt, (key, plt_setting) in enumerate(plt_settings.items()):
             cls.total_records = 1
-            ax0[i_plt] = cls.plot_attribute(ax0[i_plt], plt_setting)
-            ax1[i_plt] = cls.plot_density(ax1[i_plt], plt_setting)
+            if key in ['avg_phase', 'peak_phase', 'avg_dist',
+                       'peak_dist', 'avg_force', 'peak_force']:
+                ax0[i_plt] = cls.plot_attribute(ax0[i_plt], key, plt_setting)
+                ax1[i_plt] = cls.plot_density(ax1[i_plt], key, plt_setting)
 
         fig1.tight_layout()
         fig2.tight_layout()
         plt.show()
 
     @classmethod
-    def plot_attribute(cls, axis, settings):
-        axis.set_title(settings['title_attribute'])
-        axis.set_ylabel(settings['y-axis_label_attribute'])
-        axis.set_xlabel('Record index')
-        axis.set_ylim(bottom=settings['y-axis_min'], top=settings['y-axis_max'])
+    def plot_attribute(cls, axis, key, setting):
+        axis.set_title(setting['title_attribute'])
+        axis.set_ylabel(setting['y-axis_label_attribute'])
+        axis.set_xlabel('Index')
+        axis.set_ylim(bottom=setting['min'], top=setting['max'])
 
         for vib in range(1, FLEETS + 1):
             vib_data = cls.vaps_records_df[
-                cls.vaps_records_df['vibrator'] == vib][settings['key']].to_list()
+                cls.vaps_records_df['vibrator'] == vib][key].to_list()
 
             if vib_data:
                 records = [i for i in range(
@@ -60,7 +62,7 @@ class VpAttributes:
         return axis
 
     @classmethod
-    def plot_density(cls, axis, settings):
+    def plot_density(cls, axis, key, setting):
         '''  method to plot the attribute density function. If no density plot can be
              made then plot unity density
         '''
@@ -71,17 +73,17 @@ class VpAttributes:
                 return 0
 
         x_values = np.arange(
-            settings['y-axis_min'],
-            settings['y-axis_max'],
-            settings['y-axis_int']
+            setting['min'],
+            setting['max'],
+            setting['interval']
         )
 
-        axis.set_title(settings['title_density'])
-        axis.set_ylabel(settings['y-axis_label_density'])
+        axis.set_title(setting['title_density'])
+        axis.set_ylabel(setting['y-axis_label_density'])
 
         for vib in range(1, FLEETS + 1):
             vib_data = cls.vaps_records_df[
-                cls.vaps_records_df['vibrator'] == vib][settings['key']].to_list()
+                cls.vaps_records_df['vibrator'] == vib][key].to_list()
 
             if not vib_data:
                 continue

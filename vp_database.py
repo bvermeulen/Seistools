@@ -432,7 +432,6 @@ class VpDb:
                 f'{cls.table_vp}.line = {line} '
             f'ORDER BY {cls.table_vp}.station;'
         )
-        print(sql_string)
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
