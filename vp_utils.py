@@ -68,24 +68,27 @@ def get_year(day_of_year):
 
 class MapTools:
 
-    @classmethod
-    def get_area(cls):
+    @staticmethod
+    def get_area():
         p1 = (AREA_EASTING_MIN, AREA_NORHING_MAX)
         p2 = (AREA_EASTING_MAX, AREA_NORHING_MAX)
         p3 = (AREA_EASTING_MAX, AREA_NORTHING_MIN)
         p4 = (AREA_EASTING_MIN, AREA_NORTHING_MIN)
         area_polygon = Polygon([p1, p2, p3, p4])
+        crs = f'epsg:{EPSG_UTM_40N}'
+        area_gpd = GeoDataFrame(geometry=GeoSeries(area_polygon))
+        area_gpd.crs = crs
 
-        return GeoDataFrame(geometry=GeoSeries(area_polygon))
+        return area_gpd
 
-    @classmethod
-    def get_vp_gpd(cls, vp_df):
+    @staticmethod
+    def get_vp_gpd(vp_df):
         geometry = [Point(xy) for xy in zip(vp_df.easting, vp_df.northing)]
         crs = f'epsg:{EPSG_UTM_40N}'
         return GeoDataFrame(vp_df, crs=crs, geometry=geometry)
 
-    @classmethod
-    def convert_to_map(cls, maptype):
+    @staticmethod
+    def convert_to_map(df, maptype):
         if maptype == MapTypes.osm and not df.empty:
             df = df.to_crs(f'epsg:{EPSG_OSM}')
 
@@ -94,16 +97,16 @@ class MapTools:
 
         return df
 
-    @classmethod
+    @staticmethod
     def add_basemap_osm(
-            cls, ax, plot_area, zoom,
+            ax, plot_area, zoom,
             url='http://tile.stamen.com/terrain/{z}/{x}/{y}.png'):
 
         basemap, extent = ctx.bounds2img(*plot_area, zoom=zoom, url=url)
         ax.imshow(basemap, extent=extent, interpolation='bilinear')
 
-    @classmethod
-    def add_basemap_local(cls, ax):
+    @staticmethod
+    def add_basemap_local(ax):
         MAP_FILE = r'BackgroundMap/3D_31256.jpg'
         Image.MAX_IMAGE_PIXELS = 2_000_000_000
 
@@ -126,8 +129,8 @@ class MapTools:
 
         ax.imshow(basemap, extent=(x_min, x_max, y_min, y_max), interpolation='bilinear')
 
-    @classmethod
-    def add_colorbar(cls, fig, cmap, minimum, maximum):
+    @staticmethod
+    def add_colorbar(fig, cmap, minimum, maximum):
         ''' plot the colorbar
             https://stackoverflow.com/questions/36008648/colorbar-on-geopandas
         '''

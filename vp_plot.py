@@ -25,6 +25,7 @@ class PlotMap:
 
         cls.fig, cls.ax = plt.subplots(figsize=FIGSIZE)
         area_bnd_gpd = maptools.get_area()
+        area_bnd_gpd = maptools.convert_to_map(area_bnd_gpd, cls.maptype)
         area_bnd_gpd.plot(ax=cls.ax, facecolor='none', edgecolor=EDGECOLOR)
 
         extent_map = cls.ax.axis()
@@ -52,6 +53,8 @@ class PlotMap:
     def plot_attribute(cls, line):
         vp_df = vp_db.get_vp_data_by_line(line)
         vp_gdf = maptools.get_vp_gpd(vp_df)
+
+        vp_gdf = maptools.convert_to_map(vp_gdf, cls.maptype)
 
         minimum = plt_settings[cls.attribute]['min']
         maximum = plt_settings[cls.attribute]['max']
@@ -86,7 +89,7 @@ if __name__ == '__main__':
         attribute = 'elevation'
 
     plot = PlotMap()
-    plot.setup_map(attribute, maptype=MapTypes.no_background)
+    plot.setup_map(attribute, maptype=MapTypes.osm)
     lines = [1001, 1010, 1008, 1028, 1007, 1004, 1002, 1003, 1009]
     for line in lines:
         plot.plot_attribute(line)
