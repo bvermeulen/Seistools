@@ -1,6 +1,7 @@
 ''' utility functions for vp application
 '''
 import datetime
+import pandas as pd
 from geopandas import GeoDataFrame, GeoSeries
 from shapely.geometry import Polygon, Point
 import matplotlib.pyplot as plt
@@ -68,6 +69,8 @@ def get_year(day_of_year):
 
 class MapTools:
 
+    combined_gpd = GeoDataFrame()
+
     @staticmethod
     def get_area():
         p1 = (AREA_EASTING_MIN, AREA_NORHING_MAX)
@@ -85,6 +88,15 @@ class MapTools:
         geometry = [Point(xy) for xy in zip(vp_df.easting, vp_df.northing)]
         crs = f'epsg:{EPSG_UTM_40N}'
         return GeoDataFrame(vp_df, crs=crs, geometry=geometry)
+
+    @classmethod
+    def concat_gdf(cls, line_gpd):
+        cls.combined_gpd = pd.concat([cls.combined_gpd, line_gpd])
+
+    @classmethod
+    def save_combined_gpd(cls, attribute):
+        cls.combined_gpd = cls.combined_gpd.drop(columns='time_break')
+        cls.combined_gpd.to_file(f'lines_{attribute}.shp')
 
     @staticmethod
     def convert_to_map(df, maptype):

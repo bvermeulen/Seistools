@@ -58,6 +58,7 @@ class PlotMap:
     def plot_attribute(cls, line):
         vp_df = vp_db.get_vp_data_by_line(line)
         vp_gdf = maptools.get_vp_gpd(vp_df)
+        maptools.concat_gdf(vp_gdf)
 
         vp_gdf = maptools.convert_to_map(vp_gdf, cls.maptype)
 
@@ -121,4 +122,5 @@ if __name__ == '__main__':
     for line in lines:
         plot.plot_attribute(line)
 
+    maptools.save_combined_gpd(attribute)
     plot.show()
