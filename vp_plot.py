@@ -2,7 +2,7 @@
 '''
 import sys
 import matplotlib.pyplot as plt
-from vp_settings import MapTypes, plt_settings
+from vp_settings import MapTypes, plt_settings, lines
 from vp_utils import MapTools
 from vp_database import VpDb
 
@@ -43,11 +43,16 @@ class PlotMap:
         cls.ax.axis(extent_map)
         cls.background = cls.fig.canvas.copy_from_bbox(cls.fig.bbox)
 
-        maptools.add_colorbar(cls.fig, cmap,
-                              plt_settings[cls.attribute]['min'],
-                              plt_settings[cls.attribute]['max'],
-                             )
-        cls.ax.set_title(f'Block 42: {plt_settings[cls.attribute]["title_attribute"]}')
+        if cls.attribute != 'none':
+            maptools.add_colorbar(cls.fig, cmap,
+                                  plt_settings[cls.attribute]['min'],
+                                  plt_settings[cls.attribute]['max'],
+                                 )
+            cls.ax.set_title(
+                f'Block 42: {plt_settings[cls.attribute]["title_attribute"]}')
+
+        else:
+            cls.ax.set_title(f'Block 42')
 
     @classmethod
     def plot_attribute(cls, line):
@@ -59,14 +64,18 @@ class PlotMap:
         minimum = plt_settings[cls.attribute]['min']
         maximum = plt_settings[cls.attribute]['max']
 
-        vp_gdf.plot(
-            ax=cls.ax,
-            column=cls.attribute,
-            cmap=cmap,
-            vmin=minimum,
-            vmax=maximum,
-            markersize=MARKERSIZE
-        )
+        if cls.attribute == 'none':
+            vp_gdf.plot(ax=cls.ax, color='black', markersize=MARKERSIZE)
+
+        else:
+            vp_gdf.plot(
+                ax=cls.ax,
+                column=cls.attribute,
+                cmap=cmap,
+                vmin=minimum,
+                vmax=maximum,
+                markersize=MARKERSIZE
+            )
 
         cls.blit()
 
@@ -82,15 +91,33 @@ class PlotMap:
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
+
+    maptype = 'no_background'
+    if len(sys.argv) == 3:
+        maptype = sys.argv[2]
+        attribute = sys.argv[1]
+
+    elif len(sys.argv) == 2:
         attribute = sys.argv[1]
 
     else:
-        attribute = 'elevation'
+        attribute = 'none'
+
+    if maptype.lower() == 'local':
+        maptype = MapTypes.local
+
+    elif maptype.lower() == 'osm':
+        maptype = MapTypes.osm
+
+    else:
+        maptype = MapTypes.no_background
+
+    attribute = attribute.lower()
+    if attribute not in [attr for attr in plt_settings]:
+        attribute = 'none'
 
     plot = PlotMap()
-    plot.setup_map(attribute, maptype=MapTypes.osm)
-    lines = [1001, 1010, 1008, 1028, 1007, 1004, 1002, 1003, 1009]
+    plot.setup_map(attribute, maptype=maptype)
     for line in lines:
         plot.plot_attribute(line)
 

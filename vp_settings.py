@@ -15,6 +15,13 @@ EPSG_UTM_40N = 32640
 EPSG_WGS84 = 4326
 EPSG_OSM = 3857
 
+lines = [
+    1001, 1010, 1008, 1028, 1007, 1006, 1004, 1002, 1003, 1009,
+    1025, 1021, 1020, 1029, 1016, 1022, 1014, 1013, 1015, 1019,
+    1018, 1005, 1025, 1012, 1023, 1024, 1027, 1017, 1011,
+]
+
+
 class MapTypes(IntEnum):
     local = 0
     osm = 1
@@ -161,7 +168,7 @@ plt_settings = {
         'title_density': 'Stiffness density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 30,
+        'max': 50,
         'interval': 1,
         },
 
@@ -171,8 +178,18 @@ plt_settings = {
         'title_density': 'Viscosity density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 30,
+        'max': 50,
         'interval': 1,
+        },
+
+    'none': {
+        'title_attribute': '',
+        'y-axis_label_attribute': '',
+        'title_density': '',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 0,
+        'interval': 0,
         },
 
 }
