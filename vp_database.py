@@ -402,6 +402,12 @@ class VpDb:
 
     @classmethod
     def get_vp_data_by_date(cls, production_date):
+        ''' retrieve vp data by date
+            arguments:
+              production_date: datetime object
+            returns:
+              pandas dataframe with all database attributes
+        '''
         engine = DbUtils().get_engine()
         sql_string = (f'SELECT * FROM {cls.table_vaps} WHERE '
                       f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
@@ -409,6 +415,12 @@ class VpDb:
 
     @classmethod
     def get_vp_data_by_line(cls, line):
+        ''' retrieve vp data by line number
+            arguments:
+              line: integer
+            returns:
+              pandas dataframe with all database attributes
+        '''
         engine = DbUtils().get_engine()
         sql_string = (
             f'SELECT '
@@ -431,6 +443,41 @@ class VpDb:
                 f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
                 f'{cls.table_vp}.line = {line} '
             f'ORDER BY {cls.table_vp}.station;'
+        )
+        return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    def get_vp_data_by_time(cls, start_time, end_time):
+        ''' retrieve vp data by time interval
+            arguments:
+              start_time: datetime object
+              end_time: datetime object
+            returns:
+              pandas dataframe with all database attributes
+        '''
+        assert end_time >= start_time, "end time must be greater equal than start time"
+        engine = DbUtils().get_engine()
+        sql_string = (
+            f'SELECT '
+                f'{cls.table_vp}.line, '  #pylint: disable=bad-continuation
+                f'{cls.table_vp}.station, '
+                f'{cls.table_vp}.easting, '
+                f'{cls.table_vp}.northing, '
+                f'{cls.table_vp}.elevation, '
+                f'{cls.table_vp}.time_break, '
+                f'{cls.table_vaps}.avg_phase, '
+                f'{cls.table_vaps}.peak_phase, '
+                f'{cls.table_vaps}.avg_dist, '
+                f'{cls.table_vaps}.peak_dist, '
+                f'{cls.table_vaps}.avg_force, '
+                f'{cls.table_vaps}.peak_force, '
+                f'{cls.table_vaps}.avg_stiffness, '
+                f'{cls.table_vaps}.avg_viscosity '
+            f'FROM {cls.table_vp}, {cls.table_vaps} '
+            f'WHERE '
+                f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
+                f'{cls.table_vp}.time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
+            f'ORDER BY {cls.table_vp}.time_break;'
         )
         return pd.read_sql_query(sql_string, con=engine)
 

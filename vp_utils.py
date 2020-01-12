@@ -2,6 +2,7 @@
 '''
 import datetime
 import pandas as pd
+from  osgeo import gdal
 from geopandas import GeoDataFrame, GeoSeries
 from shapely.geometry import Polygon, Point
 import matplotlib.pyplot as plt
@@ -66,6 +67,14 @@ def get_year(day_of_year):
 
     else:
         return 2020
+
+
+def convert_ecw_to_tiff(file_name):
+    src = gdal.Open(file_name)
+    output_file = 'map_test.jpg'
+
+    src = gdal.Translate(output_file, src)
+
 
 class MapTools:
 
