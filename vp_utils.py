@@ -10,7 +10,7 @@ from PIL import Image
 import contextily as ctx
 from vp_settings import (
     AREA_EASTING_MIN, AREA_EASTING_MAX, AREA_NORTHING_MIN, AREA_NORHING_MAX,
-    MapTypes, EPSG_UTM_40N, EPSG_WGS84, EPSG_OSM,
+    MapTypes, EPSG_UTM_40N, EPSG_OSM,
 )
 
 
@@ -43,11 +43,10 @@ def get_line():
             pass
 
 
-def get_production_date():
-    ASK_DATE = 'date (YYMMDD) [q - quit]: '
+def get_production_date(question='date (YYMMDD) [q - quit]: '):
 
     while True:
-        _date = input(ASK_DATE)
+        _date = input(question)
 
         if _date in ['q', 'Q']:
             return -1
@@ -58,6 +57,46 @@ def get_production_date():
 
         except ValueError:
             pass
+
+def get_animation_dates():
+    valid = False
+    pause = None
+    interval = 0
+
+    while not valid:
+        start = get_production_date(question='start date (YYMMDD) [q - quit]: ')
+        if start == -1:
+            return -1, -1, 0
+
+        end = get_production_date(question='end date (YYMMDD) [q - quit]: ')
+        if end == -1:
+            return -1, -1, 0
+
+
+        if end >= start:
+            while not valid:
+                try:
+                    interval = int(input('Enter time interval in minutes: '))
+                    end += datetime.timedelta(1)
+                    interval = datetime.timedelta(seconds=interval*60)
+                    valid = True
+
+                except ValueError:
+                    pass
+
+        else:
+            print("End date must be greater equal to start date")
+
+        while valid and pause not in ['y', 'Y', 'n', 'N']:
+            pause = input('Pause at end of day [y, n]: ')
+
+        if valid and pause in ['y', 'Y']:
+            pause = True
+
+        else:
+            pause = False
+
+    return start, end, interval, pause
 
 
 def get_year(day_of_year):
