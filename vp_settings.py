@@ -178,8 +178,8 @@ plt_settings = {
         'y-axis_label_attribute': 'Level',
         'title_density': 'Viscosity density',
         'y-axis_label_density': '',
-        'min': 0,
-        'max': 50,
+        'min': 15,
+        'max': 25,
         'interval': 1,
         },
 
