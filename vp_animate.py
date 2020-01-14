@@ -23,7 +23,7 @@ from vp_utils import MapTools, get_animation_dates
 from vp_database import VpDb
 
 FIGSIZE = (7, 7)
-EDGECOLOR = 'black'
+EDGECOLOR = 'None'
 ZOOM = 10
 MARKERSIZE = 0.2
 STATUS_POSISTION = (0.75, 1.1)
