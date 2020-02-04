@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 import psycopg2
 from decouple import config
 import vp_utils
-from vp_settings import FilesVpTable, VpTable, FilesVapsTable, VapsTable
+from vp_settings import DATABASE, FilesVpTable, VpTable, FilesVapsTable, VapsTable
 
 
 class DbUtils:
@@ -15,7 +15,7 @@ class DbUtils:
     host = 'localhost'
     db_user = 'db_tester'
     db_user_pw = config('DB_PASSWORD')
-    database = 'vp_database'
+    database = DATABASE
 
     @classmethod
     def connect(cls, func):
@@ -299,7 +299,23 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vp(cls, vp_records, *args):
+    def update_vp(cls, vp_records, *args, include_vaps=False):
+
+        def get_vaps_id(vp_record):
+            sql_string = (
+                f'SELECT id FROM {cls.table_vaps} WHERE '
+                f'time_break=\'{vp_record.time_break}\' AND '
+                f'vibrator={vp_record.vibrator};'
+            )
+            cursor.execute(sql_string)
+            try:
+                vp_record.vaps_id = cursor.fetchone()[0]
+
+            except TypeError:
+                pass
+
+            return vp_record
+
         cursor = DbUtils().get_cursor(args)
 
         sql_vp_record = (
@@ -325,18 +341,9 @@ class VpDb:
             f'update database vp records for file: {file_name}   ')
 
         for vp_record in vp_records:
-            # get vaps_id for the record
-            sql_string = (
-                f'SELECT id FROM {cls.table_vaps} WHERE '
-                f'time_break=\'{vp_record.time_break}\' AND '
-                f'vibrator={vp_record.vibrator};'
-            )
-            cursor.execute(sql_string)
-            try:
-                vp_record.vaps_id = cursor.fetchone()[0]
 
-            except TypeError:
-                pass
+            if include_vaps:
+                vp_record = get_vaps_id(vp_record)
 
             cursor.execute(sql_vp_record, (
                 vp_record.file_id,
@@ -401,7 +408,7 @@ class VpDb:
         return cursor.fetchone()[0]
 
     @classmethod
-    def get_vp_data_by_date(cls, production_date):
+    def get_vaps_data_by_date(cls, production_date):
         ''' retrieve vp data by date
             arguments:
               production_date: datetime object
@@ -410,6 +417,19 @@ class VpDb:
         '''
         engine = DbUtils().get_engine()
         sql_string = (f'SELECT * FROM {cls.table_vaps} WHERE '
+                      f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
+        return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    def get_vp_data_by_date(cls, production_date):
+        ''' retrieve vp data by date
+            arguments:
+              production_date: datetime object
+            returns:
+              pandas dataframe with all database attributes
+        '''
+        engine = DbUtils().get_engine()
+        sql_string = (f'SELECT * FROM {cls.table_vp} WHERE '
                       f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
         return pd.read_sql_query(sql_string, con=engine)
 

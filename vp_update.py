@@ -4,8 +4,8 @@ import os
 import datetime
 import vp_database
 import vp_utils
-from vp_settings import (DATA_FILES_VAPS, DATA_FILES_VP, FilesVpTable,
-                         VpTable, FilesVapsTable, VapsTable
+from vp_settings import (DATA_FILES_VAPS, DATA_FILES_VP, INCLUDE_VAPS,
+                         FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                         )
 
 
@@ -18,7 +18,8 @@ class Vaps:
     def read_vaps(cls):
         for foldername, _, filenames in os.walk(cls.vaps_base_folder):
             for filename in filenames:
-                if filename[-5:] not in ['.vaps', '.VAPS']:
+                if not (filename[-5:] in ['.vaps', '.VAPS'] or
+                    filename[-4:] in ['.txt', '.TXT']):
                     continue
 
                 vaps_file = FilesVapsTable(*[None]*3)
@@ -131,7 +132,7 @@ class Vp:
 
                         next(progress_message)
 
-                cls.vp_db.update_vp(vp_records)
+                cls.vp_db.update_vp(vp_records, include_vaps=INCLUDE_VAPS)
                 print()
 
     @classmethod
@@ -146,7 +147,7 @@ class Vp:
 
             vp_record.line = int(vp_line[0:9])
             vp_record.station = int(vp_line[9:19])
-            vp_record.vibrator = int(vp_line[19:29].strip()[4:5])
+            vp_record.vibrator = int(vp_line[19:29].strip()[3:])
             vp_record.time_break = time_break
             vp_record.planned_easting = float(vp_line[64:79])
             vp_record.planned_northing = float(vp_line[79:94])

@@ -10,7 +10,7 @@ from PIL import Image
 import contextily as ctx
 from vp_settings import (
     AREA_EASTING_MIN, AREA_EASTING_MAX, AREA_NORTHING_MIN, AREA_NORHING_MAX,
-    MapTypes, EPSG_UTM_40N, EPSG_OSM,
+    MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE,
 )
 
 
@@ -157,16 +157,12 @@ class MapTools:
         return df
 
     @staticmethod
-    def add_basemap_osm(
-            ax, plot_area, zoom,
-            url='http://tile.stamen.com/terrain/{z}/{x}/{y}.png'):
-
+    def add_basemap_osm(ax, plot_area, zoom, url=URL_STAMEN):
         basemap, extent = ctx.bounds2img(*plot_area, zoom=zoom, url=url)
         ax.imshow(basemap, extent=extent, interpolation='bilinear')
 
     @staticmethod
     def add_basemap_local(ax):
-        MAP_FILE = r'BackgroundMap/3D_31256.jpg'
         Image.MAX_IMAGE_PIXELS = 2_000_000_000
 
         # read the map image file and set the extent

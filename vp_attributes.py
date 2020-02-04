@@ -4,17 +4,21 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import vp_utils
 import vp_database
-from vp_settings import FLEETS, plt_settings
+from vp_settings import FLEETS, INCLUDE_VAPS, MARKERSIZE, plt_settings
 
 
 class VpAttributes:
 
     @classmethod
     def select_data(cls, production_date):
-        cls.vaps_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
+        if INCLUDE_VAPS:
+            cls.vp_records_df = vp_database.VpDb().get_vaps_data_by_date(production_date)
+
+        else:
+            cls.vp_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
 
     @classmethod
-    def plot_vaps_data(cls):
+    def plot_vp_data(cls):
         ax0 = [None for i in range(6)]
         ax1 = [None for i in range(6)]
         fig1, (
@@ -35,8 +39,15 @@ class VpAttributes:
                 ax0[i_plt] = cls.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = cls.plot_density(ax1[i_plt], key, plt_setting)
 
+        handles, labels = ax0[0].get_legend_handles_labels()
+        fig1.legend(
+            handles, labels, loc='upper right', frameon=True, fontsize='small', framealpha=1, markerscale=40)
         fig1.tight_layout()
+
+        fig2.legend(
+            handles, labels, loc='upper right', frameon=True, fontsize='small', framealpha=1, markerscale=40)
         fig2.tight_layout()
+
         plt.show()
 
     @classmethod
@@ -47,17 +58,15 @@ class VpAttributes:
         axis.set_ylim(bottom=setting['min'], top=setting['max'])
 
         for vib in range(1, FLEETS + 1):
-            vib_data = cls.vaps_records_df[
-                cls.vaps_records_df['vibrator'] == vib][key].to_list()
+            vib_data = cls.vp_records_df[
+                cls.vp_records_df['vibrator'] == vib][key].to_list()
 
             if vib_data:
                 records = [i for i in range(
                     cls.total_records, cls.total_records + len(vib_data))]
                 cls.total_records += len(vib_data)
                 vib_data = np.array(vib_data)
-                axis.plot(records, vib_data, label=vib)
-
-        # axis.legend(loc='upper right')
+                axis.plot(records, vib_data, '.', label=vib, markersize=MARKERSIZE)
 
         return axis
 
@@ -82,8 +91,8 @@ class VpAttributes:
         axis.set_ylabel(setting['y-axis_label_density'])
 
         for vib in range(1, FLEETS + 1):
-            vib_data = cls.vaps_records_df[
-                cls.vaps_records_df['vibrator'] == vib][key].to_list()
+            vib_data = cls.vp_records_df[
+                cls.vp_records_df['vibrator'] == vib][key].to_list()
 
             if not vib_data:
                 continue
@@ -95,8 +104,6 @@ class VpAttributes:
             except np.linalg.LinAlgError:
                 vib_data = [dirac_function(x) for x in range(len(x_values))]
                 axis.plot(x_values, vib_data, label=vib)
-
-            axis.legend(loc='upper right')
 
         return axis
 
@@ -111,4 +118,4 @@ if __name__ == "__main__":
 
         else:
             vp_attr.select_data(production_date)
-            vp_attr.plot_vaps_data()
+            vp_attr.plot_vp_data()

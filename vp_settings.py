@@ -3,15 +3,20 @@
 from enum import IntEnum
 from recordtype import recordtype
 
-DATA_FILES_VAPS = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VAPS files\\"
-DATA_FILES_VP = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VP Report\\"
-FLEETS = 5
+DATA_FILES_VAPS = "D:\\Work\\PDO\\vp_data\\VAPS_Lekhwair\\"
+DATA_FILES_VP = "D:\\Work\\PDO\\vp_data\\VP_Lekhwair\\"
+DATABASE = 'Lekhwair'
+INCLUDE_VAPS = False
+FLEETS = 30
+MARKERSIZE = 0.2
 GMT_OFFSET = +4
 AREA_EASTING_MIN = 610_000
 AREA_EASTING_MAX = 760_000
 AREA_NORTHING_MIN = 2_345_000
 AREA_NORHING_MAX = 2_455_000
 
+URL_STAMEN = 'http://tile.stamen.com/terrain/{z}/{x}/{y}.png'
+MAP_FILE = r'BackgroundMap/3D_31256.jpg'
 EPSG_UTM_40N = 32640
 EPSG_WGS84 = 4326
 EPSG_OSM = 3857
@@ -104,12 +109,12 @@ plt_settings = {
         },
 
     'peak_dist': {
-        'title_attribute': 'Peak Distorion',
+        'title_attribute': 'Peak Distortion',
         'y-axis_label_attribute': 'Percentage',
         'title_density': 'Peak Distortion Density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 60,
+        'max': 100,
         'interval': 1,
         },
 
@@ -139,7 +144,7 @@ plt_settings = {
         'title_density': 'Average Distortion Density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 40,
+        'max': 50,
         'interval': 1,
         },
 
