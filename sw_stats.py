@@ -1,5 +1,5 @@
-import numpy as np
 from pathlib import Path
+import numpy as np
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries
@@ -96,15 +96,22 @@ class GisCalc:
         shapefile_gpd.to_crs(EPSG_PSD93_UTM40)
         return shapefile_gpd
 
-    def plot_shapefile(self, shapefile_gpd):
-        shapefile_gpd.plot(ax=self.ax, facecolor='none', edgecolor='red')
+    def plot_shapefile(self, shapefile_gpd, color='black'):
+        shapefile_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color)
 
     def calc_stats(self):
-        file_name = project_base_folder / 'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp'
+        file_name = (project_base_folder /
+                     'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
         source_block_gpd = self.read_shapefile(file_name)
         self.plot_shapefile(source_block_gpd)
 
+        file_name = (project_base_folder /
+                     'shape_files/blocks/20HN_Block_C_Receivers_CO_6KM.shp')
+        receiver_block_gpd = self.read_shapefile(file_name)
+        self.plot_shapefile(receiver_block_gpd, 'red')
+
         plt.show()
+
 
 if __name__ == '__main__':
     gis_calc = GisCalc()
