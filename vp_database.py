@@ -299,22 +299,32 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
+    def get_vaps_id(cls, vp_record, *args):
+        ''' get vaps_id from the database and insert into vp_record
+            arguments:
+                vp_record: VpTable recordtype
+            returns:
+                VpTable recordtype
+        '''
+        cursor = DbUtils().get_cursor(args)
+        sql_string = (
+            f'SELECT id FROM {cls.table_vaps} WHERE '
+            f'time_break=\'{vp_record.time_break}\' AND '
+            f'vibrator={vp_record.vibrator};'
+        )
+
+        cursor.execute(sql_string)
+        try:
+            vp_record.vaps_id = cursor.fetchone()[0]
+
+        except TypeError:
+            pass
+
+        return vp_record
+
+    @classmethod
+    @DbUtils.connect
     def update_vp(cls, vp_records, *args, include_vaps=False):
-
-        def get_vaps_id(vp_record):
-            sql_string = (
-                f'SELECT id FROM {cls.table_vaps} WHERE '
-                f'time_break=\'{vp_record.time_break}\' AND '
-                f'vibrator={vp_record.vibrator};'
-            )
-            cursor.execute(sql_string)
-            try:
-                vp_record.vaps_id = cursor.fetchone()[0]
-
-            except TypeError:
-                pass
-
-            return vp_record
 
         cursor = DbUtils().get_cursor(args)
 
@@ -343,7 +353,7 @@ class VpDb:
         for vp_record in vp_records:
 
             if include_vaps:
-                vp_record = get_vaps_id(vp_record)
+                vp_record = cls.get_vaps_id(vp_record)
 
             cursor.execute(sql_vp_record, (
                 vp_record.file_id,
@@ -406,6 +416,19 @@ class VpDb:
         cursor.execute(sql_string, (vaps_file.file_name, vaps_file.file_date))
 
         return cursor.fetchone()[0]
+
+    @classmethod
+    @DbUtils.connect
+    def link_vaps_to_vp_table(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+        vp_record = VpTable(*[None]*20)
+        # TODO
+        # get all vp_records ids, tb, vibrator where vaps_id = Null
+        # loop over vp_records
+        #   vp_record.id = id; vp_record_tb = tb; vp_record_vibrator = vibrator
+        #   vaps_id = cls.get_vaps_id(vp_record)
+        #   update vp_record id with vaps_id
+        #
 
     @classmethod
     def get_vaps_data_by_date(cls, production_date):

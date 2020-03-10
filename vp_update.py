@@ -19,7 +19,7 @@ class Vaps:
         for foldername, _, filenames in os.walk(cls.vaps_base_folder):
             for filename in filenames:
                 if not (filename[-5:] in ['.vaps', '.VAPS'] or
-                    filename[-4:] in ['.txt', '.TXT']):
+                        filename[-4:] in ['.txt', '.TXT']):
                     continue
 
                 vaps_file = FilesVapsTable(*[None]*3)

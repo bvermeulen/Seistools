@@ -3,10 +3,15 @@
 from enum import IntEnum
 from recordtype import recordtype
 
-DATA_FILES_VAPS = "D:\\Work\\PDO\\vp_data\\VAPS_Lekhwair\\"
-DATA_FILES_VP = "D:\\Work\\PDO\\vp_data\\VP_Lekhwair\\"
-DATABASE = 'Lekhwair'
-INCLUDE_VAPS = False
+# DATA_FILES_VAPS = "D:\\Work\\PDO\\vp_data\\VAPS_Lekhwair\\"
+# DATA_FILES_VP = "D:\\Work\\PDO\\vp_data\\VP_Lekhwair\\"
+# DATABASE = 'Lekhwair'
+# INCLUDE_VAPS = False
+DATA_FILES_VAPS = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VAPS files\\"
+DATA_FILES_VP = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VP Report\\"
+DATABASE = 'vp_database'
+INCLUDE_VAPS = True
+
 FLEETS = 30
 MARKERSIZE = 0.2
 GMT_OFFSET = +4
