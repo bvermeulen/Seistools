@@ -12,7 +12,7 @@ RLS = 200
 RPS = 25
 SLS_sand = 400
 SPS_sand = 12.5
-SLS_flat = 50
+SLS_flat = 25    # 25 m Block C, 50 m Block D
 SPS_flat = 25
 project_azimuth = np.pi * 0
 swath_length = 50_000  # length > length of block
@@ -24,8 +24,8 @@ class GisCalc:
 
     def __init__(self):
         self.swath_stats = pd.DataFrame(columns=[
-            'swath', 'area', 'area_flat', 'area_dune', 'vp_flat', 'vp_dune',
-            'vp_receiver', 'dozer_km'])
+            'swath', 'area', 'area_flat', 'area_dune', 'vp_theor', 'vp_flat',
+            'vp_dune_src', 'vp_dune_rcv', 'vp_dune', 'vp_actual', 'dozer_km'])
 
         self.index = 0
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
@@ -87,18 +87,23 @@ class GisCalc:
         shapefile_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color)
 
     def collate_stats(self, swath_nr, area, area_dune):
-        vp_dune = area_dune * 1000 / SLS_sand * 1000 / SPS_sand
-        vp_receiver = area_dune * 1000 / RLS * 1000 / SPS_sand
         area_flat = area - area_dune
+        vp_flat = int(area_flat * 1000 / SLS_flat * 1000 / SPS_flat)
+        vp_dune_src = int(area_dune * 1000 / SLS_sand * 1000 / SPS_sand)
+        vp_dune_rcv = int(area_dune * 1000 / RLS * 1000 / SPS_sand)
+        vp_dune = int(vp_dune_src + vp_dune_rcv)
         results = {
-            'swath': int(swath_nr),
+            'swath': swath_nr,
             'area': area,
             'area_flat': area_flat,
             'area_dune': area_dune,
-            'vp_flat': area_flat * 1000 / SLS_flat * 1000 / SPS_flat,
-            'vp_dune': int(vp_dune),
-            'vp_receiver': int(vp_receiver),
-            'dozer_km': int((vp_dune + vp_receiver) * SPS_sand) / 1000,
+            'vp_theor': area * 1000 / SLS_flat * 1000 / SPS_flat,
+            'vp_flat': vp_flat,
+            'vp_dune_src': vp_dune_src,
+            'vp_dune_rcv': vp_dune_rcv,
+            'vp_dune': vp_dune,
+            'vp_actual': vp_flat + vp_dune,
+            'dozer_km': vp_dune * SPS_sand / 1000,
         }
         self.swath_stats = self.swath_stats.append(results, ignore_index=True)
 
@@ -118,10 +123,11 @@ class GisCalc:
 
         bounds = source_block_gpd.geometry.bounds.iloc[0].to_list()
         sw_origin = (bounds[0], bounds[1])
-        total_swaths = int(round(
-            np.sqrt((bounds[2] - bounds[0])**2 + (bounds[3] - bounds[1])**2) / RLS))
 
-        # create swaths area
+        # patch assuming azimuth is zero
+        total_swaths = int(round((bounds[2] - bounds[0]) / RLS)) + 1
+
+        # loop over the swaths and create swaths area
         total_area, total_dune_area = 0, 0
         for swath_nr in range(1, total_swaths):
             swath_gpd = self.create_sw_gpd(
@@ -150,7 +156,6 @@ class GisCalc:
 
         print(self.swath_stats.head(20))
         self.stats_to_excel('./swath_stats.xlsx')
-
 
         plt.show()
 

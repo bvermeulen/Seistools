@@ -101,15 +101,24 @@ def test_add_swath_5_300degrees():
 def test_collate_stats():
     gis_calc.collate_stats(5, 10, 3)
     result = gis_calc.swath_stats.loc[0].to_list()
-
+    # params
+    # SLS_flat = 25
+    # SPS_flat = 25
+    # SLS_dune = 400
+    # SPS_dune = 12.5
+    # RLS = 200
+    # RPS = 25
     assert result[0] == 5
     assert result[1] == 10
     assert result[2] == 7
     assert result[3] == 3
-    assert result[4] == 5600
-    assert result[5] == 600
-    assert result[6] == 1200
-    assert result[7] == 22.5
+    assert result[4] == 16_000
+    assert result[5] == 11_200
+    assert result[6] == 600
+    assert result[7] == 1200
+    assert result[8] == 1800
+    assert result[9] == 13_000
+    assert result[10] == 22.5
 
 
 if __name__ == '__main__':
