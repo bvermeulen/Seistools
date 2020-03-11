@@ -121,19 +121,4 @@ boundary_data = [
          (357_997.5, 2_312_337.5),
          ],
     },
-
-    # last boundary data is for tests
-    {'project': 'Haima Central 2020',
-     'name': 'test',
-     'crs': 0,
-     'vertices': [
-         (10, 20),
-         (0, 0),
-         (0, 0),
-         (0, 0),
-         ],
-    },
-
-
-
 ]
