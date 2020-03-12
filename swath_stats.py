@@ -46,6 +46,25 @@ class GisCalc:
         self.total_swaths = None
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
 
+        file_name = (project_base_folder /
+                     'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
+        self.source_block_gpd = self.read_shapefile(file_name)
+        self.plot_gpd(self.source_block_gpd)
+
+        file_name = (project_base_folder /
+                     'shape_files/BLOCK C SAND DUNE BOUNDARY.shp')
+        self.dunes_gpd = self.read_shapefile(file_name)
+        self.plot_gpd(self.dunes_gpd, 'green')
+
+        bounds = self.source_block_gpd.geometry.bounds.iloc[0].to_list()
+        self.sw_origin = (bounds[0], bounds[1])
+
+        # patch: assuming azimuth is zero
+        if project_azimuth == 0:
+            self.total_swaths = int(round((bounds[2] - bounds[0]) / RLS)) + 1
+        else:
+            self.total_swaths = int(input('Total number of swaths: '))
+
     def get_envelop_swath_cornerpoint(self, swath_origin, swath_nr, test_azimuth=-1):
         ''' get the corner points of the envelope of the swath, i.e. length
             of swath > actual swath length, so any shape of swath will be captured
@@ -54,7 +73,8 @@ class GisCalc:
             azimuth is the angle between northing and receiver line in positive direction
 
             arguments:
-                swath_nr: interger [1, n], counting from left to right (azimuth < 90)
+                swath_nr: interger [swath_1, n], counting from left to right
+                          (azimuth < 90)
                 test_azimuth: float in degrees [0, 360], can be provided for tests
             returns:
                 tuple with 4 corner point tuples of swath swath_nr (ll, lr, tr, tl)
@@ -104,7 +124,7 @@ class GisCalc:
 
     def aggregate_stats(self, swath_nr, area, area_dune, prod_day):
         area_flat = area - area_dune
-        vp_theor = area * 1000 / SLS_flat * 1000 / SPS_flat
+        vp_theor = int(area * 1000 / SLS_flat * 1000 / SPS_flat)
         vp_flat = int(area_flat * 1000 / SLS_flat * 1000 / SPS_flat)
         vp_dune_src = int(area_dune * 1000 / SLS_sand * 1000 / SPS_sand)
         vp_dune_rcv = int(area_dune * 1000 / RLS * 1000 / SPS_sand)
@@ -131,11 +151,19 @@ class GisCalc:
             'prod_day': prod_day,
         }
         self.swath_stats = self.swath_stats.append(results, ignore_index=True)
-
         return prod_day
 
-    def stats_to_excel(self, file_name):
+    def check_totals(self, total_area, total_dune_area):
+        # check if totals match the sum of the swathss
+        area_block = sum(self.source_block_gpd.geometry.area.to_list()) / 1e6
+        print(f'area block: {area_block}')
+        print(f'area block: {total_area}')
 
+        area_dunes = sum(self.dunes_gpd.geometry.area.to_list()) / 1e6
+        print(f'area dunes: {area_dunes}')
+        print(f'area dunes: {total_dune_area}')
+
+    def stats_to_excel(self, file_name):
         writer = pd.ExcelWriter(file_name, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
         self.swath_stats.to_excel(writer, sheet_name='Swaths', index=False)
         workbook = writer.book
@@ -166,35 +194,16 @@ class GisCalc:
         return range(swath_1, self.total_swaths + swath_1)
 
     def calc_swath_stats(self, swath_reverse=False):
-        file_name = (project_base_folder /
-                     'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
-        source_block_gpd = self.read_shapefile(file_name)
-        self.plot_gpd(source_block_gpd)
-
-        file_name = (project_base_folder /
-                     'shape_files/BLOCK C SAND DUNE BOUNDARY.shp')
-        dunes_gpd = self.read_shapefile(file_name)
-        self.plot_gpd(dunes_gpd, 'green')
-
-        bounds = source_block_gpd.geometry.bounds.iloc[0].to_list()
-        sw_origin = (bounds[0], bounds[1])
-
-        # patch: assuming azimuth is zero
-        if project_azimuth == 0:
-            self.total_swaths = int(round((bounds[2] - bounds[0]) / RLS)) + 1
-        else:
-            self.total_swaths = int(input('Total number of swaths: '))
-
         # loop over the swaths and create swaths area
         total_area, total_dune_area, prod_day = 0, 0, 0
 
         for swath_nr in self.swath_range(swath_reverse=swath_reverse):
             swath_gpd = self.create_sw_gpd(
-                self.get_envelop_swath_cornerpoint(sw_origin, swath_nr))
-            swath_gpd = overlay(source_block_gpd, swath_gpd, how='intersection')
+                self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr))
+            swath_gpd = overlay(self.source_block_gpd, swath_gpd, how='intersection')
             swath_area = sum(swath_gpd.geometry.area.to_list())/ 1e6
 
-            swath_dune_gpd = overlay(swath_gpd, dunes_gpd, how='intersection')
+            swath_dune_gpd = overlay(swath_gpd, self.dunes_gpd, how='intersection')
             swath_dune_area = sum(swath_dune_gpd.geometry.area.to_list())/ 1e6
             self.plot_gpd(swath_dune_gpd, 'yellow')
 
@@ -206,19 +215,11 @@ class GisCalc:
             total_area += swath_area
             total_dune_area += swath_dune_area
 
-        area_block = sum(source_block_gpd.geometry.area.to_list()) / 1e6
-        print(f'area block: {area_block}')
-        print(f'area block: {total_area}')
-
-        area_dunes = sum(dunes_gpd.geometry.area.to_list()) / 1e6
-        print(f'area dunes: {area_dunes}')
-        print(f'area dunes: {total_dune_area}')
-
+        self.check_totals(total_area, total_dune_area)
         self.stats_to_excel('./swath_stats.xlsx')
-
-        plt.show()
 
 
 if __name__ == '__main__':
     gis_calc = GisCalc()
     gis_calc.calc_swath_stats(swath_reverse=True)
+    plt.show()
