@@ -16,6 +16,7 @@ SLS_flat = 25    # 25 m Block C, 50 m Block D
 SPS_flat = 25
 project_azimuth = np.pi * 0
 swath_length = 50_000  # length > length of block
+swath_1 = 100
 
 # parameter CTF
 flat_terrain = 0.85
@@ -58,7 +59,7 @@ class GisCalc:
             returns:
                 tuple with 4 corner point tuples of swath swath_nr (ll, lr, tr, tl)
         '''
-        assert swath_nr > 0, 'swath_nr must be [1, n]'
+        assert swath_nr > 0, 'swath_nr must be [swath_1, n]'
 
         if test_azimuth == -1:
             azimuth = project_azimuth
@@ -72,8 +73,8 @@ class GisCalc:
         swath_length_dx = swath_length * np.sin(azimuth)
         swath_length_dy = swath_length * np.cos(azimuth)
 
-        sw_ll = (swath_origin[0] + (swath_nr - 1) * swath_width_dx,
-                 swath_origin[1] + (swath_nr - 1) * swath_width_dy)
+        sw_ll = (swath_origin[0] + (swath_nr - swath_1) * swath_width_dx,
+                 swath_origin[1] + (swath_nr - swath_1) * swath_width_dy)
         sw_lr = (sw_ll[0] + swath_width_dx, sw_ll[1] + swath_width_dy)
         sw_tl = (sw_ll[0] + swath_length_dx, sw_ll[1] + swath_length_dy)
         sw_tr = (sw_tl[0] + swath_width_dx, sw_tl[1] + swath_width_dy)
@@ -133,11 +134,7 @@ class GisCalc:
 
         return prod_day
 
-    def stats_to_excel(self, file_name, swath_ascending=True):
-
-        print(swath_ascending)
-        self.swath_stats = self.swath_stats.sort_values(
-            by='swath', ascending=swath_ascending)
+    def stats_to_excel(self, file_name):
 
         writer = pd.ExcelWriter(file_name, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
         self.swath_stats.to_excel(writer, sheet_name='Swaths', index=False)
@@ -162,7 +159,13 @@ class GisCalc:
         worksheet.insert_chart('P2', chart)
         writer.save()
 
-    def calc_swath_stats(self):
+    def swath_range(self, swath_reverse=False):
+        if swath_reverse:
+            return range(self.total_swaths + swath_1 - 1, swath_1 - 1, -1)
+
+        return range(swath_1, self.total_swaths + swath_1)
+
+    def calc_swath_stats(self, swath_reverse=False):
         file_name = (project_base_folder /
                      'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
         source_block_gpd = self.read_shapefile(file_name)
@@ -184,7 +187,8 @@ class GisCalc:
 
         # loop over the swaths and create swaths area
         total_area, total_dune_area, prod_day = 0, 0, 0
-        for swath_nr in range(1, self.total_swaths + 1):
+
+        for swath_nr in self.swath_range(swath_reverse=swath_reverse):
             swath_gpd = self.create_sw_gpd(
                 self.get_envelop_swath_cornerpoint(sw_origin, swath_nr))
             swath_gpd = overlay(source_block_gpd, swath_gpd, how='intersection')
@@ -210,12 +214,11 @@ class GisCalc:
         print(f'area dunes: {area_dunes}')
         print(f'area dunes: {total_dune_area}')
 
-        print(self.swath_stats.head(20))
-        self.stats_to_excel('./swath_stats.xlsx', swath_ascending=False)
+        self.stats_to_excel('./swath_stats.xlsx')
 
         plt.show()
 
 
 if __name__ == '__main__':
     gis_calc = GisCalc()
-    gis_calc.calc_swath_stats()
+    gis_calc.calc_swath_stats(swath_reverse=True)

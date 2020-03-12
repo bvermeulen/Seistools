@@ -1,13 +1,15 @@
 ''' tests '''
 import numpy as np
 import pytest
-import sw_stats
+import swath_stats
 
-gis_calc = sw_stats.GisCalc()
+gis_calc = swath_stats.GisCalc()
+
+#pylint: disable=line-too-long
 
 def test_add_swath_0():
     azimuth = 0
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 1, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 100, test_azimuth=azimuth)
     assert a == (10, 20)
     assert b == (210, 20)
     assert c == (210, 50_020)
@@ -15,7 +17,7 @@ def test_add_swath_0():
 
 def test_add_swath_5():
     azimuth = 0
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 6, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 105, test_azimuth=azimuth)
     assert a == (1010, 20)
     assert b == (1210, 20)
     assert c == (1210, 50_020)
@@ -23,7 +25,7 @@ def test_add_swath_5():
 
 def test_add_swath_5_30degrees():
     azimuth = 30
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 6, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 105, test_azimuth=azimuth)
 
     azimuth = np.pi * azimuth / 180
     width_dx = 200 * np.cos(azimuth)
@@ -43,7 +45,7 @@ def test_add_swath_5_30degrees():
 
 def test_add_swath_5_120degrees():
     azimuth = 120
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 6, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 105, test_azimuth=azimuth)
 
     azimuth = np.pi * azimuth / 180
     width_dx = 200 * np.cos(azimuth)
@@ -62,7 +64,7 @@ def test_add_swath_5_120degrees():
 
 def test_add_swath_5_210degrees():
     azimuth = 210
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 6, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 105, test_azimuth=azimuth)
 
     azimuth = np.pi * azimuth / 180
     width_dx = 200 * np.cos(azimuth)
@@ -81,7 +83,7 @@ def test_add_swath_5_210degrees():
 
 def test_add_swath_5_300degrees():
     azimuth = 300
-    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 6, test_azimuth=azimuth)
+    a, b, c, d = gis_calc.get_envelop_swath_cornerpoint((10, 20), 105, test_azimuth=azimuth)
 
     azimuth = np.pi * azimuth / 180
     width_dx = 200 * np.cos(azimuth)
@@ -98,8 +100,8 @@ def test_add_swath_5_300degrees():
     assert d[0] == pytest.approx(10 + 5*width_dx + length_dx)
     assert d[1] == pytest.approx(20 + 5*width_dy + length_dy)
 
-def test_collate_stats():
-    gis_calc.collate_stats(5, 10, 3)
+def test_aggregate_stats():
+    gis_calc.aggregate_stats(5, 10, 3, 15)
     result = gis_calc.swath_stats.loc[0].to_list()
     # params
     # SLS_flat = 25
@@ -108,6 +110,8 @@ def test_collate_stats():
     # SPS_dune = 12.5
     # RLS = 200
     # RPS = 25
+    ctm = 3600 / (9 + 18) * 22 * (11_200 *.85 + 1800 * 0.6) / 13_000 * 12
+
     assert result[0] == 5
     assert result[1] == 10
     assert result[2] == 7
@@ -119,7 +123,25 @@ def test_collate_stats():
     assert result[8] == 1800
     assert result[9] == 13_000
     assert result[10] == 22.5
+    assert result[11] == 13_000 / 10
+    assert result[12] == pytest.approx(ctm)
+    assert result[13] == pytest.approx(15 + 13_000 / ctm)
+
+def test_swath_range_ascending_default():
+    gis_calc.total_swaths = 2
+    result_range = str(gis_calc.swath_range(False))
+    assert result_range == 'range(100, 102)'
+
+def test_swath_range_ascending_with_kwarg():
+    gis_calc.total_swaths = 2
+    result_range = str(gis_calc.swath_range(swath_reverse=False))
+    assert result_range == 'range(100, 102)'
+
+def test_swath_range_descending():
+    gis_calc.total_swaths = 2
+    result_range = str(gis_calc.swath_range(swath_reverse=True))
+    assert result_range == 'range(101, 99, -1)'
 
 
 if __name__ == '__main__':
-    test_collate_stats()
+    test_swath_range_descending()
