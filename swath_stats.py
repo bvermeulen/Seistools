@@ -16,6 +16,19 @@ SLS_flat = 25    # 25 m Block C, 50 m Block D
 SPS_flat = 25
 project_azimuth = np.pi * 0
 swath_length = 50_000  # length > length of block
+
+# parameter CTF
+flat_terrain = 0.85
+rough_terrain = 0.50
+facility_terrain = 0.55
+dunes_terrain = 0.60
+sabkha_terrain = 0.60
+sweep_time = 9
+move_up_time = 18
+number_vibes = 12
+hours_day = 22
+ctm_constant = 3600 / (sweep_time + move_up_time) * hours_day * number_vibes
+
 EPSG_PSD93_UTM40 = 3440
 project_base_folder = Path('D:/OneDrive/Work/PDO/Haima Central/QGIS - mapping/')
 
@@ -25,9 +38,11 @@ class GisCalc:
     def __init__(self):
         self.swath_stats = pd.DataFrame(columns=[
             'swath', 'area', 'area_flat', 'area_dune', 'vp_theor', 'vp_flat',
-            'vp_dune_src', 'vp_dune_rcv', 'vp_dune', 'vp_actual', 'dozer_km'])
+            'vp_dune_src', 'vp_dune_rcv', 'vp_dune', 'vp_actual', 'dozer_km',
+            'source_density', 'ctm', 'prod_day'])
 
         self.index = 0
+        self.total_swaths = None
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
 
     def get_envelop_swath_cornerpoint(self, swath_origin, swath_nr, test_azimuth=-1):
@@ -86,31 +101,68 @@ class GisCalc:
     def plot_gpd(self, shapefile_gpd, color='black'):
         shapefile_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color)
 
-    def collate_stats(self, swath_nr, area, area_dune):
+    def aggregate_stats(self, swath_nr, area, area_dune, prod_day):
         area_flat = area - area_dune
+        vp_theor = area * 1000 / SLS_flat * 1000 / SPS_flat
         vp_flat = int(area_flat * 1000 / SLS_flat * 1000 / SPS_flat)
         vp_dune_src = int(area_dune * 1000 / SLS_sand * 1000 / SPS_sand)
         vp_dune_rcv = int(area_dune * 1000 / RLS * 1000 / SPS_sand)
         vp_dune = int(vp_dune_src + vp_dune_rcv)
+        vp_actual = int(vp_flat + vp_dune)
+        ctm = (ctm_constant *
+               ((vp_flat * flat_terrain) + (vp_dune * dunes_terrain)) / vp_actual)
+        prod_day += vp_actual / ctm
+
         results = {
             'swath': swath_nr,
             'area': area,
             'area_flat': area_flat,
             'area_dune': area_dune,
-            'vp_theor': area * 1000 / SLS_flat * 1000 / SPS_flat,
+            'vp_theor': vp_theor,
             'vp_flat': vp_flat,
             'vp_dune_src': vp_dune_src,
             'vp_dune_rcv': vp_dune_rcv,
             'vp_dune': vp_dune,
-            'vp_actual': vp_flat + vp_dune,
+            'vp_actual': vp_actual,
             'dozer_km': vp_dune * SPS_sand / 1000,
+            'source_density': (vp_flat + vp_dune) / area,
+            'ctm': ctm,
+            'prod_day': prod_day,
         }
         self.swath_stats = self.swath_stats.append(results, ignore_index=True)
 
-    def stats_to_excel(self, file_name):
-        self.swath_stats.to_excel(file_name, index=False)
+        return prod_day
 
-    def calc_areas(self):
+    def stats_to_excel(self, file_name, swath_ascending=True):
+
+        print(swath_ascending)
+        self.swath_stats = self.swath_stats.sort_values(
+            by='swath', ascending=swath_ascending)
+
+        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
+        self.swath_stats.to_excel(writer, sheet_name='Swaths', index=False)
+        workbook = writer.book
+        worksheet = writer.sheets['Swaths']
+        chart = workbook.add_chart({'type': 'line'})
+
+        # format ['sheet', first_row, first_column, last_row, last_column]
+        total_swaths = len(self.swath_stats)
+        for col in [4, 5, 8, 9]:
+            chart.add_series({
+                'name': ['Swaths', 0, col],
+                'categories': ['Swaths', 1, 0, total_swaths, 0],
+                'values': ['Swaths', 1, col, total_swaths, col],
+                })
+
+        chart.set_title({'name': 'Block C'})
+        chart.set_x_axis({'name': 'swath'})
+        chart.set_y_axis({'name': 'vp'})
+        chart.set_legend({'position': 'bottom'})
+
+        worksheet.insert_chart('P2', chart)
+        writer.save()
+
+    def calc_swath_stats(self):
         file_name = (project_base_folder /
                      'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
         source_block_gpd = self.read_shapefile(file_name)
@@ -124,12 +176,15 @@ class GisCalc:
         bounds = source_block_gpd.geometry.bounds.iloc[0].to_list()
         sw_origin = (bounds[0], bounds[1])
 
-        # patch assuming azimuth is zero
-        total_swaths = int(round((bounds[2] - bounds[0]) / RLS)) + 1
+        # patch: assuming azimuth is zero
+        if project_azimuth == 0:
+            self.total_swaths = int(round((bounds[2] - bounds[0]) / RLS)) + 1
+        else:
+            self.total_swaths = int(input('Total number of swaths: '))
 
         # loop over the swaths and create swaths area
-        total_area, total_dune_area = 0, 0
-        for swath_nr in range(1, total_swaths):
+        total_area, total_dune_area, prod_day = 0, 0, 0
+        for swath_nr in range(1, self.total_swaths + 1):
             swath_gpd = self.create_sw_gpd(
                 self.get_envelop_swath_cornerpoint(sw_origin, swath_nr))
             swath_gpd = overlay(source_block_gpd, swath_gpd, how='intersection')
@@ -139,10 +194,11 @@ class GisCalc:
             swath_dune_area = sum(swath_dune_gpd.geometry.area.to_list())/ 1e6
             self.plot_gpd(swath_dune_gpd, 'yellow')
 
-            self.collate_stats(swath_nr, swath_area, swath_dune_area)
+            prod_day = self.aggregate_stats(
+                swath_nr, swath_area, swath_dune_area, prod_day)
 
             print(f'swath: {swath_nr}, area: {swath_area:.2f}, '
-                  f'dune area: {swath_dune_area:.2f}')
+                  f'dune area: {swath_dune_area:.2f}, production day: {prod_day:.1f}')
             total_area += swath_area
             total_dune_area += swath_dune_area
 
@@ -155,11 +211,11 @@ class GisCalc:
         print(f'area dunes: {total_dune_area}')
 
         print(self.swath_stats.head(20))
-        self.stats_to_excel('./swath_stats.xlsx')
+        self.stats_to_excel('./swath_stats.xlsx', swath_ascending=False)
 
         plt.show()
 
 
 if __name__ == '__main__':
     gis_calc = GisCalc()
-    gis_calc.calc_areas()
+    gis_calc.calc_swath_stats()
