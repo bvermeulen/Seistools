@@ -100,9 +100,9 @@ def test_add_swath_5_300degrees():
     assert d[0] == pytest.approx(10 + 5*width_dx + length_dx)
     assert d[1] == pytest.approx(20 + 5*width_dy + length_dy)
 
-def test_aggregate_stats():
-    gis_calc.aggregate_stats(5, 10, 3, 15)
-    result = gis_calc.swath_stats.loc[0].to_list()
+def test_aggregate_src_stats():
+    gis_calc.aggregate_src_stats(5, 10, 3, 15)
+    result = gis_calc.swath_src_stats.loc[0].to_list()
     # params
     # SLS_flat = 25
     # SPS_flat = 25
@@ -110,7 +110,7 @@ def test_aggregate_stats():
     # SPS_dune = 12.5
     # RLS = 200
     # RPS = 25
-    ctm = 3600 / (9 + 18) * 22 * (11_200 *.85 + 1800 * 0.6) / 13_000 * 12
+    ctm = 3600 / (9 + 18) * 22 * (11_200 *.85 + 600 * 0.6) / 11_800 * 12
 
     assert result[0] == 5
     assert result[1] == 10
@@ -120,12 +120,31 @@ def test_aggregate_stats():
     assert result[5] == 11_200
     assert result[6] == 600
     assert result[7] == 1200
-    assert result[8] == 1800
-    assert result[9] == 13_000
-    assert result[10] == 22.5
-    assert result[11] == 13_000 / 10
+    assert result[8] == 600      # no infill on receiver lines
+    assert result[9] == 11_800
+    assert result[10] == 7.5
+    assert result[11] == 11_800 / 10
     assert result[12] == pytest.approx(ctm)
-    assert result[13] == pytest.approx(15 + 13_000 / ctm)
+    assert result[13] == pytest.approx(15 + 11_800 / ctm)
+
+def test_aggregate_rcv_stats():
+    gis_calc.aggregate_rcv_stats(5, 10, 3)
+    result = gis_calc.swath_rcv_stats.loc[0].to_list()
+    # params
+    # RLS = 200
+    # RPS = 25
+    receiver_density = 1000 / 200 * 1000 / 25
+
+    assert result[0] == 5
+    assert result[1] == 10
+    assert result[2] == 7
+    assert result[3] == 3
+    assert result[4] == 10 * receiver_density
+    assert result[5] == 7 * receiver_density
+    assert result[6] == 3 * receiver_density
+    assert result[7] == 10 * receiver_density
+    assert result[8] == 3 * receiver_density * 25 / 1000
+    assert result[9] == receiver_density
 
 def test_swath_range_ascending_default():
     gis_calc.total_swaths = 2
