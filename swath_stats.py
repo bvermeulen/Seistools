@@ -18,8 +18,8 @@ project_azimuth = np.pi * 0
 swath_length = 50_000  # length > length of block
 swath_1 = 100
 active_lines = 46
-# calculate dozer lead with is half spread plus 5 km buffer
-lead_dozer = int(active_lines / 2 + 5000 / RLS)
+# calculate dozer lead only for half, so excluding buffer
+lead_dozer = int(active_lines / 2)
 
 # parameter CTM
 flat_terrain = 0.85
@@ -441,55 +441,71 @@ class GisCalc:
         chart2.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('B18', chart2)
 
-        # Chart 3: dozer used by production day
+        # Chart 3: Source density by swath
         chart3 = workbook.add_chart({'type': 'line'})
-        for col in [5]:
+        for col in [13]:
             chart3.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
+                'name': ['Source', 0, col],
+                'categories': ['Source', 1, 0, total_swaths, 0],
+                'values': ['Source', 1, col, total_swaths, col],
                 })
 
-        chart3.set_title({'name': title_chart + ' - dozer used by day',
+        chart3.set_title({'name': title_chart + ' - Source density by swath',
                           'name_font': name_font_title,})
-        chart3.set_x_axis({'name': 'Day'})
-        chart3.set_y_axis({'name': 'km'})
+        chart3.set_x_axis({'name': 'swath'})
+        chart3.set_y_axis({'name': 'vp'})
         chart3.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('J2', chart3)
+        ws_charts.insert_chart('B34', chart3)
 
-        # Chart 4: dozer used cumlative
+        # Chart 4: dozer used by production day
         chart4 = workbook.add_chart({'type': 'line'})
-        for col in [6]:
+        for col in [5]:
             chart4.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
                 'values': ['Prod', 1, col, total_production_days, col],
                 })
 
-        chart4.set_title({'name': title_chart + ' - cumul. dozer used',
+        chart4.set_title({'name': title_chart + ' - Dozer lead used by day',
                           'name_font': name_font_title,})
         chart4.set_x_axis({'name': 'Day'})
         chart4.set_y_axis({'name': 'km'})
         chart4.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('J18', chart4)
+        ws_charts.insert_chart('J2', chart4)
 
-        # Chart 5: Production
+        # Chart 5: dozer used cumlative
         chart5 = workbook.add_chart({'type': 'line'})
-        for col in [7]:
+        for col in [6]:
             chart5.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
                 'values': ['Prod', 1, col, total_production_days, col],
                 })
 
-        chart5.set_title({'name': title_chart + ' - Production',
+        chart5.set_title({'name': title_chart + ' - Cumul. dozer lead used',
                           'name_font': name_font_title,})
         chart5.set_x_axis({'name': 'Day'})
-        chart5.set_y_axis({'name': 'vp'})
+        chart5.set_y_axis({'name': 'km'})
         chart5.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R2', chart5)
+        ws_charts.insert_chart('J18', chart5)
 
-        # save to excel
+        # Chart 6: Production
+        chart6 = workbook.add_chart({'type': 'line'})
+        for col in [7]:
+            chart6.add_series({
+                'name': ['Prod', 0, col],
+                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'values': ['Prod', 1, col, total_production_days, col],
+                })
+
+        chart6.set_title({'name': title_chart + ' - Production',
+                          'name_font': name_font_title,})
+        chart6.set_x_axis({'name': 'Day'})
+        chart6.set_y_axis({'name': 'vp'})
+        chart6.set_legend({'position': 'bottom'})
+        ws_charts.insert_chart('R2', chart6)
+
+        # ... and save it all to excel
         ws_charts.activate()
         writer.save()
 
