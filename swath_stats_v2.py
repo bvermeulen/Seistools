@@ -90,7 +90,7 @@ class GisCalc:
             self.total_swaths = int(input('Total number of swaths: '))
 
         # TODO remove after debugging
-        self.total_swaths = 20
+        # self.total_swaths = 20
 
     @staticmethod
     def get_envelop_swath_cornerpoint(swath_origin, swath_nr, test_azimuth=-1):
@@ -150,7 +150,10 @@ class GisCalc:
     def plot_gpd(self, shape_gpd, color='black'):
         shape_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color, linewidth=0.5)
 
-    def aggregate_src_stats(self, swath_nr, area, area_sabkha, area_dune, prod_day):
+    @staticmethod
+    def convert_area_to_vps(areas):
+        area, area_sabkha, area_dune = areas['area'], areas['area_sabkha'], areas['area_dune']  #pylint: disable=line-too-long
+
         area_flat = area - area_sabkha - area_dune
         vp_theor = int(area * 1000 / SLS_flat * 1000 / SPS_flat)
         vp_flat = int(area_flat * 1000 / SLS_flat * 1000 / SPS_flat)
@@ -163,7 +166,6 @@ class GisCalc:
                (vp_flat * flat_terrain +
                 vp_sabkha * sabkha_terrain +
                 vp_dune * dunes_terrain) / vp_actual)
-        prod_day += vp_actual / ctm
         vp_dozer_km = vp_dune_src * SPS_sand / 1000
 
         try:
@@ -172,12 +174,7 @@ class GisCalc:
         except ZeroDivisionError:
             vp_density = np.nan
 
-        results = {
-            'swath': swath_nr,
-            'area': area,
-            'area_flat': area_flat,
-            'area_sabkha': area_sabkha,
-            'area_dune': area_dune,
+        return {
             'theor': vp_theor,
             'flat': vp_flat,
             'sabkha': vp_sabkha,
@@ -188,29 +185,42 @@ class GisCalc:
             'dozer_km': vp_dozer_km,
             'density': vp_density,
             'ctm': ctm,
-            'prod_day': prod_day,
         }
-        self.swath_src_stats = self.swath_src_stats.append(results, ignore_index=True)
-        return prod_day
 
-    def aggregate_rcv_stats(self, swath_nr, area, area_dune):
+    def aggregate_src_stats(self, swath_nr, area, area_sabkha, area_dune):
+        area_flat = area - area_sabkha - area_dune
+        areas = {
+            'swath': swath_nr,
+            'area': area,
+            'area_flat': area_flat,
+            'area_sabkha': area_sabkha,
+            'area_dune': area_dune,
+        }
+
+        points = self.convert_area_to_vps(areas)
+        self.swath_src_stats = self.swath_src_stats.append(
+            {**areas, **points}, ignore_index=True)
+
+        return areas
+
+    @staticmethod
+    def convert_area_to_rcv(areas):
+        area, area_dune = areas['area'], areas['area_dune']
+
         area_flat = area - area_dune
         rcv_theor = int(area * 1000 / RLS * 1000 / RPS)
         rcv_flat = int(area_flat * 1000 / RLS * 1000 / RPS)
         rcv_dune = int(area_dune * 1000 / RLS * 1000 / RPS)
         rcv_actual = int(rcv_flat + rcv_dune)
         rcv_dozer_km = rcv_dune * RPS / 1000
+
         try:
             rcv_density = rcv_actual / area
 
         except ZeroDivisionError:
             rcv_density = np.nan
 
-        results = {
-            'swath': swath_nr,
-            'area': area,
-            'area_flat': area_flat,
-            'area_dune': area_dune,
+        return {
             'theor': rcv_theor,
             'flat': rcv_flat,
             'dune': rcv_dune,
@@ -218,7 +228,22 @@ class GisCalc:
             'dozer_km': rcv_dozer_km,
             'density': rcv_density,
         }
-        self.swath_rcv_stats = self.swath_rcv_stats.append(results, ignore_index=True)
+
+    def aggregate_rcv_stats(self, swath_nr, area, area_dune):
+        area_flat = area - area_dune
+        areas = {
+            'swath': swath_nr,
+            'area': area,
+            'area_flat' : area_flat,
+            'area_dune': area_dune,
+        }
+
+        points = self.convert_area_to_rcv(areas)
+
+        self.swath_rcv_stats = self.swath_rcv_stats.append(
+            {**areas, **points}, ignore_index=True)
+
+        return areas
 
     def aggregate_prod_stats(self, prod_day, sw_doz_range, doz_src_km,
                              doz_rcv_km, doz_cum, sw_prod_range, prod):
@@ -254,7 +279,7 @@ class GisCalc:
         }
         self.prod_stats = self.prod_stats.append(results, ignore_index=True)
 
-    def calc_src_stats(self, swath_nr, prod_day):
+    def calc_src_stats(self, swath_nr):
         swath_gpd = self.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr))
         swath_gpd = overlay(self.source_block_gpd, swath_gpd, how='intersection')
@@ -270,10 +295,10 @@ class GisCalc:
         if swath_dune_area > 0:
             self.plot_gpd(swath_dune_gpd, 'yellow')
 
-        prod_day = self.aggregate_src_stats(
-            swath_nr, swath_area, swath_sabkha_area, swath_dune_area, prod_day)
+        areas = self.aggregate_src_stats(
+            swath_nr, swath_area, swath_sabkha_area, swath_dune_area)
 
-        return swath_area, swath_sabkha_area, swath_dune_area, prod_day
+        return areas
 
     def calc_rcv_stats(self, swath_nr):
         swath_gpd = self.create_sw_gpd(
@@ -286,9 +311,9 @@ class GisCalc:
         if swath_dune_area > 0:
             self.plot_gpd(swath_dune_gpd, 'yellow')
 
-        self.aggregate_rcv_stats(swath_nr, swath_area, swath_dune_area)
+        areas = self.aggregate_rcv_stats(swath_nr, swath_area, swath_dune_area)
 
-        return swath_area, swath_dune_area
+        return areas
 
     def swath_range(self, swath_reverse=False):
         ''' calculate ranges depending on swath order is reversed
@@ -305,22 +330,20 @@ class GisCalc:
         self.plot_gpd(self.receiver_block_gpd, color='blue')
         self.plot_gpd(self.source_block_gpd, color='red')
 
-        total_src_area, total_src_sabkha_area, total_src_dune_area, prod_day = 0, 0, 0, 0
+        total_src_area, total_src_sabkha_area, total_src_dune_area = 0, 0, 0
         total_rcv_area, total_rcv_dune_area = 0, 0
 
         for swath_nr in self.swath_range(swath_reverse=swath_reverse):
-            src_area, src_sabkha_area, src_dune_area, prod_day = self.calc_src_stats(
-                swath_nr, prod_day)
-            total_src_area += src_area
-            total_src_sabkha_area += src_sabkha_area
-            total_src_dune_area += src_dune_area
+            areas_src = self.calc_src_stats(swath_nr)
+            total_src_area += areas_src['area']
+            total_src_sabkha_area += areas_src['area_sabkha']
+            total_src_dune_area += areas_src['area_dune']
 
-            rcv_area, rcv_dune_area = self.calc_rcv_stats(swath_nr)
-            total_rcv_area += rcv_area
-            total_rcv_dune_area += rcv_dune_area
+            areas_rcv = self.calc_rcv_stats(swath_nr)
+            total_rcv_area += areas_rcv['area']
+            total_rcv_dune_area += areas_rcv['area_dune']
 
-            self.print_status(
-                swath_nr, src_area, src_sabkha_area, src_dune_area, prod_day)
+            self.print_status(swath_nr, areas_src)
 
         self.print_totals(total_src_area, total_src_sabkha_area, total_src_dune_area,
                           total_rcv_area, total_rcv_dune_area)
@@ -342,6 +365,41 @@ class GisCalc:
             start_swath = swath_1 + self.total_swaths
         else:
             start_swath = swath_1
+
+        prod_day = 1
+        sw_dur_total = 0
+        total_day_prod = 0
+        total_production = 0
+        for swath in self.swath_range(swath_reverse=swath_reverse):
+            result_src = self.swath_src_stats[self.swath_src_stats['swath'] == swath]
+            result_rcv = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == swath]
+
+            # areas = {
+            #     'swath': swath_nr,
+            #     'area': result,
+            #     'area_flat' : area_flat,
+            #     'area_dune': area_dune,
+            # }
+            actual_vp = result_src['actual'].values[0]
+            ctm = result_src['ctm'].values[0]
+
+            sw_duration = actual_vp / ctm
+            sw_dur_total += sw_duration
+
+            if sw_dur_total < 1 and swath != self.total_swaths:
+                total_day_prod += actual_vp
+
+            else:
+                portion_next_day = sw_dur_total - 1
+                portion_today = sw_duration - portion_next_day
+                total_day_prod += portion_today * ctm
+                total_production += total_day_prod
+                print(f'day: {prod_day}, production: {total_day_prod:.0f}, duration: {sw_dur_total}')
+                total_day_prod = portion_next_day * ctm
+                sw_dur_total = portion_next_day
+                prod_day += 1
+
+        print(f'total production is: {total_production:.0f}')
 
         # determine dozer lead required before start of production on day zero
         sw_doz_range = self.prod_range(start_swath, lead_dozer, swath_reverse)
@@ -388,13 +446,13 @@ class GisCalc:
                 (self.swath_src_stats['prod_day'] < prod_day + 1)]['swath'].to_list()
             nbr_swaths = len(sw_prod_range)
 
-    def print_status(
-            self, swath_nr, swath_area, swath_sabkha_area, swath_dune_area, prod_day):
+    @staticmethod
+    def print_status(swath_nr, areas):
         ''' print a status line '''
-        print(f'swath: {swath_nr}, area: {swath_area:.2f}, '
-              f'sabkha area: {swath_sabkha_area:.2f}, '
-              f'dune area: {swath_dune_area:.2f}, '
-              f'production day: {prod_day:.1f}\r', end='')
+        print(f'swath: {swath_nr}, '
+              f'area: {areas["area"]:.2f}, '
+              f'sabkha area: {areas["area_sabkha"]:.2f}, '
+              f'dune area: {areas["area_dune"]:.2f}\r', end='')
 
     def print_totals(self, total_src_area, total_src_sabkha_area, total_src_dune_area,
                      total_rcv_area, total_rcv_dune_area):
@@ -537,7 +595,7 @@ def main():
     gis_calc = GisCalc()
     gis_calc.swaths_stats(swath_reverse=True)
     gis_calc.calc_prod_stats(swath_reverse=True)
-    gis_calc.stats_to_excel('./swath_stats.xlsx')
+    # gis_calc.stats_to_excel('./swath_stats.xlsx')
 
     plt.show()
 
