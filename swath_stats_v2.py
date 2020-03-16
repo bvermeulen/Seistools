@@ -346,7 +346,7 @@ class GisCalc:
             start_swath = swath_1
 
         prod_day = 1
-        sw_dur_total = 0
+        total_day_duration = 0
         total_day_prod = 0
         total_day_areas = np.zeros(4)
         for swath in self.swath_range(swath_reverse=swath_reverse):
@@ -363,26 +363,25 @@ class GisCalc:
             actual_vp = result_src['actual'].values[0]
             ctm = result_src['ctm'].values[0]
             sw_duration = actual_vp / ctm
-            sw_dur_total += sw_duration
+            total_day_duration += sw_duration
 
-            if sw_dur_total < 1:
-                total_day_prod += actual_vp
-                total_day_areas += sw_areas
-
-            else:
+            if total_day_duration > 1:
                 # swath is overflowing to next day
-                portion_next_day = (sw_dur_total - 1) / sw_duration
-                portion_today = 1 - portion_next_day
+                portion_tomorrow = (total_day_duration - 1) / sw_duration
+                portion_today = 1 - portion_tomorrow
                 total_day_prod += portion_today * actual_vp
                 total_day_areas += portion_today * sw_areas
-
                 self.aggregate_prod_stats(prod_day, total_day_areas, total_day_prod)
 
                 # set up for next day
                 prod_day += 1
-                total_day_prod = portion_next_day * actual_vp
-                total_day_areas = portion_next_day * sw_areas
-                sw_dur_total = total_day_prod / ctm
+                total_day_prod = portion_tomorrow * actual_vp
+                total_day_areas = portion_tomorrow * sw_areas
+                total_day_duration = total_day_prod / ctm
+
+            else:
+                total_day_prod += actual_vp
+                total_day_areas += sw_areas
 
         self.aggregate_prod_stats(prod_day, total_day_areas, total_day_prod)
 
