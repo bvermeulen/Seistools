@@ -46,18 +46,18 @@ class GisCalc:
     def __init__(self):
         self.swath_src_stats = pd.DataFrame(columns=[
             'swath', 'area', 'area_flat', 'area_sabkha', 'area_dune', 'theor',
-            'flat', 'sabkha', 'dune_src', 'dune_rcv', 'dune', 'actual', 'dozer_km',
-            'density', 'ctm', 'prod_day'
+            'flat', 'sabkha', 'dune_src', 'dune_rcv', 'dune', 'actual', 'doz_km',
+            'density', 'ctm'
             ])
 
         self.swath_rcv_stats = pd.DataFrame(columns=[
             'swath', 'area', 'area_flat', 'area_dune', 'theor', 'flat',
-            'dune', 'actual', 'dozer_km', 'density'
+            'dune', 'actual', 'doz_km', 'density'
             ])
 
         self.prod_stats = pd.DataFrame(columns=[
-            'prod_day', 'area', 'area_flat', 'area_sabkha', 'area_dune',
-            'vp_prod'
+            'prod_day', 'swath_first', 'swath_last', 'area', 'area_flat', 'area_sabkha',
+            'area_dune', 'doz_km', 'doz_total_km', 'vp_prod'
             ])
 
         self.index = 0
@@ -90,7 +90,7 @@ class GisCalc:
             self.total_swaths = int(input('Total number of swaths: '))
 
         # TODO remove after debugging
-        self.total_swaths = 20
+        # self.total_swaths = 20
 
     @staticmethod
     def get_envelop_swath_cornerpoint(swath_origin, swath_nr, test_azimuth=-1):
@@ -182,7 +182,7 @@ class GisCalc:
             'dune_rcv': vp_dune_rcv,
             'dune': vp_dune,
             'actual': vp_actual,
-            'dozer_km': vp_dozer_km,
+            'doz_km': vp_dozer_km,
             'density': vp_density,
             'ctm': ctm,
         }
@@ -225,7 +225,7 @@ class GisCalc:
             'flat': rcv_flat,
             'dune': rcv_dune,
             'actual': rcv_actual,
-            'dozer_km': rcv_dozer_km,
+            'doz_km': rcv_dozer_km,
             'density': rcv_density,
         }
 
@@ -245,15 +245,27 @@ class GisCalc:
 
         return areas
 
-    def aggregate_prod_stats(self, prod_day, sw_areas, prod):
+    def aggregate_prod_stats(self, prod_day, swaths, sw_areas, doz, doz_total, prod):
         ''' aggregate stats by production day
         '''
+        try:
+            swath_first = swaths[0]
+            swath_last = swaths[-1]
+
+        except IndexError:
+            swath_first = np.nan
+            swath_last = np.nan
+
         results = {
             'prod_day': prod_day,
+            'swath_first': swath_first,
+            'swath_last': swath_last,
             'area': sw_areas[0],
             'area_flat': sw_areas[1],
             'area_sabkha': sw_areas[2],
             'area_dune': sw_areas[3],
+            'doz_km': doz,
+            'doz_total_km': doz_total,
             'vp_prod': prod,
         }
         self.prod_stats = self.prod_stats.append(results, ignore_index=True)
@@ -327,65 +339,88 @@ class GisCalc:
         self.print_totals(total_src_area, total_src_sabkha_area, total_src_dune_area,
                           total_rcv_area, total_rcv_dune_area)
 
-    @staticmethod
-    def prod_range(start_swath, nbr_swaths, swath_reverse=False):
-        if swath_reverse:
-            return [sw for sw in range(start_swath, start_swath - nbr_swaths, -1)]
-
-        return [sw for sw in range(start_swath, start_swath + nbr_swaths)]
-
     def calc_prod_stats(self, swath_reverse=False):
         def sign():
             if swath_reverse:
                 return -1
             return 1
 
+        # determine dozer lead required before start of production on day zero
         if swath_reverse:
             start_swath = swath_1 + self.total_swaths
+            sw_doz_range = [sw for sw in range(start_swath, start_swath - lead_dozer, -1)]
+
         else:
             start_swath = swath_1
+            sw_doz_range = [sw for sw in range(start_swath, start_swath + lead_dozer)]
 
-
+        doz_src_km = self.swath_src_stats[
+            self.swath_src_stats['swath'].isin(sw_doz_range)]['doz_km'].sum()
+        doz_rcv_km = self.swath_rcv_stats[
+            self.swath_rcv_stats['swath'].isin(sw_doz_range)]['doz_km'].sum()
+        doz = doz_src_km + doz_rcv_km
+        doz_total = doz
+        self.aggregate_prod_stats(0, [], np.zeros(4), doz, doz_total, 0)
 
         prod_day = 1
-        total_day_duration = 0
-        total_day_prod = 0
-        total_day_areas = np.zeros(4)
+        day_duration = 0
+        day_prod = 0
+        day_areas = np.zeros(4)
+        day_doz = 0
+        day_swaths = []
+        dozer_swath = sw_doz_range[-1] + sign()
+
         for swath in self.swath_range(swath_reverse=swath_reverse):
             result_src = self.swath_src_stats[self.swath_src_stats['swath'] == swath]
-            result_rcv = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == swath]
-
             sw_areas = np.array([
                 result_src['area'].values[0],
                 result_src['area_flat'].values[0],
                 result_src['area_sabkha'].values[0],
-                result_src['area_dune'].values[0]
+                result_src['area_dune'].values[0],
             ])
-
             actual_vp = result_src['actual'].values[0]
             ctm = result_src['ctm'].values[0]
             sw_duration = actual_vp / ctm
-            total_day_duration += sw_duration
+            day_duration += sw_duration
 
-            if total_day_duration > 1:
+            # get dozer km
+            doz_src_km = self.swath_src_stats[
+                self.swath_src_stats['swath'] == dozer_swath]['doz_km'].sum()
+            doz_rcv_km = self.swath_rcv_stats[
+                self.swath_rcv_stats['swath'] == dozer_swath]['doz_km'].sum()
+            sw_doz = doz_src_km + doz_rcv_km
+
+            if day_duration > 1:
                 # swath is overflowing to next day
-                portion_tomorrow = (total_day_duration - 1) / sw_duration
+                portion_tomorrow = (day_duration - 1) / sw_duration
                 portion_today = 1 - portion_tomorrow
-                total_day_prod += portion_today * actual_vp
-                total_day_areas += portion_today * sw_areas
-                self.aggregate_prod_stats(prod_day, total_day_areas, total_day_prod)
+                day_prod += portion_today * actual_vp
+                day_areas += portion_today * sw_areas
+                day_doz += portion_today * sw_doz
+                doz_total += day_doz
+                day_swaths.append(swath)
+
+                self.aggregate_prod_stats(
+                    prod_day, day_swaths, day_areas, day_doz, doz_total, day_prod)
 
                 # set up for next day
                 prod_day += 1
-                total_day_prod = portion_tomorrow * actual_vp
-                total_day_areas = portion_tomorrow * sw_areas
-                total_day_duration = total_day_prod / ctm
-
+                day_prod = portion_tomorrow * actual_vp
+                day_areas = portion_tomorrow * sw_areas
+                day_doz = portion_tomorrow * sw_doz
+                day_duration = day_prod / ctm
+                day_swaths = [swath]
             else:
-                total_day_prod += actual_vp
-                total_day_areas += sw_areas
+                day_prod += actual_vp
+                day_areas += sw_areas
+                day_doz += sw_doz
+                day_swaths.append(swath)
 
-        self.aggregate_prod_stats(prod_day, total_day_areas, total_day_prod)
+            dozer_swath += sign()
+
+        doz_total += day_doz
+        self.aggregate_prod_stats(
+            prod_day, day_swaths, day_areas, day_doz, doz_total, day_prod)
 
     @staticmethod
     def print_status(swath_nr, areas):
@@ -495,25 +530,25 @@ class GisCalc:
         chart4.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('J2', chart4)
 
-        # # Chart 5: dozer used cumlative
-        # chart5 = workbook.add_chart({'type': 'line'})
-        # for col in [6]:
-        #     chart5.add_series({
-        #         'name': ['Prod', 0, col],
-        #         'categories': ['Prod', 1, 0, total_production_days, 0],
-        #         'values': ['Prod', 1, col, total_production_days, col],
-        #         })
+        # # Chart 5: dozer used cumulative
+        chart5 = workbook.add_chart({'type': 'line'})
+        for col in [6]:
+            chart5.add_series({
+                'name': ['Prod', 0, col],
+                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'values': ['Prod', 1, col, total_production_days, col],
+                })
 
-        # chart5.set_title({'name': title_chart + ' - Cumul. dozer lead used',
-        #                   'name_font': name_font_title,})
-        # chart5.set_x_axis({'name': 'Day'})
-        # chart5.set_y_axis({'name': 'km'})
-        # chart5.set_legend({'position': 'bottom'})
-        # ws_charts.insert_chart('J18', chart5)
+        chart5.set_title({'name': title_chart + ' - Cumul. dozer lead used',
+                          'name_font': name_font_title,})
+        chart5.set_x_axis({'name': 'Day'})
+        chart5.set_y_axis({'name': 'km'})
+        chart5.set_legend({'position': 'bottom'})
+        ws_charts.insert_chart('J18', chart5)
 
         # Chart 6: Production
         chart6 = workbook.add_chart({'type': 'line'})
-        for col in [5]:
+        for col in [7]:
             chart6.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
