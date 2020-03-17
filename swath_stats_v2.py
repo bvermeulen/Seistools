@@ -90,7 +90,7 @@ class GisCalc:
             self.total_swaths = int(input('Total number of swaths: '))
 
         # TODO remove after debugging
-        # self.total_swaths = 20
+        self.total_swaths = 20
 
     @staticmethod
     def get_envelop_swath_cornerpoint(swath_origin, swath_nr, test_azimuth=-1):
@@ -344,6 +344,8 @@ class GisCalc:
             start_swath = swath_1 + self.total_swaths
         else:
             start_swath = swath_1
+
+
 
         prod_day = 1
         total_day_duration = 0

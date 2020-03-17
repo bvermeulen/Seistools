@@ -1,9 +1,9 @@
 ''' tests '''
 import numpy as np
 import pytest
-import swath_stats
+import swath_stats_v2
 
-gis_calc = swath_stats.GisCalc()
+gis_calc = swath_stats_v2.GisCalc()
 
 #pylint: disable=line-too-long
 
@@ -101,7 +101,7 @@ def test_add_swath_5_300degrees():
     assert d[1] == pytest.approx(20 + 5*width_dy + length_dy)
 
 def test_aggregate_src_stats():
-    gis_calc.aggregate_src_stats(5, 10, 1, 2, 15)
+    gis_calc.aggregate_src_stats(5, 10, 1, 2)
     result = gis_calc.swath_src_stats.loc[0].to_list()
     # params
     SLS_flat = 25
@@ -129,7 +129,7 @@ def test_aggregate_src_stats():
     ctm = 3600 / (9 + 18) * 22 * (
         result[6] *.85 + result[7] * 0.60 + result[10] * 0.6) / result[11] * 12
     assert result[14] == pytest.approx(ctm)
-    assert result[15] == pytest.approx(15 + result[11] / ctm)
+
 
 def test_aggregate_rcv_stats():
     gis_calc.aggregate_rcv_stats(5, 10, 3)
