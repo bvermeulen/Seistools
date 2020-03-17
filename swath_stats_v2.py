@@ -391,7 +391,7 @@ class GisCalc:
             sw_doz = doz_src_km + doz_rcv_km
 
             if day_duration > 1:
-                # swath is overflowing to next day
+                # swath is overflowing to next day, assume swath can only overflow 1 day!
                 portion_tomorrow = (day_duration - 1) / sw_duration
                 portion_today = 1 - portion_tomorrow
                 day_prod += portion_today * actual_vp
@@ -410,6 +410,7 @@ class GisCalc:
                 day_doz = portion_tomorrow * sw_doz
                 day_duration = day_prod / ctm
                 day_swaths = [swath]
+
             else:
                 day_prod += actual_vp
                 day_areas += sw_areas
@@ -516,7 +517,7 @@ class GisCalc:
 
         # Chart 4: dozer used by production day
         chart4 = workbook.add_chart({'type': 'line'})
-        for col in [5]:
+        for col in [7]:
             chart4.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
@@ -532,7 +533,7 @@ class GisCalc:
 
         # # Chart 5: dozer used cumulative
         chart5 = workbook.add_chart({'type': 'line'})
-        for col in [6]:
+        for col in [8]:
             chart5.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
@@ -548,7 +549,7 @@ class GisCalc:
 
         # Chart 6: Production
         chart6 = workbook.add_chart({'type': 'line'})
-        for col in [7]:
+        for col in [9]:
             chart6.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
