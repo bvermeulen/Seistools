@@ -3,13 +3,9 @@
 from enum import IntEnum
 from recordtype import recordtype
 
-# DATA_FILES_VAPS = "D:\\Work\\PDO\\vp_data\\VAPS_Lekhwair\\"
-# DATA_FILES_VP = "D:\\Work\\PDO\\vp_data\\VP_Lekhwair\\"
-# DATABASE = 'Lekhwair'
-# INCLUDE_VAPS = False
-DATA_FILES_VAPS = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VAPS files\\"
-DATA_FILES_VP = "D:\\OneDrive\\Work\\PDO\\vp_data\\1 VP Report\\"
-DATABASE = 'vp_database'
+DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS\\'
+DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
+DATABASE = 'Lekhwair'
 INCLUDE_VAPS = True
 
 FLEETS = 30
@@ -109,7 +105,7 @@ plt_settings = {
         'title_density': 'Peak Phase Density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 10,
+        'max': 30,
         'interval': 0.5,
         },
 
@@ -139,7 +135,7 @@ plt_settings = {
         'title_density': 'Average Phase Density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 10,
+        'max': 20,
         'interval': 0.5,
         },
 
@@ -149,7 +145,7 @@ plt_settings = {
         'title_density': 'Average Distortion Density',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 50,
+        'max': 80,
         'interval': 1,
         },
 

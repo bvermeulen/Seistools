@@ -5,24 +5,25 @@ from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
+from recordtype import recordtype
 ''' extract statistis based on GIS geometries
+    version for Haima Central Shell block only
 '''
 # project parameters
 RLS = 200
 RPS = 25
 SLS_sand = 400
-SPS_sand = 12.5
-SLS_flat = 25    # 25 m Block C, 50 m Block D
+SPS_sand = 25
+SLS_flat = 50
 SPS_flat = 25
 project_azimuth = np.pi * 0
+repeat_factor = 2
 swath_length = 50_000  # length > length of block
-swath_1 = 100
-active_lines = 46
-# calculate dozer lead for half the spread only, so excluding buffer
-lead_dozer = int(active_lines / 2)
-lead_dozer = int(active_lines / 2 + 5000 / RLS)
-repeat_factor = 1
-
+swath_1 = 210
+active_lines = 23
+# calculate dozer and receiver lead for half the spread
+lead_receiver = int(active_lines * repeat_factor / 2)
+lead_dozer = lead_receiver + int(5000 / RLS)
 
 # parameter CTM
 flat_terrain = 0.85
@@ -32,7 +33,7 @@ dunes_terrain = 0.60
 sabkha_terrain = 0.60
 sweep_time = 9
 move_up_time = 18
-number_vibes = 12
+number_vibes = 6
 hours_day = 22
 ctm_constant = 3600 / (sweep_time + move_up_time) * hours_day * number_vibes
 
@@ -41,7 +42,10 @@ EPSG_PSD93_UTM40 = 3440
 project_base_folder = Path('D:/OneDrive/Work/PDO/Haima Central/QGIS - mapping/')
 
 #output parameters
-title_chart = 'Block C'
+title_chart = 'Haima North Block C'
+
+Production = recordtype('Production', 'doz, doz_total, prod, '
+                        'layout_flat, layout_dune, pickup_flat, pickup_dune')
 
 
 class GisCalc:
@@ -60,7 +64,8 @@ class GisCalc:
 
         self.prod_stats = pd.DataFrame(columns=[
             'prod_day', 'swath_first', 'swath_last', 'area', 'area_flat', 'area_sabkha',
-            'area_dune', 'doz_km', 'doz_total_km', 'vp_prod'
+            'area_dune', 'doz_km', 'doz_total_km', 'vp_prod',
+            'layout_flat', 'layout_dune', 'layout', 'pickup_flat', 'pickup_dune', 'pickup'
             ])
 
         self.index = 0
@@ -68,15 +73,17 @@ class GisCalc:
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
 
         file_name = (project_base_folder /
-                     'shape_files/blocks/20HN_Block_C_Sources_CO_6KM.shp')
+                     'shape_files/blocks/Whole_Shell_Option_4_Source.shp')
         self.source_block_gpd = self.read_shapefile(file_name)
 
         file_name = (project_base_folder /
-                     'shape_files/blocks/20HN_Block_C_Receivers_CO_6KM.shp')
+                     'shape_files/blocks/Whole_Shell_Option_4_Rec.shp')
         self.receiver_block_gpd = self.read_shapefile(file_name)
 
         file_name = (project_base_folder /
-                     'shape_files/BLOCK C SAND DUNE BOUNDARY.shp')
+                     'shape_files/dunes/Whole_Shell_Option_4_Source_SD.shp')
+        # file_name = (project_base_folder /
+        #              'shape_files/dunes/Shell - Dunes (BGP).shp')
         self.dunes_gpd = self.read_shapefile(file_name)
 
         file_name = (project_base_folder /
@@ -165,17 +172,18 @@ class GisCalc:
         vp_dune_rcv = int(area_dune * 1000 / RLS * 1000 / SPS_sand)
         vp_dune = int(vp_dune_src)
         vp_actual = int(vp_flat + vp_sabkha + vp_dune)
-        ctm = (ctm_constant *
-               (vp_flat * flat_terrain +
-                vp_sabkha * sabkha_terrain +
-                vp_dune * dunes_terrain) / vp_actual)
         vp_dozer_km = vp_dune_src * SPS_sand / 1000
 
         try:
             vp_density = vp_actual / area
+            ctm = (ctm_constant *
+                   (vp_flat * flat_terrain +
+                    vp_sabkha * sabkha_terrain +
+                    vp_dune * dunes_terrain) / vp_actual)
 
         except ZeroDivisionError:
             vp_density = np.nan
+            ctm = np.nan
 
         return {
             'theor': vp_theor,
@@ -199,8 +207,8 @@ class GisCalc:
             'area_sabkha': area_sabkha,
             'area_dune': area_dune,
         }
-
         points = self.convert_area_to_vps(areas)
+
         self.swath_src_stats = self.swath_src_stats.append(
             {**areas, **points}, ignore_index=True)
 
@@ -247,31 +255,6 @@ class GisCalc:
             {**areas, **points}, ignore_index=True)
 
         return areas
-
-    def aggregate_prod_stats(self, prod_day, swaths, sw_areas, doz, doz_total, prod):
-        ''' aggregate stats by production day
-        '''
-        try:
-            swath_first = swaths[0]
-            swath_last = swaths[-1]
-
-        except IndexError:
-            swath_first = np.nan
-            swath_last = np.nan
-
-        results = {
-            'prod_day': prod_day,
-            'swath_first': swath_first,
-            'swath_last': swath_last,
-            'area': sw_areas[0],
-            'area_flat': sw_areas[1],
-            'area_sabkha': sw_areas[2],
-            'area_dune': sw_areas[3],
-            'doz_km': doz,
-            'doz_total_km': doz_total,
-            'vp_prod': prod,
-        }
-        self.prod_stats = self.prod_stats.append(results, ignore_index=True)
 
     def calc_src_stats(self, swath_nr):
         swath_gpd = self.create_sw_gpd(
@@ -329,6 +312,7 @@ class GisCalc:
 
         for swath_nr in self.swath_range(swath_reverse=swath_reverse):
             areas_src = self.calc_src_stats(swath_nr)
+
             total_src_area += areas_src['area']
             total_src_sabkha_area += areas_src['area_sabkha']
             total_src_dune_area += areas_src['area_dune']
@@ -342,49 +326,113 @@ class GisCalc:
         self.print_totals(total_src_area, total_src_sabkha_area, total_src_dune_area,
                           total_rcv_area, total_rcv_dune_area)
 
+    def aggregate_prod_stats(self, prod_day, swaths, sw_areas, prod):
+        ''' aggregate stats by production day
+        '''
+        try:
+            swath_first = swaths[0]
+            swath_last = swaths[-1]
+
+        except IndexError:
+            swath_first = np.nan
+            swath_last = np.nan
+
+        results = {
+            'prod_day': prod_day,
+            'swath_first': swath_first,
+            'swath_last': swath_last,
+            'area': sw_areas[0],
+            'area_flat': sw_areas[1],
+            'area_sabkha': sw_areas[2],
+            'area_dune': sw_areas[3],
+            'doz_km': prod.doz,
+            'doz_total_km': prod.doz_total,
+            'vp_prod': prod.prod,
+            'layout_flat': prod.layout_flat,
+            'layout_dune': prod.layout_dune,
+            'layout': prod.layout_flat + prod.layout_dune,
+            'pickup_flat': prod.pickup_flat,
+            'pickup_dune': prod.pickup_dune,
+            'pickup': prod.pickup_flat + prod.pickup_dune,
+        }
+        self.prod_stats = self.prod_stats.append(results, ignore_index=True)
+
     def calc_prod_stats(self, swath_reverse=False):
+        production = Production(*[0]*7)
+
         def sign():
             if swath_reverse:
                 return -1
             return 1
 
-        # determine dozer lead required before start of production on day zero
+        # determine dozer and receiver lead required before start of production
+        # on day zero
         if swath_reverse:
             start_swath = swath_1 + self.total_swaths
-            sw_doz_range = [sw for sw in range(start_swath, start_swath - lead_dozer, -1)]
+            sw_doz_range = [sw for sw in range(
+                start_swath, start_swath - lead_dozer, -1)]
+            sw_rcv_range = [sw for sw in range(
+                start_swath, start_swath - lead_receiver, -1)]
 
         else:
             start_swath = swath_1
-            sw_doz_range = [sw for sw in range(start_swath, start_swath + lead_dozer)]
+            sw_doz_range = [sw for sw in range(
+                start_swath, start_swath + lead_dozer)]
+            sw_rcv_range = [sw for sw in range(
+                start_swath, start_swath + lead_receiver)]
 
         doz_src_km = self.swath_src_stats[
             self.swath_src_stats['swath'].isin(sw_doz_range)]['doz_km'].sum()
         doz_rcv_km = self.swath_rcv_stats[
             self.swath_rcv_stats['swath'].isin(sw_doz_range)]['doz_km'].sum()
-        doz = doz_src_km + doz_rcv_km
-        doz_total = doz
-        self.aggregate_prod_stats(0, [], np.zeros(4), doz, doz_total, 0)
+        production.doz = doz_src_km + doz_rcv_km
+        production.doz_total = production.doz
+
+        production.layout_flat = self.swath_rcv_stats[
+            self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['flat'].sum()
+        production.layout_dune = self.swath_rcv_stats[
+            self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['dune'].sum()
+
+        self.aggregate_prod_stats(0, [], np.zeros(4), production)
 
         prod_day = 1
         day_duration = 0
-        day_prod = 0
         day_areas = np.zeros(4)
-        day_doz = 0
+        production = Production(prod=0, doz=0, doz_total=production.doz_total,
+                                layout_flat=0, layout_dune=0,
+                                pickup_flat=0, pickup_dune=0)
         day_swaths = []
         dozer_swath = sw_doz_range[-1] + sign()
+        rcv_swath_front = sw_rcv_range[-1] + sign()
+        rcv_swath_back = sw_rcv_range[-1] - sign() * active_lines
 
         for swath in self.swath_range(swath_reverse=swath_reverse):
             result_src = self.swath_src_stats[self.swath_src_stats['swath'] == swath]
             sw_areas = np.array([
-                result_src['area'].values[0],
-                result_src['area_flat'].values[0],
-                result_src['area_sabkha'].values[0],
-                result_src['area_dune'].values[0],
+                result_src['area'].sum(),
+                result_src['area_flat'].sum(),
+                result_src['area_sabkha'].sum(),
+                result_src['area_dune'].sum(),
             ])
-            actual_vp = result_src['actual'].values[0]
-            ctm = result_src['ctm'].values[0]
-            sw_duration = actual_vp / ctm
+            actual_vp = result_src['actual'].values[0] * repeat_factor
+            ctm = result_src['ctm'].values[0] * repeat_factor
+
+            if not np.isnan(ctm):
+                sw_duration = actual_vp / ctm
+            else:
+                sw_duration = 0
+
             day_duration += sw_duration
+
+            # get receiver production
+            layout = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_front]  #pylint: disable=line-too-long
+            pickup = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_back]
+            layout_pickup = np.array([
+                layout['flat'].sum(),
+                layout['dune'].sum(),
+                pickup['flat'].sum(),
+                pickup['dune'].sum(),
+            ])
 
             # get dozer km
             doz_src_km = self.swath_src_stats[
@@ -397,34 +445,52 @@ class GisCalc:
                 # swath is overflowing to next day, assume swath can only overflow 1 day!
                 portion_tomorrow = (day_duration - 1) / sw_duration
                 portion_today = 1 - portion_tomorrow
-                day_prod += portion_today * actual_vp
                 day_areas += portion_today * sw_areas
-                day_doz += portion_today * sw_doz
-                doz_total += day_doz
+                production.prod += portion_today * actual_vp
+                production.doz += portion_today * sw_doz
+                production.layout_flat += portion_today * layout_pickup[0]
+                production.layout_dune += portion_today * layout_pickup[1]
+                production.pickup_flat += portion_today * layout_pickup[2]
+                production.pickup_dune += portion_today * layout_pickup[3]
+
                 day_swaths.append(swath)
 
-                self.aggregate_prod_stats(
-                    prod_day, day_swaths, day_areas, day_doz, doz_total, day_prod)
+                production.doz_total += production.doz
+                self.aggregate_prod_stats(prod_day, day_swaths, day_areas, production)
 
                 # set up for next day
                 prod_day += 1
-                day_prod = portion_tomorrow * actual_vp
                 day_areas = portion_tomorrow * sw_areas
-                day_doz = portion_tomorrow * sw_doz
-                day_duration = day_prod / ctm
+                production.prod = portion_tomorrow * actual_vp
+                production.doz = portion_tomorrow * sw_doz
+                production.layout_flat = portion_tomorrow * layout_pickup[0]
+                production.layout_dune = portion_tomorrow * layout_pickup[1]
+                production.pickup_flat = portion_tomorrow * layout_pickup[2]
+                production.pickup_dune = portion_tomorrow * layout_pickup[3]
+
+                day_duration = production.prod / ctm
                 day_swaths = [swath]
 
             else:
-                day_prod += actual_vp
                 day_areas += sw_areas
-                day_doz += sw_doz
+                production.prod += actual_vp
+                production.doz += sw_doz
+                production.layout_flat += layout_pickup[0]
+                production.layout_dune += layout_pickup[1]
+                production.pickup_flat += layout_pickup[2]
+                production.pickup_dune += layout_pickup[3]
+
                 day_swaths.append(swath)
 
             dozer_swath += sign()
+            rcv_swath_front += sign()
+            rcv_swath_back += sign()
 
-        doz_total += day_doz
-        self.aggregate_prod_stats(
-            prod_day, day_swaths, day_areas, day_doz, doz_total, day_prod)
+        production.doz_total += production.doz
+        self.aggregate_prod_stats(prod_day, day_swaths, day_areas, production)
+
+        # TODO add final pickup
+
 
     @staticmethod
     def print_status(swath_nr, areas):
@@ -566,6 +632,38 @@ class GisCalc:
         chart6.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('R2', chart6)
 
+        # Chart 7: Layout
+        chart7 = workbook.add_chart({'type': 'line'})
+        for col in [10, 11, 12]:
+            chart7.add_series({
+                'name': ['Prod', 0, col],
+                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'values': ['Prod', 1, col, total_production_days, col],
+                })
+
+        chart7.set_title({'name': title_chart + ' - Layout',
+                          'name_font': name_font_title,})
+        chart7.set_x_axis({'name': 'Day'})
+        chart7.set_y_axis({'name': 'Stations'})
+        chart7.set_legend({'position': 'bottom'})
+        ws_charts.insert_chart('R18', chart7)
+
+        # Chart 8: Pickup
+        chart8 = workbook.add_chart({'type': 'line'})
+        for col in [13, 14, 15]:
+            chart8.add_series({
+                'name': ['Prod', 0, col],
+                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'values': ['Prod', 1, col, total_production_days, col],
+                })
+
+        chart8.set_title({'name': title_chart + ' - Pickup',
+                          'name_font': name_font_title,})
+        chart8.set_x_axis({'name': 'Day'})
+        chart8.set_y_axis({'name': 'vp'})
+        chart8.set_legend({'position': 'bottom'})
+        ws_charts.insert_chart('R34', chart8)
+
         # ... and save it all to excel
         ws_charts.activate()
         writer.save()
@@ -575,7 +673,7 @@ def main():
     gis_calc = GisCalc()
     gis_calc.swaths_stats(swath_reverse=True)
     gis_calc.calc_prod_stats(swath_reverse=True)
-    gis_calc.stats_to_excel('./swath_stats.xlsx')
+    gis_calc.stats_to_excel('./swath_stats_shell_test.xlsx')
 
     plt.show()
 
