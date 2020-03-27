@@ -6,7 +6,7 @@ import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
 from recordtype import recordtype
-import swath_settings as settings
+import swath_settings_lekhwair as settings
 ''' extract statistis based on GIS geometries
 '''
 # project parameters

@@ -12,8 +12,8 @@ SPS_flat = 25
 project_azimuth = 0
 repeat_factor = 1
 swath_length = 50_000  # length > length of block
-swath_1 = 210
-active_lines = 23
+swath_1 = 100
+active_lines = 46
 
 # parameter CTM
 sweep_time = 9
