@@ -101,7 +101,7 @@ def test_add_swath_5_300degrees():
     assert d[1] == pytest.approx(20 + 5*width_dy + length_dy)
 
 def test_aggregate_src_stats():
-    gis_calc.aggregate_src_stats(5, 10, 1, 2, 15)
+    gis_calc.aggregate_src_stats(5, 10, 1, 2)
     result = gis_calc.swath_src_stats.loc[0].to_list()
     # params
     SLS_flat = 25
@@ -129,7 +129,7 @@ def test_aggregate_src_stats():
     ctm = 3600 / (9 + 18) * 22 * (
         result[6] *.85 + result[7] * 0.60 + result[10] * 0.6) / result[11] * 12
     assert result[14] == pytest.approx(ctm)
-    assert result[15] == pytest.approx(15 + result[11] / ctm)
+
 
 def test_aggregate_rcv_stats():
     gis_calc.aggregate_rcv_stats(5, 10, 3)
@@ -153,17 +153,17 @@ def test_aggregate_rcv_stats():
 def test_swath_range_ascending_default():
     gis_calc.total_swaths = 2
     result_range = str(gis_calc.swath_range(False))
-    assert result_range == 'range(100, 102)'
+    assert result_range == 'range(210, 212)'
 
 def test_swath_range_ascending_with_kwarg():
     gis_calc.total_swaths = 2
     result_range = str(gis_calc.swath_range(swath_reverse=False))
-    assert result_range == 'range(100, 102)'
+    assert result_range == 'range(210, 212)'
 
 def test_swath_range_descending():
     gis_calc.total_swaths = 2
     result_range = str(gis_calc.swath_range(swath_reverse=True))
-    assert result_range == 'range(101, 99, -1)'
+    assert result_range == 'range(211, 209, -1)'
 
 
 if __name__ == '__main__':
