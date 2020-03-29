@@ -6,7 +6,7 @@ import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
 from recordtype import recordtype
-import swath_settings_lekhwair as settings
+import swath_settings as settings
 # import swath_settings as settings
 ''' extract statistis based on GIS geometries
 '''
@@ -53,8 +53,8 @@ class GisCalc:
             ])
 
         self.swath_rcv_stats = pd.DataFrame(columns=[
-            'swath', 'area', 'area_flat', 'area_dunes', 'theor', 'flat', 'dunes', 'actual',
-            'doz_km', 'density'
+            'swath', 'area', 'area_flat', 'area_dunes', 'theor', 'flat', 'dunes',
+            'actual', 'doz_km', 'density'
             ])
 
         self.prod_stats = pd.DataFrame(columns=[
@@ -87,7 +87,7 @@ class GisCalc:
                 pass
 
         else:
-            self.facilties_gpd = None
+            self.facilities_gpd = None
 
 
         if settings.shapefile_dune:
@@ -147,7 +147,7 @@ class GisCalc:
             self.total_swaths = int(input('Total number of swaths: '))
 
         # TODO remove after debugging
-        self.total_swaths = 20
+        # self.total_swaths = 20
 
     @staticmethod
     def get_envelop_swath_cornerpoint(swath_origin, swath_nr, test_azimuth=-1):
@@ -465,6 +465,7 @@ class GisCalc:
         prod_day = 1
         day_duration = 0
         day_swaths = []
+        production = self.init_production(production, np.zeros(6), np.zeros(4), 0)
         dozer_swath = sw_doz_range[-1] + sign()
         rcv_swath_front = sw_rcv_range[-1] + sign()
         rcv_swath_back = sw_rcv_range[-1] - sign() * active_lines
@@ -485,10 +486,10 @@ class GisCalc:
             vp_prod = vp_prod * repeat_factor
             ctm = result_src['ctm'].sum() * repeat_factor
 
-            if not np.isnan(ctm):
-                sw_duration = vp_prod[5] / ctm
-            else:
+            if ctm == 0:
                 sw_duration = 0
+            else:
+                sw_duration = vp_prod[5] / ctm
 
             day_duration += sw_duration
 
@@ -525,14 +526,15 @@ class GisCalc:
                 # set up for next day
                 prod_day += 1
                 production = self.init_production(
-                    production, vp_prod * portion_tomorrow, layout_pickup * portion_tomorrow,
-                    sw_doz * portion_tomorrow)
+                    production, vp_prod * portion_tomorrow,
+                    layout_pickup * portion_tomorrow, sw_doz * portion_tomorrow)
 
                 day_duration = production.prod / ctm
                 day_swaths = [swath]
 
             else:
-                production = self.sum_production(production, vp_prod, layout_pickup, sw_doz) # rfwe;l r;w eker wer ;rk w;lker ;e;rk wr
+                production = self.sum_production(
+                    production, vp_prod, layout_pickup, sw_doz)
 
                 day_swaths.append(swath)
 
@@ -598,7 +600,7 @@ class GisCalc:
         # Chart 1: VP by type
         # format ['sheet', first_row, first_column, last_row, last_column]
         chart1 = workbook.add_chart({'type': 'line'})
-        for col in [7, 8, 9, 10, 13, 14]:
+        for col in [7, 8, 9, 10, 13, 14, 15]:
             chart1.add_series({
                 'name': ['Source', 0, col],
                 'categories': ['Source', 1, 0, total_swaths, 0],

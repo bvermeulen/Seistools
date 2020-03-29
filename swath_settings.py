@@ -34,6 +34,10 @@ shapefile_rcv = (
 # shapefile_dune = (
 #     project_base_folder / 'shape_files/dunes/Whole_Shell_Option_4_Source_SD.shp')
 
+shapefile_rough = ''
+
+shapefile_facilities = ''
+
 shapefile_dune = (
     project_base_folder / 'shape_files/dunes/Shell - Dunes (BGP).shp')
 
