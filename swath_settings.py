@@ -14,6 +14,7 @@ repeat_factor = 2
 swath_length = 50_000  # length > length of block
 swath_1 = 210
 active_lines = 23
+swath_reverse = True
 
 # parameter CTM
 sweep_time = 9
@@ -30,15 +31,14 @@ shapefile_src = (
 shapefile_rcv = (
     project_base_folder / 'shape_files/blocks/Whole_Shell_Option_4_Rec.shp')
 
-shapefile_dune = (
-    project_base_folder / 'shape_files/dunes/Whole_Shell_Option_4_Source_SD.shp')
-
 # shapefile_dune = (
-#     project_base_folder / 'shape_files/dunes/Shell - Dunes (BGP).shp')
+#     project_base_folder / 'shape_files/dunes/Whole_Shell_Option_4_Source_SD.shp')
+
+shapefile_dune = (
+    project_base_folder / 'shape_files/dunes/Shell - Dunes (BGP).shp')
 
 shapefile_sabkha = (
     project_base_folder / 'shape_files/Sabkha.shp')
-
 
 # excel and chart parameters
 excel_file = './swath_stats_shell_test.xlsx'
