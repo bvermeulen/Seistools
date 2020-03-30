@@ -6,7 +6,7 @@ from recordtype import recordtype
 DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATABASE = 'Lekhwair'
-INCLUDE_VAPS = True
+INCLUDE_VAPS = False
 
 FLEETS = 30
 MARKERSIZE = 0.2
@@ -21,6 +21,7 @@ MAP_FILE = r'BackgroundMap/3D_31256.jpg'
 EPSG_UTM_40N = 32640
 EPSG_WGS84 = 4326
 EPSG_OSM = 3857
+EPSG_PSD93 = 3440
 
 lines = [
     1001, 1010, 1008, 1028, 1007, 1006, 1004, 1002, 1003, 1009,

@@ -1,12 +1,18 @@
 ''' module for vp database interaction
 '''
+#    postgis:
+#    ALTER TABLE public.vaps_records ADD COLUMN geom geometry(Point, 3440);
+#    UPDATE public.vaps_records SET geom =
+#        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
 from functools import wraps
 import pandas as pd
 from sqlalchemy import create_engine
+from shapely.geometry import Point
 import psycopg2
 from decouple import config
 import vp_utils
-from vp_settings import DATABASE, FilesVpTable, VpTable, FilesVapsTable, VapsTable
+from vp_settings import (DATABASE, EPSG_PSD93, FilesVpTable, VpTable,
+                         FilesVapsTable, VapsTable)
 
 
 class DbUtils:
@@ -176,6 +182,10 @@ class VpDb:
         )
 
         cursor.execute(sql_string)
+
+        cursor.execute(
+            f'ALTER TABLE {cls.table_vp} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
+
         print(f'create table {cls.table_vp}')
 
     @classmethod
@@ -325,32 +335,22 @@ class VpDb:
     @classmethod
     @DbUtils.connect
     def update_vp(cls, vp_records, *args, include_vaps=False):
-
         cursor = DbUtils().get_cursor(args)
+
+        progress_message = vp_utils.progress_message_generator(
+            f'populate database for table: {cls.table_vp}                             ')
 
         sql_vp_record = (
             f'INSERT INTO {cls.table_vp} ('
             f'file_id, vaps_id, line, station, vibrator, time_break, '
             f'planned_easting, planned_northing, easting, northing, elevation, _offset, '
             f'peak_force, avg_force, peak_dist, avg_dist, peak_phase, avg_phase, '
-            f'qc_flag) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
-            f'%s, %s, %s, %s, %s, %s, %s, %s, %s);'
+            f'qc_flag, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+            f'%s, %s, %s, %s, %s, %s, %s, %s, %s,  ST_SetSRID(%s::geometry, %s));'
         )
-
-        sql_string = (
-            f'SELECT file_name FROM {cls.table_vp_files} WHERE '
-            f'id={vp_records[0].file_id};'
-        )
-        cursor.execute(sql_string)
-        try:
-            file_name = cursor.fetchone()[0]
-        except TypeError:
-            file_name = ''
-
-        progress_message = vp_utils.progress_message_generator(
-            f'update database vp records for file: {file_name}   ')
 
         for vp_record in vp_records:
+            point = Point(vp_record.easting, vp_record.northing)
 
             if include_vaps:
                 vp_record = cls.get_vaps_id(vp_record)
@@ -375,6 +375,7 @@ class VpDb:
                 vp_record.peak_phase,
                 vp_record.avg_phase,
                 vp_record.qc_flag,
+                point.wkb_hex, EPSG_PSD93
                 ))
 
             next(progress_message)
@@ -419,16 +420,86 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def link_vaps_to_vp_table(cls, *args):
+    def update_vaps(cls, vaps_records, *args):
         cursor = DbUtils().get_cursor(args)
-        vp_record = VpTable(*[None]*20)
-        # TODO
-        # get all vp_records ids, tb, vibrator where vaps_id = Null
-        # loop over vp_records
-        #   vp_record.id = id; vp_record_tb = tb; vp_record_vibrator = vibrator
-        #   vaps_id = cls.get_vaps_id(vp_record)
-        #   update vp_record id with vaps_id
-        #
+
+        progress_message = vp_utils.progress_message_generator(
+            f'populate database for table: {cls.table_vaps}                             ')
+
+        sql_string = (
+            f'INSERT INTO {cls.table_vaps} ('
+            f'file_id, line, point, fleet_nr, vibrator, drive, '
+            f'avg_phase, peak_phase, avg_dist, peak_dist, avg_force, peak_force, '
+            f'avg_stiffness, avg_viscosity, easting, northing, elevation, '
+            f'time_break, hdop, tb_date, positioning, geom) '
+            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+            f'%s, %s, %s, %s, %s, %s, ST_SetSRID(%s::geometry, %s));'
+        )
+
+        for vaps_record in vaps_records:
+            point = Point(vaps_record.easting, vaps_record.northing)
+
+            cursor.execute(sql_string, (
+                vaps_record.file_id,
+                vaps_record.line,
+                vaps_record.point,
+                vaps_record.fleet_nr,
+                vaps_record.vibrator,
+                vaps_record.drive,
+                vaps_record.avg_phase,
+                vaps_record.peak_phase,
+                vaps_record.avg_dist,
+                vaps_record.peak_dist,
+                vaps_record.avg_force,
+                vaps_record.peak_force,
+                vaps_record.avg_stiffness,
+                vaps_record.avg_viscosity,
+                vaps_record.easting,
+                vaps_record.northing,
+                vaps_record.elevation,
+                vaps_record.time_break,
+                vaps_record.hdop,
+                vaps_record.tb_date,
+                vaps_record.positioning,
+                point.wkb_hex, EPSG_PSD93
+                ))
+
+            next(progress_message)
+
+    @classmethod
+    def get_vp_data_by_time(cls, start_time, end_time):
+        ''' retrieve vp data by time interval
+            arguments:
+              start_time: datetime object
+              end_time: datetime object
+            returns:
+              pandas dataframe with all database attributes
+        '''
+        assert end_time >= start_time, "end time must be greater equal than start time"
+        engine = DbUtils().get_engine()
+        sql_string = (
+            f'SELECT '
+                f'{cls.table_vp}.line, '  #pylint: disable=bad-continuation
+                f'{cls.table_vp}.station, '
+                f'{cls.table_vp}.easting, '
+                f'{cls.table_vp}.northing, '
+                f'{cls.table_vp}.elevation, '
+                f'{cls.table_vp}.time_break, '
+                f'{cls.table_vaps}.avg_phase, '
+                f'{cls.table_vaps}.peak_phase, '
+                f'{cls.table_vaps}.avg_dist, '
+                f'{cls.table_vaps}.peak_dist, '
+                f'{cls.table_vaps}.avg_force, '
+                f'{cls.table_vaps}.peak_force, '
+                f'{cls.table_vaps}.avg_stiffness, '
+                f'{cls.table_vaps}.avg_viscosity '
+            f'FROM {cls.table_vp}, {cls.table_vaps} '
+            f'WHERE '
+                f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
+                f'{cls.table_vp}.time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
+            f'ORDER BY {cls.table_vp}.time_break;'
+        )
+        return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
     def get_vaps_data_by_date(cls, production_date):
@@ -488,79 +559,3 @@ class VpDb:
             f'ORDER BY {cls.table_vp}.station;'
         )
         return pd.read_sql_query(sql_string, con=engine)
-
-    @classmethod
-    def get_vp_data_by_time(cls, start_time, end_time):
-        ''' retrieve vp data by time interval
-            arguments:
-              start_time: datetime object
-              end_time: datetime object
-            returns:
-              pandas dataframe with all database attributes
-        '''
-        assert end_time >= start_time, "end time must be greater equal than start time"
-        engine = DbUtils().get_engine()
-        sql_string = (
-            f'SELECT '
-                f'{cls.table_vp}.line, '  #pylint: disable=bad-continuation
-                f'{cls.table_vp}.station, '
-                f'{cls.table_vp}.easting, '
-                f'{cls.table_vp}.northing, '
-                f'{cls.table_vp}.elevation, '
-                f'{cls.table_vp}.time_break, '
-                f'{cls.table_vaps}.avg_phase, '
-                f'{cls.table_vaps}.peak_phase, '
-                f'{cls.table_vaps}.avg_dist, '
-                f'{cls.table_vaps}.peak_dist, '
-                f'{cls.table_vaps}.avg_force, '
-                f'{cls.table_vaps}.peak_force, '
-                f'{cls.table_vaps}.avg_stiffness, '
-                f'{cls.table_vaps}.avg_viscosity '
-            f'FROM {cls.table_vp}, {cls.table_vaps} '
-            f'WHERE '
-                f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
-                f'{cls.table_vp}.time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
-            f'ORDER BY {cls.table_vp}.time_break;'
-        )
-        return pd.read_sql_query(sql_string, con=engine)
-
-    @classmethod
-    @DbUtils.connect
-    def update_vaps(cls, vaps_records, *args):
-        cursor = DbUtils().get_cursor(args)
-
-        sql_string = (
-            f'INSERT INTO {cls.table_vaps} ('
-            f'file_id, line, point, fleet_nr, vibrator, drive, '
-            f'avg_phase, peak_phase, avg_dist, peak_dist, avg_force, peak_force, '
-            f'avg_stiffness, avg_viscosity, easting, northing, elevation, '
-            f'time_break, hdop, tb_date, positioning) '
-            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
-            f'%s, %s, %s, %s, %s, %s);'
-        )
-
-        for vaps_record in vaps_records:
-
-            cursor.execute(sql_string, (
-                vaps_record.file_id,
-                vaps_record.line,
-                vaps_record.point,
-                vaps_record.fleet_nr,
-                vaps_record.vibrator,
-                vaps_record.drive,
-                vaps_record.avg_phase,
-                vaps_record.peak_phase,
-                vaps_record.avg_dist,
-                vaps_record.peak_dist,
-                vaps_record.avg_force,
-                vaps_record.peak_force,
-                vaps_record.avg_stiffness,
-                vaps_record.avg_viscosity,
-                vaps_record.easting,
-                vaps_record.northing,
-                vaps_record.elevation,
-                vaps_record.time_break,
-                vaps_record.hdop,
-                vaps_record.tb_date,
-                vaps_record.positioning,
-                ))
