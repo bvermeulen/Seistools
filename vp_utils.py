@@ -15,6 +15,7 @@ from vp_settings import (
 
 
 def progress_message_generator(message):
+    print()
     loop_dash = ['\u2014', '\\', '|', '/']
     i = 1
     print_interval = 1

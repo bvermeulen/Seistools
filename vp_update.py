@@ -4,7 +4,7 @@ import os
 import datetime
 import vp_database
 import vp_utils
-from vp_settings import (DATA_FILES_VAPS, DATA_FILES_VP, INCLUDE_VAPS,
+from vp_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
                          FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                         )
 
@@ -132,8 +132,7 @@ class Vp:
 
                         next(progress_message)
 
-                cls.vp_db.update_vp(vp_records, include_vaps=INCLUDE_VAPS)
-                print()
+                cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
 
     @classmethod
     def parse_vp_line(cls, vp_line):
@@ -144,6 +143,8 @@ class Vp:
             time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
                 vp_line[32:51], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y %H:%M:%S') +  \
                     '.' + vp_line[52:55] + '000', '%d-%m-%y %H:%M:%S.%f'))
+
+            time_break += GMT_OFFSET
 
             vp_record.line = int(vp_line[0:9])
             vp_record.station = int(vp_line[9:19])

@@ -4,6 +4,7 @@
 #    ALTER TABLE public.vaps_records ADD COLUMN geom geometry(Point, 3440);
 #    UPDATE public.vaps_records SET geom =
 #        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
+# TODO VP_Records adjust VP_RECORDS GMT time to local time
 from functools import wraps
 import pandas as pd
 from sqlalchemy import create_engine
@@ -334,11 +335,12 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vp(cls, vp_records, *args, include_vaps=False):
+    def update_vp(cls, vp_records, *args, link_vaps=False):
         cursor = DbUtils().get_cursor(args)
 
         progress_message = vp_utils.progress_message_generator(
-            f'populate database for table: {cls.table_vp}                             ')
+            f'populate database for table: {cls.table_vp}                   ')
+
 
         sql_vp_record = (
             f'INSERT INTO {cls.table_vp} ('
@@ -352,7 +354,7 @@ class VpDb:
         for vp_record in vp_records:
             point = Point(vp_record.easting, vp_record.northing)
 
-            if include_vaps:
+            if link_vaps:
                 vp_record = cls.get_vaps_id(vp_record)
 
             cursor.execute(sql_vp_record, (
@@ -425,6 +427,7 @@ class VpDb:
 
         progress_message = vp_utils.progress_message_generator(
             f'populate database for table: {cls.table_vaps}                             ')
+
 
         sql_string = (
             f'INSERT INTO {cls.table_vaps} ('

@@ -4,18 +4,18 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import vp_utils
 import vp_database
-from vp_settings import FLEETS, INCLUDE_VAPS, MARKERSIZE, plt_settings
+from vp_settings import FLEETS, ATTRIBUTES_FROM_VP, MARKERSIZE, plt_settings
 
 
 class VpAttributes:
 
     @classmethod
     def select_data(cls, production_date):
-        if INCLUDE_VAPS:
-            cls.vp_records_df = vp_database.VpDb().get_vaps_data_by_date(production_date)
+        if ATTRIBUTES_FROM_VP:
+            cls.vp_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
 
         else:
-            cls.vp_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
+            cls.vp_records_df = vp_database.VpDb().get_vaps_data_by_date(production_date)
 
     @classmethod
     def plot_vp_data(cls):
@@ -41,11 +41,13 @@ class VpAttributes:
 
         handles, labels = ax0[0].get_legend_handles_labels()
         fig1.legend(
-            handles, labels, loc='upper right', frameon=True, fontsize='small', framealpha=1, markerscale=40)
+            handles, labels, loc='upper right', frameon=True,
+            fontsize='small', framealpha=1, markerscale=40)
         fig1.tight_layout()
 
         fig2.legend(
-            handles, labels, loc='upper right', frameon=True, fontsize='small', framealpha=1, markerscale=40)
+            handles, labels, loc='upper right', frameon=True,
+            fontsize='small', framealpha=1, markerscale=40)
         fig2.tight_layout()
 
         plt.show()

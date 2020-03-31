@@ -1,16 +1,18 @@
 ''' settings and data structures for vp app
 '''
+import datetime
 from enum import IntEnum
 from recordtype import recordtype
 
 DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATABASE = 'Lekhwair'
-INCLUDE_VAPS = False
+LINK_VP_TO_VAPS = False
+ATTRIBUTES_FROM_VP = False
+GMT_OFFSET = datetime.timedelta(hours=+4)
 
 FLEETS = 30
 MARKERSIZE = 0.2
-GMT_OFFSET = +4
 AREA_EASTING_MIN = 610_000
 AREA_EASTING_MAX = 760_000
 AREA_NORTHING_MIN = 2_345_000
