@@ -6,14 +6,16 @@
 #        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
 # TODO VP_Records adjust VP_RECORDS GMT time to local time
 from functools import wraps
+import datetime
+import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 from shapely.geometry import Point
 import psycopg2
 from decouple import config
 import vp_utils
-from vp_settings import (DATABASE, EPSG_PSD93, FilesVpTable, VpTable,
-                         FilesVapsTable, VapsTable)
+from vp_settings import (DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM,
+                         EPSG_PSD93, FilesVpTable, VpTable, FilesVapsTable, VapsTable)
 
 
 class DbUtils:
@@ -155,7 +157,11 @@ class VpDb:
             avg_dist='avg_dist INTEGER',
             peak_phase='peak_phase INTEGER',
             avg_phase='avg_phase INTEGER',
-            qc_flag='qc_flag VARCHAR(10)'
+            qc_flag='qc_flag VARCHAR(10)',
+            distance='distance REAL',
+            time='time REAL',
+            velocity='velocity REAL',
+            dense_flag='dense_flag BOOLEAN',
         )
 
         sql_string = (
@@ -179,7 +185,11 @@ class VpDb:
             f'{vp_tbl.avg_dist}, '
             f'{vp_tbl.peak_phase}, '
             f'{vp_tbl.avg_phase}, '
-            f'{vp_tbl.qc_flag});'
+            f'{vp_tbl.qc_flag}, '
+            f'{vp_tbl.distance}, '
+            f'{vp_tbl.time}, '
+            f'{vp_tbl.velocity}, '
+            f'{vp_tbl.dense_flag};'
         )
 
         cursor.execute(sql_string)
@@ -238,7 +248,11 @@ class VpDb:
             time_break='time_break TIMESTAMP',
             hdop='hdop REAL',
             tb_date='tb_date VARCHAR(30)',
-            positioning='positioning VARCHAR(75)'
+            positioning='positioning VARCHAR(75)',
+            distance='distance REAL',
+            time='time DOUBLE REAL',
+            velocity='velocity REAL',
+            dense_flag='dense_flag BOOLEAN',
         )
 
         sql_string = (
@@ -264,10 +278,18 @@ class VpDb:
             f'{vaps_tbl.time_break}, '
             f'{vaps_tbl.hdop}, '
             f'{vaps_tbl.tb_date}, '
-            f'{vaps_tbl.positioning});'
+            f'{vaps_tbl.positioning}, '
+            f'{vaps_tbl.distance}, '
+            f'{vaps_tbl.time}, '
+            f'{vaps_tbl.velocity},'
+            f'{vaps_tbl.dense_flag});'
         )
 
         cursor.execute(sql_string)
+
+        cursor.execute(
+            f'ALTER TABLE {cls.table_vp} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
+
         print(f'create table {cls.table_vaps}')
 
     @classmethod
@@ -505,28 +527,22 @@ class VpDb:
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
-    def get_vaps_data_by_date(cls, production_date):
+    def get_data_by_date(cls, database_table, production_date):
         ''' retrieve vp data by date
             arguments:
+              database_table: 'VAPS' or 'VP'
               production_date: datetime object
             returns:
               pandas dataframe with all database attributes
         '''
-        engine = DbUtils().get_engine()
-        sql_string = (f'SELECT * FROM {cls.table_vaps} WHERE '
-                      f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
-        return pd.read_sql_query(sql_string, con=engine)
+        if database_table == 'VAPS':
+            table = cls.table_vaps
 
-    @classmethod
-    def get_vp_data_by_date(cls, production_date):
-        ''' retrieve vp data by date
-            arguments:
-              production_date: datetime object
-            returns:
-              pandas dataframe with all database attributes
-        '''
+        else:
+            table = cls.table_vp
+
         engine = DbUtils().get_engine()
-        sql_string = (f'SELECT * FROM {cls.table_vp} WHERE '
+        sql_string = (f'SELECT * FROM {table} WHERE '
                       f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
         return pd.read_sql_query(sql_string, con=engine)
 
@@ -562,3 +578,99 @@ class VpDb:
             f'ORDER BY {cls.table_vp}.station;'
         )
         return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    @DbUtils.connect
+    def patch_add_distance_column(cls, database_table, start_date, end_date, *args):
+        ''' patch to add column distance to vaps table
+            arguments:
+              database_table: 'VAPS' or 'VP'
+              state_date: datetime.date object start date
+              end_date: datetime.date object end date
+        '''
+        cursor = DbUtils().get_cursor(args)
+
+        if database_table == 'VAPS':
+            table = cls.table_vaps
+
+        else:
+            table = cls.table_vp
+
+        sql_string = (
+            f'UPDATE {table} '
+            f'SET'
+            f'    distance = %s, '
+            f'    time = %s, '
+            f'    velocity = %s, '
+            f'    dense_flag = %s '
+            f'WHERE id = %s;'
+        )
+
+        _date = start_date
+
+        while _date <= end_date:
+            progress_message = vp_utils.progress_message_generator(
+                f'add dist, time, vel, dense_flag to {table} for '
+                f'{_date.strftime("%d-%m-%Y")}                          ')
+
+            vp_records_df = cls.get_data_by_date(database_table, _date)
+
+            for vib in range(1, FLEETS):
+                vib_df = vp_records_df[vp_records_df['vibrator'] == vib]
+
+                vp_pts = [(id_xy[0], Point(id_xy[1], id_xy[2]), id_xy[3]) for id_xy in zip(  #pylint: disable=line-too-long
+                    vib_df['id'].to_list(),
+                    vib_df['easting'].to_list(),
+                    vib_df['northing'].to_list(),
+                    vib_df['time_break'].to_list(),
+                )]
+
+                dense_flag_1 = False
+
+                for i in range(len(vp_pts) - 1):
+                    index = vp_pts[i][0]
+                    dx = vp_pts[i + 1][1].x - vp_pts[i][1].x
+                    dy = vp_pts[i + 1][1].y - vp_pts[i][1].y
+                    dist = np.sqrt(dx*dx + dy*dy)
+                    time = max(0, (
+                        vp_pts[i + 1][2] - vp_pts[i][2]).seconds - SWEEP_TIME - PAD_DOWN_TIME)
+                    try:
+                        velocity = dist / time
+
+                    except ZeroDivisionError:
+                        velocity = 0
+
+                    if dist < DENSE_CRITERIUM or dense_flag_1:
+                        dense_flag = True
+
+                    else:
+                        dense_flag = False
+
+                    cursor.execute(sql_string, (
+                        dist,
+                        time,
+                        velocity,
+                        dense_flag,
+                        index,
+                    ))
+
+                    if dist < DENSE_CRITERIUM:
+                        dense_flag_1 = True
+
+                    else:
+                        dense_flag_1 = False
+
+                    next(progress_message)
+
+                # handle data for last element if there is one
+                if vp_pts:
+                    index = vp_pts[-1][0]
+                    cursor.execute(sql_string, (
+                        np.nan,
+                        np.nan,
+                        np.nan,
+                        dense_flag_1,
+                        index,
+                    ))
+
+            _date += datetime.timedelta(days=+1)

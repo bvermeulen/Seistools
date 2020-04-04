@@ -15,6 +15,7 @@ swath_length = 50_000  # length > length of block
 swath_1 = 210
 active_lines = 23
 swath_reverse = True
+source_on_receivers = False
 
 # parameter CTM
 sweep_time = 9

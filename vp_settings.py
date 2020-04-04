@@ -8,8 +8,11 @@ DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATABASE = 'Lekhwair'
 LINK_VP_TO_VAPS = False
-ATTRIBUTES_FROM_VP = False
+DATABASE_TABLE = 'VP'
 GMT_OFFSET = datetime.timedelta(hours=+4)
+DENSE_CRITERIUM = 15  # if distance < DENSE_CRITERIUM then dense_flag is true
+SWEEP_TIME = 9
+PAD_DOWN_TIME = 2.5
 
 FLEETS = 30
 MARKERSIZE = 0.2
@@ -65,7 +68,9 @@ VpTable = recordtype(
     'avg_dist, '
     'peak_phase, '
     'avg_phase, '
-    'qc_flag'
+    'qc_flag, '
+    'distance, '
+    'dense_flag'
 )
 
 FilesVapsTable = recordtype(
@@ -98,7 +103,9 @@ VapsTable = recordtype(
     'time_break, '
     'hdop, '
     'tb_date, '
-    'positioning'
+    'positioning, '
+    'distance, '
+    'dense_flag'
 )
 
 plt_settings = {

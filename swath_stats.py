@@ -229,6 +229,9 @@ class GisCalc:
         vp_dune_src = int(areas['area_dunes'] * 1000 / SLS_sand * 1000 / SPS_sand)
         vp_dune_rcv = int(areas['area_dunes'] * 1000 / RLS * 1000 / SPS_sand)
         vp_dune = int(vp_dune_src)
+        if settings.source_on_receivers:
+            vp_dune += vp_dune_rcv
+
         vp_sabkha = int(areas['area_sabkha'] * 1000 / SLS_flat * 1000 / SPS_flat)
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dune + vp_sabkha)
         vp_dozer_km = vp_dune_src * SPS_sand / 1000

@@ -1,21 +1,19 @@
-# display vibe statistics
+''' display vibe attributes
+'''
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import vp_utils
 import vp_database
-from vp_settings import FLEETS, ATTRIBUTES_FROM_VP, MARKERSIZE, plt_settings
+from vp_settings import FLEETS, DATABASE_TABLE, MARKERSIZE, plt_settings
 
 
 class VpAttributes:
 
     @classmethod
-    def select_data(cls, production_date):
-        if ATTRIBUTES_FROM_VP:
-            cls.vp_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
-
-        else:
-            cls.vp_records_df = vp_database.VpDb().get_vaps_data_by_date(production_date)
+    def select_data(cls, database_table, production_date):
+        cls.vp_records_df = vp_database.VpDb().get_data_by_date(
+            database_table, production_date)
 
     @classmethod
     def plot_vp_data(cls):
@@ -24,7 +22,6 @@ class VpAttributes:
         fig1, (
             (ax0[0], ax1[0]), (ax0[1], ax1[1]), (ax0[2], ax1[2]),
             ) = plt.subplots(nrows=3, ncols=2, figsize=(8, 8))
-
 
         fig2, (
             (ax0[3], ax1[3]), (ax0[4], ax1[4]), (ax0[5], ax1[5]),
@@ -119,5 +116,5 @@ if __name__ == "__main__":
             break
 
         else:
-            vp_attr.select_data(production_date)
+            vp_attr.select_data(DATABASE_TABLE, production_date)
             vp_attr.plot_vp_data()
