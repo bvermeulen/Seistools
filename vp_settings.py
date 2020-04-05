@@ -70,6 +70,8 @@ VpTable = recordtype(
     'avg_phase, '
     'qc_flag, '
     'distance, '
+    'time, '
+    'velocity, '
     'dense_flag'
 )
 
@@ -105,6 +107,8 @@ VapsTable = recordtype(
     'tb_date, '
     'positioning, '
     'distance, '
+    'time, '
+    'velocity, '
     'dense_flag'
 )
 

@@ -15,7 +15,7 @@ import psycopg2
 from decouple import config
 import vp_utils
 from vp_settings import (DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM,
-                         EPSG_PSD93, FilesVpTable, VpTable, FilesVapsTable, VapsTable)
+                         EPSG_PSD93)
 
 
 class DbUtils:
@@ -114,17 +114,11 @@ class VpDb:
     def create_table_vp_files(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        files_tbl = FilesVpTable(
-            id='id SERIAL PRIMARY KEY',
-            file_name='file_name VARCHAR(100)',
-            file_date='file_date TIMESTAMP',
-        )
-
         sql_string = (
-            f'CREATE TABLE {cls.table_vp_files} '
-            f'({files_tbl.id}, '
-            f'{files_tbl.file_name}, '
-            f'{files_tbl.file_date});'
+            f'CREATE TABLE {cls.table_vp_files} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_name VARCHAR(100), '
+            f'file_date TIMESTAMP);'
         )
 
         cursor.execute(sql_string)
@@ -135,61 +129,32 @@ class VpDb:
     def create_table_vp(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        vp_tbl = VpTable(
-            id='id SERIAL PRIMARY KEY',
-            file_id=f'file_id INTEGER REFERENCES {cls.table_vp_files}(id) '
-                    f'ON DELETE CASCADE',
-            vaps_id=f'vaps_id INTEGER REFERENCES {cls.table_vaps}(id) '
-                    f'ON DELETE CASCADE',
-            line='line INT',
-            station='station INTEGER',
-            vibrator='vibrator INTEGER',
-            time_break='time_break TIMESTAMP',
-            planned_easting='planned_easting DOUBLE PRECISION',
-            planned_northing='planned_northing DOUBLE PRECISION',
-            easting='easting DOUBLE PRECISION',
-            northing='northing DOUBLE PRECISION',
-            elevation='elevation REAL',
-            offset='_offset REAL',
-            peak_force='peak_force INTEGER',
-            avg_force='avg_force INTEGER',
-            peak_dist='peak_dist INTEGER',
-            avg_dist='avg_dist INTEGER',
-            peak_phase='peak_phase INTEGER',
-            avg_phase='avg_phase INTEGER',
-            qc_flag='qc_flag VARCHAR(10)',
-            distance='distance REAL',
-            time='time REAL',
-            velocity='velocity REAL',
-            dense_flag='dense_flag BOOLEAN',
-        )
-
         sql_string = (
-            f'CREATE TABLE {cls.table_vp} '
-            f'({vp_tbl.id}, '
-            f'{vp_tbl.file_id}, '
-            f'{vp_tbl.vaps_id}, '
-            f'{vp_tbl.line}, '
-            f'{vp_tbl.station}, '
-            f'{vp_tbl.vibrator}, '
-            f'{vp_tbl.time_break}, '
-            f'{vp_tbl.planned_easting}, '
-            f'{vp_tbl.planned_northing}, '
-            f'{vp_tbl.easting}, '
-            f'{vp_tbl.northing}, '
-            f'{vp_tbl.elevation}, '
-            f'{vp_tbl.offset}, '
-            f'{vp_tbl.peak_force}, '
-            f'{vp_tbl.avg_force}, '
-            f'{vp_tbl.peak_dist}, '
-            f'{vp_tbl.avg_dist}, '
-            f'{vp_tbl.peak_phase}, '
-            f'{vp_tbl.avg_phase}, '
-            f'{vp_tbl.qc_flag}, '
-            f'{vp_tbl.distance}, '
-            f'{vp_tbl.time}, '
-            f'{vp_tbl.velocity}, '
-            f'{vp_tbl.dense_flag};'
+            f'CREATE TABLE {cls.table_vp} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_id INTEGER REFERENCES {cls.table_vp_files}(id) ON DELETE CASCADE, '
+            f'vaps_id INTEGER REFERENCES {cls.table_vaps}(id) ON DELETE CASCADE, '
+            f'line INT, '
+            f'station INTEGER, '
+            f'vibrator INTEGER, '
+            f'time_break TIMESTAMP, '
+            f'planned_easting DOUBLE PRECISION, '
+            f'planned_northing DOUBLE PRECISION, '
+            f'easting DOUBLE PRECISION, '
+            f'northing DOUBLE PRECISION, '
+            f'elevation REAL, '
+            f'_offset REAL, '
+            f'peak_force INTEGER, '
+            f'avg_force INTEGER, '
+            f'peak_dist INTEGER, '
+            f'avg_dist INTEGER, '
+            f'peak_phase INTEGER, '
+            f'avg_phase INTEGER, '
+            f'qc_flag VARCHAR(10), '
+            f'distance REAL, '
+            f'time REAL, '
+            f'velocity REAL, '
+            f'dense_flag BOOLEAN);'
         )
 
         cursor.execute(sql_string)
@@ -204,17 +169,11 @@ class VpDb:
     def create_table_vaps_files(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        files_tbl = FilesVapsTable(
-            id='id SERIAL PRIMARY KEY',
-            file_name='file_name VARCHAR(100)',
-            file_date='file_date TIMESTAMP',
-        )
-
         sql_string = (
-            f'CREATE TABLE {cls.table_vaps_files} '
-            f'({files_tbl.id}, '
-            f'{files_tbl.file_name}, '
-            f'{files_tbl.file_date});'
+            f'CREATE TABLE {cls.table_vaps_files} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_name VARCHAR(100), '
+            f'file_date TIMESTAMP);'
         )
 
         cursor.execute(sql_string)
@@ -225,64 +184,34 @@ class VpDb:
     def create_table_vaps(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        vaps_tbl = VapsTable(
-            id='id SERIAL PRIMARY KEY',
-            file_id=f'file_id INTEGER REFERENCES {cls.table_vaps_files}(id)'
-                    f'ON DELETE CASCADE',
-            line='line INTEGER',
-            point='point INTEGER',
-            fleet_nr='fleet_nr VARCHAR(2)',
-            vibrator='vibrator INTEGER',
-            drive='drive INTEGER',
-            avg_phase='avg_phase INTEGER',
-            peak_phase='peak_phase INTEGER',
-            avg_dist='avg_dist INTEGER',
-            peak_dist='peak_dist INTEGER',
-            avg_force='avg_force INTEGER',
-            peak_force='peak_force INTEGER',
-            avg_stiffness='avg_stiffness INTEGER',
-            avg_viscosity='avg_viscosity INTEGER',
-            easting='easting DOUBLE PRECISION',
-            northing='northing DOUBLE PRECISION',
-            elevation='elevation REAL',
-            time_break='time_break TIMESTAMP',
-            hdop='hdop REAL',
-            tb_date='tb_date VARCHAR(30)',
-            positioning='positioning VARCHAR(75)',
-            distance='distance REAL',
-            time='time DOUBLE REAL',
-            velocity='velocity REAL',
-            dense_flag='dense_flag BOOLEAN',
-        )
-
         sql_string = (
-            f'CREATE TABLE {cls.table_vaps} '
-            f'({vaps_tbl.id}, '
-            f'{vaps_tbl.file_id}, '
-            f'{vaps_tbl.line}, '
-            f'{vaps_tbl.point}, '
-            f'{vaps_tbl.fleet_nr}, '
-            f'{vaps_tbl.vibrator}, '
-            f'{vaps_tbl.drive}, '
-            f'{vaps_tbl.avg_phase}, '
-            f'{vaps_tbl.peak_phase}, '
-            f'{vaps_tbl.avg_dist}, '
-            f'{vaps_tbl.peak_dist}, '
-            f'{vaps_tbl.avg_force}, '
-            f'{vaps_tbl.peak_force}, '
-            f'{vaps_tbl.avg_stiffness}, '
-            f'{vaps_tbl.avg_viscosity}, '
-            f'{vaps_tbl.easting}, '
-            f'{vaps_tbl.northing}, '
-            f'{vaps_tbl.elevation}, '
-            f'{vaps_tbl.time_break}, '
-            f'{vaps_tbl.hdop}, '
-            f'{vaps_tbl.tb_date}, '
-            f'{vaps_tbl.positioning}, '
-            f'{vaps_tbl.distance}, '
-            f'{vaps_tbl.time}, '
-            f'{vaps_tbl.velocity},'
-            f'{vaps_tbl.dense_flag});'
+            f'CREATE TABLE {cls.table_vaps} ('
+            f'file_id INTEGER REFERENCES {cls.table_vaps_files}(id) ON DELETE CASCADE, '
+            f'line INTEGER, '
+            f'point INTEGER, '
+            f'fleet_nr VARCHAR(2), '
+            f'vibrator INTEGER, '
+            f'drive INTEGER, '
+            f'avg_phase INTEGER, '
+            f'peak_phase INTEGER, '
+            f'avg_dist INTEGER, '
+            f'peak_dist INTEGER, '
+            f'avg_force INTEGER, '
+            f'peak_force INTEGER, '
+            f'avg_stiffness INTEGER, '
+            f'avg_viscosity INTEGER, '
+            f'easting DOUBLE PRECISION, '
+            f'northing DOUBLE PRECISION, '
+            f'elevation REAL, '
+            f'time_break TIMESTAMP, '
+            f'hdop REAL, '
+            f'tb_date VARCHAR(30), '
+            f'positioning VARCHAR(75), '
+            f'tb_date VARCHAR(30), '
+            f'distance REAL, '
+            f'time DOUBLE REAL, '
+            f'velocity REAL, '
+            f'dense_flag BOOLEAN);'
         )
 
         cursor.execute(sql_string)
@@ -633,7 +562,9 @@ class VpDb:
                     dy = vp_pts[i + 1][1].y - vp_pts[i][1].y
                     dist = np.sqrt(dx*dx + dy*dy)
                     time = max(0, (
-                        vp_pts[i + 1][2] - vp_pts[i][2]).seconds - SWEEP_TIME - PAD_DOWN_TIME)
+                        vp_pts[i + 1][2] - vp_pts[i][2]).seconds -
+                               SWEEP_TIME - PAD_DOWN_TIME)
+
                     try:
                         velocity = dist / time
 

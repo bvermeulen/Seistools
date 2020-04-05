@@ -55,7 +55,7 @@ class Vaps:
 
     @classmethod
     def parse_vaps_line(cls, vaps_line):
-        vaps_record = VapsTable(*[None]*24)
+        vaps_record = VapsTable(*[None]*26)
 
         try:
             # create time break date
@@ -88,7 +88,7 @@ class Vaps:
             vaps_record.positioning = vaps_line[150:225]
 
         except ValueError:
-            vaps_record = VapsTable(*[None]*24)
+            vaps_record = VapsTable(*[None]*26)
 
         return vaps_record
 
@@ -136,7 +136,7 @@ class Vp:
 
     @classmethod
     def parse_vp_line(cls, vp_line):
-        vp_record = VpTable(*[None]*22)
+        vp_record = VpTable(*[None]*24)
 
         try:
             # create time break date
@@ -165,7 +165,7 @@ class Vp:
             vp_record.qc_flag = vp_line[238:248].strip()
 
         except ValueError:
-            vp_record = VpTable(*[None]*22)
+            vp_record = VpTable(*[None]*24)
 
         return vp_record
 
