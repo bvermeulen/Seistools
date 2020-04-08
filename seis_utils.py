@@ -8,7 +8,7 @@ from shapely.geometry import Polygon, Point
 import matplotlib.pyplot as plt
 from PIL import Image
 import contextily as ctx
-from vp_settings import (
+from seis_settings import (
     AREA_EASTING_MIN, AREA_EASTING_MAX, AREA_NORTHING_MIN, AREA_NORHING_MAX,
     MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE,
 )

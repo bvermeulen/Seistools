@@ -2,17 +2,17 @@
 '''
 import os
 import datetime
-import vp_database
-import vp_utils
-from vp_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
-                         FilesVpTable, VpTable, FilesVapsTable, VapsTable,
-                        )
+import seis_database
+import seis_utils
+from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
+                           FilesVpTable, VpTable, FilesVapsTable, VapsTable,
+                          )
 
 
 class Vaps:
 
     vaps_base_folder = DATA_FILES_VAPS
-    vp_db = vp_database.VpDb()
+    vp_db = seis_database.VpDb()
 
     @classmethod
     def read_vaps(cls):
@@ -34,7 +34,7 @@ class Vaps:
                 if file_id == -1:
                     continue
 
-                progress_message = vp_utils.progress_message_generator(
+                progress_message = seis_utils.progress_message_generator(
                     f'reading vaps from {vaps_file.file_name}   ')
 
                 vaps_records = []
@@ -60,7 +60,7 @@ class Vaps:
         try:
             # create time break date
             doy = int(vaps_line[117:120])
-            year = vp_utils.get_year(doy)
+            year = seis_utils.get_year(doy)
 
             time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
                 str(year) + f'{doy:03}', '%Y%j').strftime('%d-%m-%y') + ' ' +  \
@@ -95,7 +95,7 @@ class Vaps:
 class Vp:
 
     vp_base_folder = DATA_FILES_VP
-    vp_db = vp_database.VpDb()
+    vp_db = seis_database.VpDb()
 
     @classmethod
     def read_vp(cls):
@@ -116,7 +116,7 @@ class Vp:
                 if file_id == -1:
                     continue
 
-                progress_message = vp_utils.progress_message_generator(
+                progress_message = seis_utils.progress_message_generator(
                     f'reading vp from {vp_file.file_name}   ')
 
                 vp_records = []
@@ -134,8 +134,8 @@ class Vp:
 
                 cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
 
-    @classmethod
-    def parse_vp_line(cls, vp_line):
+    @staticmethod
+    def parse_vp_line(vp_line):
         vp_record = VpTable(*[None]*24)
 
         try:
@@ -171,7 +171,7 @@ class Vp:
 
 
 if __name__ == '__main__':
-    vp_db = vp_database.VpDb()
+    vp_db = seis_database.VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
     vp_db.create_table_vp_files()

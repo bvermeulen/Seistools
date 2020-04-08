@@ -4,7 +4,6 @@
 #    ALTER TABLE public.vaps_records ADD COLUMN geom geometry(Point, 3440);
 #    UPDATE public.vaps_records SET geom =
 #        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
-# TODO VP_Records adjust VP_RECORDS GMT time to local time
 from functools import wraps
 import datetime
 import numpy as np
@@ -13,9 +12,9 @@ from sqlalchemy import create_engine
 from shapely.geometry import Point
 import psycopg2
 from decouple import config
-import vp_utils
-from vp_settings import (DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM,
-                         EPSG_PSD93)
+import seis_utils
+from seis_settings import (DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM,
+                           EPSG_PSD93)
 
 
 class DbUtils:
@@ -289,7 +288,7 @@ class VpDb:
     def update_vp(cls, vp_records, *args, link_vaps=False):
         cursor = DbUtils().get_cursor(args)
 
-        progress_message = vp_utils.progress_message_generator(
+        progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_vp}                   ')
 
 
@@ -376,7 +375,7 @@ class VpDb:
     def update_vaps(cls, vaps_records, *args):
         cursor = DbUtils().get_cursor(args)
 
-        progress_message = vp_utils.progress_message_generator(
+        progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_vaps}                             ')
 
 
@@ -538,7 +537,7 @@ class VpDb:
         _date = start_date
 
         while _date <= end_date:
-            progress_message = vp_utils.progress_message_generator(
+            progress_message = seis_utils.progress_message_generator(
                 f'add dist, time, vel, dense_flag to {table} for '
                 f'{_date.strftime("%d-%m-%Y")}                          ')
 
@@ -605,3 +604,148 @@ class VpDb:
                     ))
 
             _date += datetime.timedelta(days=+1)
+
+class RcvDb:
+    table_rcv_files = 'rcv_files'
+    table_rcv = 'rcv_records'
+
+    @classmethod
+    @DbUtils.connect
+    def delete_table_rcv(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = f'DROP TABLE {cls.table_rcv};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_rcv}')
+
+    @classmethod
+    @DbUtils.connect
+    def delete_table_rcv_files(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = f'DROP TABLE {cls.table_rcv_files};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_rcv_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_rcv_files(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = (
+            f'CREATE TABLE {cls.table_rcv_files} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_name VARCHAR(100), '
+            f'file_date TIMESTAMP);'
+        )
+
+        cursor.execute(sql_string)
+        print(f'create table {cls.table_rcv_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_rcv(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = (
+            f'CREATE TABLE {cls.table_rcv} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_id INTEGER REFERENCES {cls.table_rcv_files}(id) ON DELETE CASCADE, '
+            f'fdu_sn INT, '
+            f'line INT, '
+            f'station INTEGER, '
+            f'sensor_type INTEGER, '
+            f'resistance REAL, '
+            f'tilt REAL, '
+            f'noise REAL, '
+            f'leakage REAL, '
+            f'time_update TIMESTAMP, '
+            f'easting DOUBLE PRECISION, '
+            f'northing DOUBLE PRECISION, '
+            f'elevation REAL);'
+        )
+
+        cursor.execute(sql_string)
+
+        cursor.execute(
+            f'ALTER TABLE {cls.table_rcv} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
+
+        print(f'create table {cls.table_rcv}')
+
+    @classmethod
+    @DbUtils.connect
+    def update_rcv_file(cls, rcv_file, *args):
+        ''' method to to check if file_name exists in the database, if it does not then
+            add the filename to the data base
+            returns:
+            -1, if file is found
+            n, new file_id number if no file is found
+        '''
+        cursor = DbUtils().get_cursor(args)
+
+        # check if file exists
+        sql_string = (
+            f'SELECT id FROM {cls.table_rcv_files} WHERE '
+            f'file_name=\'{rcv_file.file_name}\' AND '
+            f'file_date=\'{rcv_file.file_date}\';'
+        )
+        cursor.execute(sql_string)
+        try:
+            # check if id exists
+            _ = cursor.fetchone()[0]
+            return -1
+
+        except TypeError:
+            # no id was found so go on to create one
+            pass
+
+        sql_string = (
+            f'INSERT INTO {cls.table_rcv_files} ('
+            f'file_name, file_date) '
+            f'VALUES (%s, %s) '
+            f'RETURNING id;'
+        )
+
+        cursor.execute(sql_string, (rcv_file.file_name, rcv_file.file_date))
+
+        return cursor.fetchone()[0]
+
+    @classmethod
+    @DbUtils.connect
+    def update_rcv(cls, rcv_records, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        progress_message = seis_utils.progress_message_generator(
+            f'populate database for table: {cls.table_rcv}                             ')
+
+
+        sql_string = (
+            f'INSERT INTO {cls.table_rcv} ('
+            f'file_id, fdu_sn, line, station, sensor_type, resistance, tilt, '
+            f'noise, leakage, time_update, easting, northing, elevation, geom) '
+            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
+            f'ST_SetSRID(%s::geometry, %s));'
+        )
+
+        for rcv_record in rcv_records:
+            point = Point(rcv_record.easting, rcv_record.northing)
+
+            cursor.execute(sql_string, (
+                rcv_record.file_id,
+
+                rcv_record.fdu_sn,
+                rcv_record.line,
+                rcv_record.station,
+                rcv_record.sensor_type,
+                rcv_record.resistance,
+                rcv_record.tilt,
+                rcv_record.noise,
+                rcv_record.leakage,
+                rcv_record.time_update,
+                rcv_record.easting,
+                rcv_record.northing,
+                rcv_record.elevation,
+                point.wkb_hex, EPSG_PSD93
+                ))
+
+            next(progress_message)

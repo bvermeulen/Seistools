@@ -2,9 +2,9 @@
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-import vp_utils
-import vp_database
-from vp_settings import FLEETS, plt_settings
+import seis_utils
+import seis_database
+from seis_settings import FLEETS, plt_settings
 
 
 class VpAttributes:

@@ -3,16 +3,16 @@
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
-import vp_utils
-import vp_database
-from vp_settings import FLEETS, DATABASE_TABLE, MARKERSIZE, plt_settings
+import seis_utils
+import seis_database
+from seis_settings import FLEETS, DATABASE_TABLE, MARKERSIZE, plt_settings
 
 
 class VpAttributes:
 
     @classmethod
     def select_data(cls, database_table, production_date):
-        cls.vp_records_df = vp_database.VpDb().get_data_by_date(
+        cls.vp_records_df = seis_database.VpDb().get_data_by_date(
             database_table, production_date)
 
     @classmethod
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     vp_attr = VpAttributes()
 
     while True:
-        production_date = vp_utils.get_production_date()
+        production_date = seis_utils.get_production_date()
         if production_date == -1:
             break
 

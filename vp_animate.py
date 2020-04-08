@@ -18,9 +18,9 @@
 import sys
 import datetime
 import matplotlib.pyplot as plt
-from vp_settings import GMT_OFFSET, MapTypes, plt_settings
-from vp_utils import MapTools, get_animation_dates
-from vp_database import VpDb
+from seis_settings import GMT_OFFSET, MapTypes, plt_settings
+from seis_utils import MapTools, get_animation_dates
+from seis_database import VpDb
 
 FIGSIZE = (7, 7)
 EDGECOLOR = 'None'

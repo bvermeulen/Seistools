@@ -1,4 +1,4 @@
-from vp_database import VpDb
+from seis_database import VpDb
 
 vp_db = VpDb()
 

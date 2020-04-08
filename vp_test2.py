@@ -1,5 +1,5 @@
 import datetime
-import vp_database
+import seis_database
 
 vpdb = vp_database.VpDb()
 

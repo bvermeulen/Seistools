@@ -2,9 +2,9 @@
 '''
 import sys
 import matplotlib.pyplot as plt
-from vp_settings import MapTypes, plt_settings, lines
-from vp_utils import MapTools
-from vp_database import VpDb
+from seis_settings import MapTypes, plt_settings, lines
+from seis_utils import MapTools
+from seis_database import VpDb
 
 FIGSIZE = (7, 7)
 EDGECOLOR = 'black'
