@@ -18,7 +18,7 @@ class Rcv:
                 if filename[-5:] not in ['.noon', '.NOON']:
                     continue
 
-                rcv_file = FilesRcvTable(*[None]*3)
+                rcv_file = FilesRcvTable(*[None]*2)
 
                 abs_filename = os.path.abspath(os.path.join(foldername, filename))
                 rcv_file.file_name = abs_filename

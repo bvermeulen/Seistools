@@ -153,13 +153,11 @@ class VpDb:
             f'distance REAL, '
             f'time REAL, '
             f'velocity REAL, '
-            f'dense_flag BOOLEAN);'
+            f'dense_flag BOOLEAN), '
+            f'geom geometry(Point, {EPSG_PSD93}) );'
         )
 
         cursor.execute(sql_string)
-
-        cursor.execute(
-            f'ALTER TABLE {cls.table_vp} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
 
         print(f'create table {cls.table_vp}')
 
@@ -208,7 +206,7 @@ class VpDb:
             f'positioning VARCHAR(75), '
             f'tb_date VARCHAR(30), '
             f'distance REAL, '
-            f'time DOUBLE REAL, '
+            f'time REAL, '
             f'velocity REAL, '
             f'dense_flag BOOLEAN);'
         )
@@ -606,26 +604,31 @@ class VpDb:
             _date += datetime.timedelta(days=+1)
 
 class RcvDb:
-    table_rcv_files = 'rcv_files'
-    table_rcv = 'rcv_records'
+    table_files = 'rcv_files'
+    table_points = 'rcv_points'
+    table_attributes = 'rcv_attributes'
 
     @classmethod
     @DbUtils.connect
-    def delete_table_rcv(cls, *args):
+    def delete_table_records(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_rcv};'
+        sql_string = f'DROP TABLE {cls.table_attributes};'
         cursor.execute(sql_string)
-        print(f'delete table {cls.table_rcv}')
+        print(f'delete table {cls.table_attributes}')
+
+        sql_string = f'DROP TABLE {cls.table_points};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_points}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_rcv_files(cls, *args):
+    def delete_table_files(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_rcv_files};'
+        sql_string = f'DROP TABLE {cls.table_files};'
         cursor.execute(sql_string)
-        print(f'delete table {cls.table_rcv_files}')
+        print(f'delete table {cls.table_files}')
 
     @classmethod
     @DbUtils.connect
@@ -633,14 +636,14 @@ class RcvDb:
         cursor = DbUtils().get_cursor(args)
 
         sql_string = (
-            f'CREATE TABLE {cls.table_rcv_files} ('
+            f'CREATE TABLE {cls.table_files} ('
             f'id SERIAL PRIMARY KEY, '
             f'file_name VARCHAR(100), '
             f'file_date TIMESTAMP);'
         )
 
         cursor.execute(sql_string)
-        print(f'create table {cls.table_rcv_files}')
+        print(f'create table {cls.table_files}')
 
     @classmethod
     @DbUtils.connect
@@ -648,29 +651,36 @@ class RcvDb:
         cursor = DbUtils().get_cursor(args)
 
         sql_string = (
-            f'CREATE TABLE {cls.table_rcv} ('
+            f'CREATE TABLE {cls.table_points} ('
             f'id SERIAL PRIMARY KEY, '
-            f'file_id INTEGER REFERENCES {cls.table_rcv_files}(id) ON DELETE CASCADE, '
-            f'fdu_sn INT, '
             f'line INT, '
-            f'station INTEGER, '
+            f'station INT, '
+            f'easting DOUBLE PRECISION, '
+            f'northing DOUBLE PRECISION, '
+            f'elevation REAL, '
+            f'geom geometry(Point, {EPSG_PSD93}), '
+            f'UNIQUE (easting, northing) );'
+        )
+
+        cursor.execute(sql_string)
+        print(f'create table {cls.table_points}')
+
+        sql_string = (
+            f'CREATE TABLE {cls.table_attributes} ('
+            f'id SERIAL PRIMARY KEY, '
+            f'file_id INT REFERENCES {cls.table_files}(id) ON DELETE CASCADE, '
+            f'rcv_point_id INT REFERENCES {cls.table_points}(id) ON DELETE CASCADE, '
+            f'fdu_sn INT, '
             f'sensor_type INTEGER, '
             f'resistance REAL, '
             f'tilt REAL, '
             f'noise REAL, '
             f'leakage REAL, '
-            f'time_update TIMESTAMP, '
-            f'easting DOUBLE PRECISION, '
-            f'northing DOUBLE PRECISION, '
-            f'elevation REAL);'
+            f'time_update TIMESTAMP);'
         )
 
         cursor.execute(sql_string)
-
-        cursor.execute(
-            f'ALTER TABLE {cls.table_rcv} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
-
-        print(f'create table {cls.table_rcv}')
+        print(f'create table {cls.table_attributes}')
 
     @classmethod
     @DbUtils.connect
@@ -685,7 +695,7 @@ class RcvDb:
 
         # check if file exists
         sql_string = (
-            f'SELECT id FROM {cls.table_rcv_files} WHERE '
+            f'SELECT id FROM {cls.table_files} WHERE '
             f'file_name=\'{rcv_file.file_name}\' AND '
             f'file_date=\'{rcv_file.file_date}\';'
         )
@@ -700,7 +710,7 @@ class RcvDb:
             pass
 
         sql_string = (
-            f'INSERT INTO {cls.table_rcv_files} ('
+            f'INSERT INTO {cls.table_files} ('
             f'file_name, file_date) '
             f'VALUES (%s, %s) '
             f'RETURNING id;'
@@ -712,40 +722,71 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
+    def update_rcv_point(cls, rcv_record, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        point = Point(rcv_record.easting, rcv_record.northing)
+
+        sql_string = (
+            f'SELECT id FROM {cls.table_points} WHERE '
+            f'line = \'{rcv_record.line}\' AND '
+            f'station = \'{rcv_record.station}\';'
+        )
+        cursor.execute(sql_string)
+
+        try:
+            # check if id exists and return id
+            return cursor.fetchone()[0]
+
+        except TypeError:
+            # no id was found so go on to create one
+            sql_string = (
+                f'INSERT INTO {cls.table_points} ('
+                f'line, station, easting, northing, elevation, geom) '
+                f'VALUES (%s, %s, %s, %s, %s, ST_SetSRID(%s::geometry, %s)) '
+                f'RETURNING id;'
+            )
+
+            cursor.execute(sql_string, (
+                rcv_record.line,
+                rcv_record.station,
+                rcv_record.easting,
+                rcv_record.northing,
+                rcv_record.elevation,
+                point.wkb_hex, EPSG_PSD93
+            ))
+
+            return cursor.fetchone()[0]
+
+    @classmethod
+    @DbUtils.connect
     def update_rcv(cls, rcv_records, *args):
         cursor = DbUtils().get_cursor(args)
 
         progress_message = seis_utils.progress_message_generator(
-            f'populate database for table: {cls.table_rcv}                             ')
-
+            f'populate database for table: {cls.table_points}                             ')
 
         sql_string = (
-            f'INSERT INTO {cls.table_rcv} ('
-            f'file_id, fdu_sn, line, station, sensor_type, resistance, tilt, '
-            f'noise, leakage, time_update, easting, northing, elevation, geom) '
-            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
-            f'ST_SetSRID(%s::geometry, %s));'
+            f'INSERT INTO {cls.table_attributes} ('
+            f'file_id, rcv_point_id, fdu_sn, sensor_type, resistance, tilt, '
+            f'noise, leakage, time_update) '
+            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) );'
         )
 
         for rcv_record in rcv_records:
-            point = Point(rcv_record.easting, rcv_record.northing)
+
+            rcv_record.rcv_point_id = cls.update_rcv_point(rcv_record)
 
             cursor.execute(sql_string, (
                 rcv_record.file_id,
-
+                rcv_record.rcv_point_id,
                 rcv_record.fdu_sn,
-                rcv_record.line,
-                rcv_record.station,
                 rcv_record.sensor_type,
                 rcv_record.resistance,
                 rcv_record.tilt,
                 rcv_record.noise,
                 rcv_record.leakage,
                 rcv_record.time_update,
-                rcv_record.easting,
-                rcv_record.northing,
-                rcv_record.elevation,
-                point.wkb_hex, EPSG_PSD93
                 ))
 
             next(progress_message)
