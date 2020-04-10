@@ -4,6 +4,13 @@
 #    ALTER TABLE public.vaps_records ADD COLUMN geom geometry(Point, 3440);
 #    UPDATE public.vaps_records SET geom =
 #        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
+# find duplicates
+#SELECT *
+#FROM users
+#WHERE employee_id IN (SELECT employee_id
+#                      FROM users
+#                      GROUP BY employee_id
+#                      HAVING COUNT(employee_id) > 1);
 from functools import wraps
 import datetime
 import numpy as np
@@ -153,7 +160,7 @@ class VpDb:
             f'distance REAL, '
             f'time REAL, '
             f'velocity REAL, '
-            f'dense_flag BOOLEAN), '
+            f'dense_flag BOOLEAN, '
             f'geom geometry(Point, {EPSG_PSD93}) );'
         )
 
@@ -764,13 +771,13 @@ class RcvDb:
         cursor = DbUtils().get_cursor(args)
 
         progress_message = seis_utils.progress_message_generator(
-            f'populate database for table: {cls.table_points}                             ')
+            f'populate database for table: {cls.table_points}                           ')
 
         sql_string = (
             f'INSERT INTO {cls.table_attributes} ('
             f'file_id, rcv_point_id, fdu_sn, sensor_type, resistance, tilt, '
             f'noise, leakage, time_update) '
-            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) );'
+            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);'
         )
 
         for rcv_record in rcv_records:
