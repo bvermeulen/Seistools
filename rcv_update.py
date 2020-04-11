@@ -25,9 +25,9 @@ class Rcv:
                 rcv_file.file_date = (
                     datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
 
-                file_id = cls.rcv_db.update_rcv_file(rcv_file)
+                id_file = cls.rcv_db.update_rcv_file(rcv_file)
 
-                if file_id == -1:
+                if id_file == -1:
                     continue
 
                 progress_message = seis_utils.progress_message_generator(
@@ -41,7 +41,7 @@ class Rcv:
 
                         rcv_record = cls.parse_rcv_line(rcv_line)
                         if rcv_record.fdu_sn:
-                            rcv_record.file_id = file_id
+                            rcv_record.id_file = id_file
                             rcv_records.append(rcv_record)
 
                         next(progress_message)
@@ -50,7 +50,7 @@ class Rcv:
 
     @staticmethod
     def parse_rcv_line(rcv_line):
-        rcv_record = RcvTable(*[None]*14)
+        rcv_record = RcvTable(*[None]*15)
 
         rcv_line = rcv_line.strip('\n')
         attributes = rcv_line.split('\t')
@@ -71,14 +71,14 @@ class Rcv:
             rcv_record.elevation = float(attributes[12])
 
         except ValueError:
-            rcv_record = RcvTable(*[None]*14)
+            rcv_record = RcvTable(*[None]*15)
 
         return rcv_record
 
 def main():
     rcv_db = seis_database.RcvDb()
-    rcv_db.create_table_rcv_files()
-    rcv_db.create_table_rcv()
+    rcv_db.create_table_files()
+    rcv_db.create_table_records()
 
     rcv = Rcv()
     rcv.read_rcv()

@@ -6,7 +6,7 @@ from recordtype import recordtype
 
 DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
-DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\Test\\'
+DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
 
 DATABASE = 'Lekhwair'
 LINK_VP_TO_VAPS = False
@@ -225,8 +225,8 @@ FilesRcvTable = recordtype(
 
 RcvTable = recordtype(
     'RcvTable',
-    'file_id, '
-    'rcv_point_id, '
+    'id_file, '
+    'id_attr, '
     'fdu_sn, '
     'line, '
     'station, '
@@ -238,5 +238,6 @@ RcvTable = recordtype(
     'time_update, '
     'easting, '
     'northing, '
-    'elevation'
+    'elevation, '
+    'geom'
 )
