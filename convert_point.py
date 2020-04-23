@@ -1,6 +1,7 @@
 '''
 Convert coordinates
 '''
+import re
 from enum import Enum
 from shapely.geometry import Point
 from pyproj import Proj
@@ -24,17 +25,10 @@ def input_val1_val2(prompt_string):
         if answer in ['q', 'Q', 'quit', 'Quit']:
             return -1, -1
 
-        # try comma seperated values
+        # try to split on comma seperated values and space
         try:
-            val1, val2 = [float(val) for val in answer.split(',')]
-            valid = True
-
-        except (IndexError, ValueError):
-            pass
-
-        # try space seperated values
-        try:
-            val1, val2 = [float(val) for val in answer.split()]
+            val1, val2 = [
+                float(val) for val in re.split.split(r',|\s', answer) if val != '']
             valid = True
 
         except (IndexError, ValueError):
