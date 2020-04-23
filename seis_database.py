@@ -621,11 +621,11 @@ class RcvDb:
     def delete_table_records(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_attributes};'
+        sql_string = f'DROP TABLE {cls.table_attributes} CASCADE;'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_attributes}')
 
-        sql_string = f'DROP TABLE {cls.table_points};'
+        sql_string = f'DROP TABLE {cls.table_points} CASCADE;'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_points}')
 
@@ -634,7 +634,7 @@ class RcvDb:
     def delete_table_files(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_files};'
+        sql_string = f'DROP TABLE {cls.table_files} CASCADE;'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_files}')
 

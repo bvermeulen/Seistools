@@ -1,6 +1,7 @@
 ''' module to update vaps and vp record files in the database
 '''
 import os
+import warnings
 import datetime
 import seis_database
 import seis_utils
@@ -8,6 +9,8 @@ from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_
                            FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                           )
 
+# ignore warning velocity =  dist / time in method patch_add_distance_column
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 class Vaps:
 
@@ -51,6 +54,10 @@ class Vaps:
                         next(progress_message)
 
                 cls.vp_db.update_vaps(vaps_records)
+                if vaps_records:
+                    _date = vaps_records[0].time_break.date()
+                    cls.vp_db.patch_add_distance_column('VAPS', _date, _date)
+
                 print()
 
     @classmethod
@@ -133,6 +140,11 @@ class Vp:
                         next(progress_message)
 
                 cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
+                if vp_records:
+                    _date = vp_records[0].time_break.date()
+                    cls.vp_db.patch_add_distance_column('VP', _date, _date)
+
+                print()
 
     @staticmethod
     def parse_vp_line(vp_line):
