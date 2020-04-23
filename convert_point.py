@@ -28,7 +28,7 @@ def input_val1_val2(prompt_string):
         # try to split on comma seperated values and space
         try:
             val1, val2 = [
-                float(val) for val in re.split(r',|\s|;', answer) if val != '']
+                float(val) for val in re.split(r',|\s|;', answer) if val]
             valid = True
 
         except (IndexError, ValueError):
