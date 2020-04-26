@@ -5,6 +5,7 @@ import sys
 import datetime
 import warnings
 import numpy as np
+from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
@@ -13,6 +14,7 @@ from seis_settings import FLEETS, DATABASE_TABLE
 
 seconds_per_day = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+register_matplotlib_converters()
 
 
 class VpActive:
