@@ -239,8 +239,7 @@ class VpDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vp_files} WHERE '
-            f'file_name=\'{vp_file.file_name}\' AND '
-            f'file_date=\'{vp_file.file_date}\';'
+            f'file_name=\'{vp_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:
@@ -351,8 +350,7 @@ class VpDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vaps_files} WHERE '
-            f'file_name=\'{vaps_file.file_name}\' AND '
-            f'file_date=\'{vaps_file.file_date}\';'
+            f'file_name=\'{vaps_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:
@@ -705,8 +703,7 @@ class RcvDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_files} WHERE '
-            f'file_name=\'{rcv_file.file_name}\' AND '
-            f'file_date=\'{rcv_file.file_date}\';'
+            f'file_name=\'{rcv_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:

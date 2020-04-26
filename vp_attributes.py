@@ -115,6 +115,5 @@ if __name__ == "__main__":
         if production_date == -1:
             break
 
-        else:
-            vp_attr.select_data(DATABASE_TABLE, production_date)
-            vp_attr.plot_vp_data()
+        vp_attr.select_data(DATABASE_TABLE, production_date)
+        vp_attr.plot_vp_data()
