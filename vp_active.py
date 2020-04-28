@@ -3,8 +3,10 @@
 '''
 import sys
 import datetime
+from collections import Counter
 import warnings
 import numpy as np
+import pandas as pd
 from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -23,6 +25,12 @@ class VpActive:
         ''' initialise the hashtable '''
         self.production_date = production_date
         self.vps_by_second = {second: [] for second in range(seconds_per_day)}
+
+        self.vps_by_interval_df = pd.DataFrame(
+            columns=['time'] +
+            [f'V{i:02}' for i in range(1, FLEETS + 1)] +
+            ['total', 'vps_hour', 'num_vibs']
+        )
 
     def select_data(self, database_table):
         self.vp_records_df = seis_database.VpDb().get_data_by_date(
@@ -43,6 +51,22 @@ class VpActive:
 
                 next(progress_message)
 
+    def add_vps_interval(self, interval, second, vib_list):
+        _date = datetime.datetime.combine(
+            self.production_date.date(), datetime.time(0, 0, 0))
+        _date += datetime.timedelta(seconds=second)
+
+        count_vps = {f'V{vib:02}': vps for vib, vps in Counter(vib_list).items()}
+        total = sum(val for _, val in count_vps.items())
+        self.vps_by_interval_df = self.vps_by_interval_df.append(
+            {
+                **{'time': _date},
+                **count_vps,
+                **{'total': total},
+                **{'vps_hour': total * 3600 / interval},
+                **{'num_vibs': len(set(vib_list))},
+            },
+            ignore_index=True)
 
     def aggregate_vps_by_interval(self, interval):
         ''' aggregate number of vps by interval
@@ -53,41 +77,29 @@ class VpActive:
                 vps_in_interval: list with number of vps in interval
                 vibs_in_interval: list of number of vibs operational in interval
         '''
-        vps_in_interval = []
-        vibs_in_interval = []
-        seconds = []
         total_vps = 0
         second = 0
-
         while second <= seconds_per_day:
             # TODO improve loop, probably over vps_by_second and check if in interval
 
             # calculate vps in interval and normalise by hour and
             # caluculate vibs operational in interval
-            vps = 0
-            vibs_operational = set()
+            vibs_list = []
             for k, val in self.vps_by_second.items():
                 if k in range(second, second + interval):
-                    vps += len(val)
-                    vibs_operational.update(val)
-
+                    vibs_list += val
                 else:
                     pass
 
-            seconds.append(second)
-            vps_in_interval.append(vps * 3600 / interval)
-            vibs_in_interval.append(len(vibs_operational))
+            self.add_vps_interval(interval, second, vibs_list)
 
-            total_vps += vps
+            total_vps += len(vibs_list)
             second += interval
 
-        if seconds != seconds_per_day:
-            vps_in_interval.append(0)
-            vibs_in_interval.append(0)
-            seconds.append(seconds_per_day)
+        if second != seconds_per_day:
+            self.add_vps_interval(interval, seconds_per_day, [])
 
         print(f'\rtotal vps: {total_vps}                                           ')
-        return seconds, vps_in_interval, vibs_in_interval
 
     def plot_vps_by_interval(self, interval):
 
@@ -104,16 +116,21 @@ class VpActive:
         ax2.xaxis.set_major_formatter(time_format)
 
         self.populate_vps_by_second()
-        seconds, vps_in_interval, vibs_in_interval = self.aggregate_vps_by_interval(
-            interval)
-
-        _date = datetime.datetime.combine(
-            self.production_date.date(), datetime.time(0, 0, 0))
-        times = [_date + datetime.timedelta(seconds=second) for second in seconds]
-        ax1.step(times, vps_in_interval, where='post', markersize=5)
-        ax2.step(times, vibs_in_interval, where='post', markersize=5)
+        self.aggregate_vps_by_interval(interval)
+        times = self.vps_by_interval_df['time'].to_list()
+        ax1.step(times,
+                 self.vps_by_interval_df['vps_hour'].to_list(),
+                 where='post', markersize=5,
+                )
+        ax2.step(times,
+                 self.vps_by_interval_df['num_vibs'].to_list(),
+                 where='post', markersize=5,
+                )
 
         plt.show()
+
+    def results_to_excel(self, file_name):
+        self.vps_by_interval_df.to_excel(file_name)
 
 def main():
 
@@ -133,6 +150,9 @@ def main():
         vp_activity = VpActive(production_date)
         vp_activity.select_data(DATABASE_TABLE)
         vp_activity.plot_vps_by_interval(interval)
+
+        results_file = f'.\\vp_activity_{production_date.strftime("%y%m%d")}.xlsx'
+        vp_activity.results_to_excel(results_file)
 
 if __name__ == '__main__':
     main()

@@ -211,7 +211,6 @@ class VpDb:
             f'hdop REAL, '
             f'tb_date VARCHAR(30), '
             f'positioning VARCHAR(75), '
-            f'tb_date VARCHAR(30), '
             f'distance REAL, '
             f'time REAL, '
             f'velocity REAL, '
