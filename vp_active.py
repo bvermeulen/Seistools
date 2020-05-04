@@ -79,7 +79,7 @@ class VpActive:
         '''
         total_vps = 0
         second = 0
-        while second <= seconds_per_day:
+        while second < seconds_per_day:
             # TODO improve loop, probably over vps_by_second and check if in interval
 
             # calculate vps in interval and normalise by hour and
@@ -96,21 +96,20 @@ class VpActive:
             total_vps += len(vibs_list)
             second += interval
 
-        if second != seconds_per_day:
-            self.add_vps_interval(interval, seconds_per_day, [])
+        self.add_vps_interval(interval, seconds_per_day, [])
 
         print(f'\rtotal vps: {total_vps}                                           ')
 
     def plot_vps_by_interval(self, interval):
 
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 8))
-        fig.suptitle(f'Vibes activity for {self.production_date.strftime("%d-%b-%Y")}')
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+        # fig.suptitle(f'Vibes activity for {self.production_date.strftime("%d-%b-%Y")}')
         ax1.set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
         ax2.set_title(f'Vibs operational - interval {interval / 60:.0f} minutes')
-        ax1.set_ylim(bottom=0, top=2500)
-        ax1.yaxis.set_ticks(np.arange(0, 2501, 500))
-        ax2.set_ylim(bottom=0, top=20)
-        ax2.yaxis.set_ticks(np.arange(0, 21, 2))
+        ax1.set_ylim(bottom=0, top=2000)
+        ax1.yaxis.set_ticks(np.arange(0, 2001, 500))
+        ax2.set_ylim(bottom=0, top=16)
+        ax2.yaxis.set_ticks(np.arange(0, 17, 2))
         time_format = mdates.DateFormatter('%H:%M')
         ax1.xaxis.set_major_formatter(time_format)
         ax2.xaxis.set_major_formatter(time_format)
@@ -127,6 +126,7 @@ class VpActive:
                  where='post', markersize=5,
                 )
 
+        fig.tight_layout()
         plt.show()
 
     def results_to_excel(self, file_name):

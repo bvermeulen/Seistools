@@ -397,7 +397,7 @@ class VpDb:
             cursor.execute(sql_string, (
                 vaps_record.file_id,
                 vaps_record.line,
-                vaps_record.point,
+                vaps_record.station,
                 vaps_record.fleet_nr,
                 vaps_record.vibrator,
                 vaps_record.drive,

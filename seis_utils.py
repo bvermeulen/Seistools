@@ -116,6 +116,45 @@ def convert_ecw_to_tiff(file_name):
     src = gdal.Translate(output_file, src)
 
 
+def update_records(vp_records, file_id, vp_record):
+    ''' function to add vp_record to the list vp_records. It checks on if there is a
+        duplicate and removes them first.
+        arguments:
+            vp_records: list of vp_records
+            file_id: id of file name in database
+            vp_record: vp attributes of type VpRecord
+        return:
+            vp_records: list of vp_records of type VpRecord
+    '''
+    # TODO see if a more efficient algorithm can be found
+
+    if not vp_record.line:
+        return vp_records
+
+    # search duplicate records and remove
+    line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
+
+    indexes = []
+    for i, record in enumerate(vp_records):
+        duplicate_record = (
+            line == record.line and
+            station == record.station and
+            vib == record.vibrator
+        )
+
+        if duplicate_record:
+            indexes.append(i)
+
+    for index in indexes:
+        vp_records.pop(index)
+
+    # add the record ...
+    vp_record.file_id = file_id
+    vp_records.append(vp_record)
+
+    return vp_records
+
+
 class MapTools:
 
     combined_gpd = GeoDataFrame()

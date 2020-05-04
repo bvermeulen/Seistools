@@ -89,7 +89,7 @@ VapsTable = recordtype(
     'id, '
     'file_id, '
     'line, '
-    'point, '
+    'station, '
     'fleet_nr, '
     'vibrator, '
     'drive, '

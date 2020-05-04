@@ -47,9 +47,8 @@ class Vaps:
                             continue
 
                         vaps_record = cls.parse_vaps_line(vaps_line)
-                        if  vaps_record.line:
-                            vaps_record.file_id = file_id
-                            vaps_records.append(vaps_record)
+                        vaps_records = seis_utils.update_records(
+                            vaps_records, file_id, vaps_record)
 
                         next(progress_message)
 
@@ -74,7 +73,7 @@ class Vaps:
                     vaps_line[120:126] + '.' + vaps_line[144:147], '%d-%m-%y %H%M%S.%f'))
 
             vaps_record.line = int(float(vaps_line[1:17]))
-            vaps_record.point = int(float(vaps_line[17:25]))
+            vaps_record.station = int(float(vaps_line[17:25]))
             vaps_record.fleet_nr = vaps_line[26:27]
             vaps_record.vibrator = int(vaps_line[27:29])
             vaps_record.drive = int(vaps_line[29:32])
@@ -133,9 +132,8 @@ class Vp:
                             continue
 
                         vp_record = cls.parse_vp_line(vp_line)
-                        if vp_record.line:
-                            vp_record.file_id = file_id
-                            vp_records.append(vp_record)
+                        vp_records = seis_utils.update_records(
+                            vp_records, file_id, vp_record)
 
                         next(progress_message)
 
