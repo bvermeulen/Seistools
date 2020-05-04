@@ -3,6 +3,7 @@
 import os
 import warnings
 import datetime
+import numpy as np
 import seis_database
 import seis_utils
 from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
@@ -41,16 +42,30 @@ class Vaps:
                     f'reading vaps from {vaps_file.file_name}   ')
 
                 vaps_records = []
+                vaps_signatures = np.array([])
+                duplicates = np.array([])
+
                 with open(abs_filename, mode='rt') as vaps:
                     for vaps_line in vaps.readlines():
                         if vaps_line[0] != 'A':
                             continue
 
                         vaps_record = cls.parse_vaps_line(vaps_line)
-                        vaps_records = seis_utils.update_records(
-                            vaps_records, file_id, vaps_record)
+                        vaps_record.file_id = file_id
+                        vaps_records, vaps_signatures, duplicates = (
+                            seis_utils.update_records(
+                                vaps_records, vaps_signatures, duplicates, vaps_record)
+                        )
 
                         next(progress_message)
+
+                # remove duplicate records from unique list of indexes of duplicate
+                # records in reverse order
+                unique_duplicates_reversed = sorted(list(set(duplicates)), reverse=True)
+                for index in unique_duplicates_reversed:
+                    vaps_records.pop(int(index))
+
+                print(f'\n{len(unique_duplicates_reversed)} duplicate records have been removed ...')  #pylint: disable=line-too-long
 
                 cls.vp_db.update_vaps(vaps_records)
                 if vaps_records:
@@ -126,16 +141,29 @@ class Vp:
                     f'reading vp from {vp_file.file_name}   ')
 
                 vp_records = []
+                vp_signatures = np.array([])
+                duplicates = np.array([])
                 with open(abs_filename, mode='rt') as vp:
                     for vp_line in vp.readlines():
                         if vp_line[0:9].strip() == 'Line':
                             continue
 
                         vp_record = cls.parse_vp_line(vp_line)
-                        vp_records = seis_utils.update_records(
-                            vp_records, file_id, vp_record)
+                        vp_record.file_id = file_id
+                        vp_records, vp_signatures, duplicates = (
+                            seis_utils.update_records(
+                                vp_records, vp_signatures, duplicates, vp_record)
+                        )
 
                         next(progress_message)
+
+                # remove duplicate records from unique list of indexes of duplicate
+                # records in reverse order
+                unique_duplicates_reversed = sorted(list(set(duplicates)), reverse=True)
+                for index in unique_duplicates_reversed:
+                    vp_records.pop(int(index))
+
+                print(f'\n{len(unique_duplicates_reversed)} duplicate records have been removed ...')  #pylint: disable=line-too-long
 
                 cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
                 if vp_records:

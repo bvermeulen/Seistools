@@ -1,6 +1,8 @@
 ''' utility functions for vp application
 '''
+import warnings
 import datetime
+import numpy as np
 import pandas as pd
 from  osgeo import gdal
 from geopandas import GeoDataFrame, GeoSeries
@@ -12,6 +14,9 @@ from seis_settings import (
     AREA_EASTING_MIN, AREA_EASTING_MAX, AREA_NORTHING_MIN, AREA_NORHING_MAX,
     MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE,
 )
+
+
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def progress_message_generator(message):
@@ -116,43 +121,34 @@ def convert_ecw_to_tiff(file_name):
     src = gdal.Translate(output_file, src)
 
 
-def update_records(vp_records, file_id, vp_record):
-    ''' function to add vp_record to the list vp_records. It checks on if there is a
-        duplicate and removes them first.
+def update_records(vp_records, record_signatures, duplicates, vp_record):
+    ''' function to add vp_record to the list vp_records. For each record it makes a 10
+        digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
+        of the indexes of duplicates
         arguments:
             vp_records: list of vp_records
-            file_id: id of file name in database
+            record_signatures: np array of record signatures
+            duplicates: np array of duplicae indexes
             vp_record: vp attributes of type VpRecord
         return:
             vp_records: list of vp_records of type VpRecord
+            record_signatures: np array of record signatures of type string
+            duplicates: np array of indexes of type int
     '''
-    # TODO see if a more efficient algorithm can be found
-
     if not vp_record.line:
         return vp_records
 
     # search duplicate records and remove
     line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
+    record_signature = f'{line:04}' + f'{station:04}' + f'{vib:02}'
 
-    indexes = []
-    for i, record in enumerate(vp_records):
-        duplicate_record = (
-            line == record.line and
-            station == record.station and
-            vib == record.vibrator
-        )
-
-        if duplicate_record:
-            indexes.append(i)
-
-    for index in indexes:
-        vp_records.pop(index)
+    duplicates = np.append(duplicates, np.where(record_signatures == record_signature))
 
     # add the record ...
-    vp_record.file_id = file_id
     vp_records.append(vp_record)
+    record_signatures = np.append(record_signatures, record_signature)
 
-    return vp_records
+    return vp_records, record_signatures, duplicates
 
 
 class MapTools:
