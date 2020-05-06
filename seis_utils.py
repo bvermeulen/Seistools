@@ -16,7 +16,7 @@ from seis_settings import (
 )
 
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def progress_message_generator(message):
@@ -121,7 +121,7 @@ def convert_ecw_to_tiff(file_name):
     src = gdal.Translate(output_file, src)
 
 
-def update_records(vp_records, record_signatures, duplicates, vp_record):
+def update_records(vp_records, record_signatures, vp_record):
     ''' function to add vp_record to the list vp_records. For each record it makes a 10
         digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
         of the indexes of duplicates
@@ -142,13 +142,18 @@ def update_records(vp_records, record_signatures, duplicates, vp_record):
     line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
     record_signature = f'{line:04}' + f'{station:04}' + f'{vib:02}'
 
-    duplicates = np.append(duplicates, np.where(record_signatures == record_signature))
+    # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
+    # gets removed on first instance
+    duplicate = np.where(record_signatures == record_signature)[0]
+    if  duplicate:
+        vp_records.pop(duplicate[0])
+        record_signatures = np.delete(record_signatures, duplicate)
 
     # add the record ...
     vp_records.append(vp_record)
     record_signatures = np.append(record_signatures, record_signature)
 
-    return vp_records, record_signatures, duplicates
+    return vp_records, record_signatures
 
 
 class MapTools:
