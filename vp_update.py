@@ -49,8 +49,7 @@ class Vaps:
                         if vaps_line[0] != 'A':
                             continue
 
-                        vaps_record = cls.parse_vaps_line(vaps_line)
-                        vaps_record.file_id = file_id
+                        vaps_record = cls.parse_vaps_line(vaps_line, file_id)
                         vaps_records, vaps_signatures = seis_utils.update_records(
                             vaps_records, vaps_signatures, vaps_record)
 
@@ -59,15 +58,15 @@ class Vaps:
 
                 print(f'\n{count - len(vaps_records)} duplicates have been deleted ...')
 
-                cls.vp_db.update_vaps(vaps_records)
                 if vaps_records:
+                    cls.vp_db.update_vaps(vaps_records)
                     _date = vaps_records[0].time_break.date()
                     cls.vp_db.patch_add_distance_column('VAPS', _date, _date)
 
                 print()
 
     @classmethod
-    def parse_vaps_line(cls, vaps_line):
+    def parse_vaps_line(cls, vaps_line, file_id):
         vaps_record = VapsTable(*[None]*26)
 
         try:
@@ -99,6 +98,8 @@ class Vaps:
             vaps_record.hdop = float(vaps_line[126:130])
             vaps_record.tb_date = vaps_line[130:150]
             vaps_record.positioning = vaps_line[150:225]
+
+            vaps_record.file_id = file_id
 
         except ValueError:
             vaps_record = VapsTable(*[None]*26)
@@ -140,31 +141,28 @@ class Vp:
                         if vp_line[0:9].strip() == 'Line':
                             continue
 
-                        vp_record = cls.parse_vp_line(vp_line)
-                        vp_record.file_id = file_id
+                        vp_record = cls.parse_vp_line(vp_line, file_id)
                         vp_records, vp_signatures = seis_utils.update_records(
                             vp_records, vp_signatures, vp_record)
-
 
                         next(progress_message)
                         count += 1
 
-
                 print(f'\n{count - len(vp_records)} duplicates have been deleted ...')
 
-                cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
                 if vp_records:
+                    cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
                     _date = vp_records[0].time_break.date()
                     cls.vp_db.patch_add_distance_column('VP', _date, _date)
 
                 print()
 
     @staticmethod
-    def parse_vp_line(vp_line):
+    def parse_vp_line(vp_line, file_id):
         vp_record = VpTable(*[None]*24)
 
         try:
-            # create time break date
+            # create time break date and adjust to local time
             time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
                 vp_line[32:51], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y %H:%M:%S') +  \
                     '.' + vp_line[52:55] + '000', '%d-%m-%y %H:%M:%S.%f'))
@@ -188,6 +186,8 @@ class Vp:
             vp_record.peak_phase = int(vp_line[214:226])
             vp_record.avg_phase = int(vp_line[226:238])
             vp_record.qc_flag = vp_line[238:248].strip()
+
+            vp_record.file_id = file_id
 
         except ValueError:
             vp_record = VpTable(*[None]*24)
