@@ -36,15 +36,14 @@ class Rcv:
                 rcv_records = []
                 with open(abs_filename, mode='rt') as rcv:
                     for rcv_line in rcv.readlines():
-                        if rcv_line[0:7].strip() != 'FDU-428':
-                            continue
+                        # if rcv_line[0:7].strip() != 'FDU-428':
+                        #     continue
 
                         rcv_record = cls.parse_rcv_line(rcv_line)
                         if rcv_record.fdu_sn:
                             rcv_record.id_file = id_file
                             rcv_records.append(rcv_record)
-
-                        next(progress_message)
+                            next(progress_message)
 
                 cls.rcv_db.update_rcv(rcv_records)
 
@@ -64,14 +63,27 @@ class Rcv:
             rcv_record.tilt = float(attributes[6])
             rcv_record.noise = float(attributes[7])
             rcv_record.leakage = float(attributes[8])
-            rcv_record.time_update = datetime.strptime(
-                attributes[9], '%m/%d/%y %I:%M:%S %p')
+
+            try:
+                rcv_record.time_update = datetime.strptime(
+                    attributes[9], '%m/%d/%y %I:%M:%S %p')
+
+            except ValueError:
+                rcv_record.time_update = datetime.strptime(
+                    attributes[9], '%m-%d-%y %H:%M')
+
             rcv_record.easting = float(attributes[10])
             rcv_record.northing = float(attributes[11])
             rcv_record.elevation = float(attributes[12])
 
         except ValueError:
             rcv_record = RcvTable(*[None]*15)
+
+        if rcv_record.fdu_sn:
+            # crew occasional is mixing up easting and northing, therefore assert
+            assert rcv_record.northing > rcv_record.easting, (
+                f'northing must be > easting: '
+                f'{rcv_record.northing:,.0f} > {rcv_record.easting:,.0f}')
 
         return rcv_record
 
