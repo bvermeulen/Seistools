@@ -65,7 +65,8 @@ class VpAttributes:
                     cls.total_records, cls.total_records + len(vib_data))]
                 cls.total_records += len(vib_data)
                 vib_data = np.array(vib_data)
-                axis.plot(records, vib_data, '.', label=vib, markersize=MARKERSIZE)
+                label_vib = f'{vib} ({len(records)})'
+                axis.plot(records, vib_data, '.', label=label_vib, markersize=MARKERSIZE)
 
         return axis
 

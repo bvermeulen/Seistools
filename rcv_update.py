@@ -54,6 +54,9 @@ class Rcv:
         rcv_line = rcv_line.strip('\n')
         attributes = rcv_line.split('\t')
 
+        if len(attributes) != 13:
+            return rcv_record
+
         try:
             rcv_record.fdu_sn = int(attributes[1])
             rcv_record.line = int(attributes[2])
