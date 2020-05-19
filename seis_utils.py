@@ -16,7 +16,7 @@ from seis_settings import (
 )
 
 
-# warnings.simplefilter(action='ignore', category=FutureWarning)
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 def progress_message_generator(message):
@@ -145,7 +145,10 @@ def update_records(vp_records, record_signatures, vp_record):
     # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
     # gets removed on first instance
     duplicate = np.where(record_signatures == record_signature)[0]
-    if  duplicate:
+
+    # bug fix: if duplicate: returns False if first and only element of the array has a
+    # a value of 0!! Therefore test on length of the array.
+    if  len(duplicate) == 1:
         vp_records.pop(duplicate[0])
         record_signatures = np.delete(record_signatures, duplicate)
 
