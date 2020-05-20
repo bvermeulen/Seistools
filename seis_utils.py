@@ -147,8 +147,8 @@ def update_records(vp_records, record_signatures, vp_record):
     duplicate = np.where(record_signatures == record_signature)[0]
 
     # bug fix: if duplicate: returns False if first and only element of the array has a
-    # a value of 0!! Therefore test on length of the array.
-    if  len(duplicate) == 1:
+    # a value of 0!! Therefore test on numpy size the array.
+    if  duplicate.size != 0:
         vp_records.pop(duplicate[0])
         record_signatures = np.delete(record_signatures, duplicate)
 
