@@ -215,12 +215,10 @@ class VpDb:
             f'time REAL, '
             f'velocity REAL, '
             f'dense_flag BOOLEAN);'
+            f'geom geometry(Point, {EPSG_PSD93}) );'
         )
 
         cursor.execute(sql_string)
-
-        cursor.execute(
-            f'ALTER TABLE {cls.table_vp} ADD COLUMN geom geometry(Point, {EPSG_PSD93});')
 
         print(f'create table {cls.table_vaps}')
 
