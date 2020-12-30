@@ -6,8 +6,8 @@ import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
 from recordtype import recordtype
-import swath_settings_lekhwair as settings
-# import swath_settings as settings
+# import swath_settings_lekhwair as settings
+import swath_settings as settings
 ''' extract statistis based on GIS geometries
 '''
 # project parameters
@@ -212,10 +212,10 @@ class GisCalc:
         try:
             terrain_gpd = overlay(swath_gpd, terrain_gpd, how='intersection')
             terrain_area = sum(terrain_gpd.geometry.area.to_list())/ 1e6
-            if terrain_area > 0:
+            if terrain_area > 0 and terrain_gpd['geometry'].all():
                 self.plot_gpd(terrain_gpd, color)
 
-        except AttributeError:
+        except (AttributeError, IndexError):
             terrain_area = 0
 
         return terrain_area
