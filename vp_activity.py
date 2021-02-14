@@ -1,5 +1,10 @@
-''' time analysis of vp per day
-    calculated number of vp's for each second of day in hashtable
+''' module to calculate and display vibrator activity over 24 hours time perdio
+    calculates number of vp's for each second of day in hashtable and displays in
+    user defined interval
+    author: Bruno Vermeulen
+    email: bvermeulen@hotmail.com
+    Copyright: 2021
+
 '''
 import sys
 import datetime
@@ -12,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE
+from seis_settings import FLEETS, DATABASE_TABLE, plt_settings
 
 seconds_per_day = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -41,8 +46,16 @@ class VpActive:
             f'process records for {self.production_date.strftime("%d-%b-%Y")}')
 
         for vib in range(1, FLEETS + 1):
+            # get time strings and convert to datetime objects
             vib_data = self.vp_records_df[
-                self.vp_records_df['vibrator'] == vib]['time_break'].to_list()
+                self.vp_records_df['vibrator'] == vib]['time_break']
+            if not vib_data.empty:
+                vib_data = pd.to_datetime(
+                    vib_data, format='%Y-%m-%d %H:%M:%S.%f').to_list()
+
+            else:
+                vib_data = []
+
             for vp_time in vib_data:
                 vp_seconds = int(
                     vp_time.time().hour * 3600 + vp_time.time().minute * 60 +
@@ -103,13 +116,22 @@ class VpActive:
     def plot_vps_by_interval(self, interval):
 
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
-        # fig.suptitle(f'Vibes activity for {self.production_date.strftime("%d-%b-%Y")}')
+        fig.suptitle(
+            f'{plt_settings["vib_activity"]["fig_title"]}'
+            f'{self.production_date.strftime("%d-%b-%Y")}'
+        )
         ax1.set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
         ax2.set_title(f'Vibs operational - interval {interval / 60:.0f} minutes')
-        ax1.set_ylim(bottom=0, top=2000)
-        ax1.yaxis.set_ticks(np.arange(0, 2001, 500))
-        ax2.set_ylim(bottom=0, top=16)
-        ax2.yaxis.set_ticks(np.arange(0, 17, 2))
+
+        max_val = plt_settings['vib_activity']['max_vp_hour']
+        intval = plt_settings['vib_activity']['tick_intval_vp_hour']
+        ax1.set_ylim(bottom=0, top=max_val)
+        ax1.yaxis.set_ticks(np.arange(0, max_val+1, intval))
+
+        max_val = plt_settings['vib_activity']['max_vibs']
+        intval = plt_settings['vib_activity']['tick_intval_vibs']
+        ax2.set_ylim(bottom=0, top=max_val)
+        ax2.yaxis.set_ticks(np.arange(0, max_val+1, intval))
         time_format = mdates.DateFormatter('%H:%M')
         ax1.xaxis.set_major_formatter(time_format)
         ax2.xaxis.set_major_formatter(time_format)

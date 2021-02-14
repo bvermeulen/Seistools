@@ -136,7 +136,7 @@ def update_records(vp_records, record_signatures, vp_record):
             duplicates: np array of indexes of type int
     '''
     if not vp_record.line:
-        return vp_records
+        return vp_records, record_signatures
 
     # search duplicate records and remove
     line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator

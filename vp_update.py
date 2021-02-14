@@ -1,4 +1,8 @@
 ''' module to update vaps and vp record files in the database
+    author: Bruno Vermeulen
+    email: bvermeulen@hotmail.com
+    Copyright: 2021
+
 '''
 import os
 import warnings
@@ -10,7 +14,7 @@ from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_
                            FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                           )
 
-# ignore warning velocity =  dist / time in method patch_add_distance_column
+# ignore warning velocity =  dist / time in method add_distance_column
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 class Vaps:
@@ -56,14 +60,13 @@ class Vaps:
                         next(progress_message)
                         count += 1
 
-                print(f'\n{count - len(vaps_records)} duplicates have been deleted ...')
+                print(f'\n{count - len(vaps_records)} '
+                      f'duplicates have been deleted ...', end='')
 
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
                     _date = vaps_records[0].time_break.date()
-                    cls.vp_db.patch_add_distance_column('VAPS', _date, _date)
-
-                print()
+                    cls.vp_db.add_distance_column('VAPS', _date, _date)
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
@@ -107,7 +110,6 @@ class Vaps:
         return vaps_record
 
 class Vp:
-
     vp_base_folder = DATA_FILES_VP
     vp_db = seis_database.VpDb()
 
@@ -148,12 +150,13 @@ class Vp:
                         next(progress_message)
                         count += 1
 
-                print(f'\n{count - len(vp_records)} duplicates have been deleted ...')
+                print(f'\n{count - len(vp_records)} '
+                      f'duplicates have been deleted ...', end='')
 
                 if vp_records:
                     cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
                     _date = vp_records[0].time_break.date()
-                    cls.vp_db.patch_add_distance_column('VP', _date, _date)
+                    cls.vp_db.add_distance_column('VP', _date, _date)
 
                 print()
 
@@ -199,11 +202,11 @@ if __name__ == '__main__':
     vp_db = seis_database.VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
-    vp_db.create_table_vp_files()
-    vp_db.create_table_vp()
+    # vp_db.create_table_vp_files()
+    # vp_db.create_table_vp()
 
     vaps = Vaps()
     vaps.read_vaps()
 
-    vp = Vp()
-    vp.read_vp()
+    # vp = Vp()
+    # vp.read_vp()

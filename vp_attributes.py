@@ -1,4 +1,7 @@
 ''' display vibe attributes
+    author: Bruno Vermeulen
+    email: bvermeulen@hotmail.com
+    Copyright: 2021
 '''
 import numpy as np
 from scipy import stats

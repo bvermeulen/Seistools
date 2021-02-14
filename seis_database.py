@@ -1,52 +1,40 @@
-''' module for vp database interaction
+''' module for seistools database interaction using sqlite3
 '''
-#    postgis:
-#    ALTER TABLE public.vaps_records ADD COLUMN geom geometry(Point, 3440);
-#    UPDATE public.vaps_records SET geom =
-#        ST_SetSRID(ST_MakePoint(easting, northing), 3440);
-# find duplicates
-#SELECT *
-#FROM users
-#WHERE employee_id IN (SELECT employee_id
-#                      FROM users
-#                      GROUP BY employee_id
-#                      HAVING COUNT(employee_id) > 1);
 from functools import wraps
 import datetime
+import sqlite3
 import numpy as np
 import pandas as pd
-from sqlalchemy import create_engine
 from shapely.geometry import Point
-import psycopg2
-from decouple import config
+from sqlalchemy import create_engine
 import seis_utils
-from seis_settings import (DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM,
-                           EPSG_PSD93)
+from seis_settings import (
+    DATABASE, INIT_DB, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM, EPSG_PSD93
+)
 
 
 class DbUtils:
     '''  utility methods for database
     '''
-    host = 'localhost'
-    db_user = 'db_tester'
-    db_user_pw = config('DB_PASSWORD')
-    database = DATABASE
+    database = DATABASE + '_db.sqlite3'
 
     @classmethod
     def connect(cls, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            connect_string = f'host=\'{cls.host}\' dbname=\'{cls.database}\''\
-                             f'user=\'{cls.db_user}\' password=\'{cls.db_user_pw}\''
             result = None
             try:
-                connection = psycopg2.connect(connect_string)
+                connection = sqlite3.connect(cls.database)
+                connection.enable_load_extension(True)
+                connection.execute('SELECT load_extension("mod_spatialite")')
+                if INIT_DB:
+                    connection.execute('SELECT InitSpatialMetaData(1);')
                 cursor = connection.cursor()
                 result = func(*args, cursor, **kwargs)
                 connection.commit()
 
-            except psycopg2.Error as error:
-                print(f'error while connect to PostgreSQL {cls.database}: '
+            except sqlite3.Error as error:
+                print(f'error while connect to sqlite {cls.database}: '
                       f'{error}')
 
             finally:
@@ -61,8 +49,7 @@ class DbUtils:
     @classmethod
     def get_engine(cls):
         return create_engine(
-            f'postgresql+psycopg2://{cls.db_user}:{cls.db_user_pw}'
-            f'@{cls.host}/{cls.database}')
+            f'sqlite:///{cls.database}')
 
     @staticmethod
     def get_cursor(cursor):
@@ -122,7 +109,7 @@ class VpDb:
 
         sql_string = (
             f'CREATE TABLE {cls.table_vp_files} ('
-            f'id SERIAL PRIMARY KEY, '
+            f'id INTEGER PRIMARY KEY, '
             f'file_name VARCHAR(100), '
             f'file_date TIMESTAMP);'
         )
@@ -135,9 +122,10 @@ class VpDb:
     def create_table_vp(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
+        # first create the table
         sql_string = (
             f'CREATE TABLE {cls.table_vp} ('
-            f'id SERIAL PRIMARY KEY, '
+            f'id INTEGER PRIMARY KEY, '
             f'file_id INTEGER REFERENCES {cls.table_vp_files}(id) ON DELETE CASCADE, '
             f'vaps_id INTEGER REFERENCES {cls.table_vaps}(id) ON DELETE CASCADE, '
             f'line INT, '
@@ -161,9 +149,14 @@ class VpDb:
             f'time REAL, '
             f'velocity REAL, '
             f'dense_flag BOOLEAN, '
-            f'geom geometry(Point, {EPSG_PSD93}) );'
         )
+        cursor.executescript(sql_string)
 
+        # once table is created you can add the geomety column
+        sql_string = (
+            f'SELECT AddGeometryColumn("{cls.table_vp}", '
+            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+        )
         cursor.execute(sql_string)
 
         print(f'create table {cls.table_vp}')
@@ -175,7 +168,7 @@ class VpDb:
 
         sql_string = (
             f'CREATE TABLE {cls.table_vaps_files} ('
-            f'id SERIAL PRIMARY KEY, '
+            f'id INTEGER PRIMARY KEY, '
             f'file_name VARCHAR(100), '
             f'file_date TIMESTAMP);'
         )
@@ -190,6 +183,7 @@ class VpDb:
 
         sql_string = (
             f'CREATE TABLE {cls.table_vaps} ('
+            f'id INTEGER PRIMARY KEY, '
             f'file_id INTEGER REFERENCES {cls.table_vaps_files}(id) ON DELETE CASCADE, '
             f'line INTEGER, '
             f'point INTEGER, '
@@ -214,10 +208,15 @@ class VpDb:
             f'distance REAL, '
             f'time REAL, '
             f'velocity REAL, '
-            f'dense_flag BOOLEAN);'
-            f'geom geometry(Point, {EPSG_PSD93}) );'
+            f'dense_flag BOOLEAN); '
         )
+        cursor.executescript(sql_string)
 
+        # once table is created you can add the geomety column
+        sql_string = (
+            f'SELECT AddGeometryColumn("{cls.table_vaps}", '
+            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+        )
         cursor.execute(sql_string)
 
         print(f'create table {cls.table_vaps}')
@@ -251,13 +250,11 @@ class VpDb:
         sql_string = (
             f'INSERT INTO {cls.table_vp_files} ('
             f'file_name, file_date) '
-            f'VALUES (%s, %s) '
-            f'RETURNING id;'
+            f'VALUES (?, ?); '
         )
-
         cursor.execute(sql_string, (vp_file.file_name, vp_file.file_date))
 
-        return cursor.fetchone()[0]
+        return cursor.lastrowid
 
     @classmethod
     @DbUtils.connect
@@ -298,8 +295,8 @@ class VpDb:
             f'file_id, vaps_id, line, station, vibrator, time_break, '
             f'planned_easting, planned_northing, easting, northing, elevation, _offset, '
             f'peak_force, avg_force, peak_dist, avg_dist, peak_phase, avg_phase, '
-            f'qc_flag, geom) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
-            f'%s, %s, %s, %s, %s, %s, %s, %s, %s,  ST_SetSRID(%s::geometry, %s));'
+            f'qc_flag, geom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
+            f'?, ?, ?, ?, ?, ?, ?, ?, ?, MakePoint(?, ?, ?));'
         )
 
         for vp_record in vp_records:
@@ -328,7 +325,7 @@ class VpDb:
                 vp_record.peak_phase,
                 vp_record.avg_phase,
                 vp_record.qc_flag,
-                point.wkb_hex, EPSG_PSD93
+                point.x, point.y, EPSG_PSD93
                 ))
 
             next(progress_message)
@@ -350,6 +347,7 @@ class VpDb:
             f'file_name=\'{vaps_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
+
         try:
             # check if id exists
             _ = cursor.fetchone()[0]
@@ -362,13 +360,12 @@ class VpDb:
         sql_string = (
             f'INSERT INTO {cls.table_vaps_files} ('
             f'file_name, file_date) '
-            f'VALUES (%s, %s) '
-            f'RETURNING id;'
+            f'VALUES (?, ?); '
         )
 
         cursor.execute(sql_string, (vaps_file.file_name, vaps_file.file_date))
 
-        return cursor.fetchone()[0]
+        return cursor.lastrowid
 
     @classmethod
     @DbUtils.connect
@@ -378,15 +375,14 @@ class VpDb:
         progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_vaps}                             ')
 
-
         sql_string = (
             f'INSERT INTO {cls.table_vaps} ('
             f'file_id, line, point, fleet_nr, vibrator, drive, '
             f'avg_phase, peak_phase, avg_dist, peak_dist, avg_force, peak_force, '
             f'avg_stiffness, avg_viscosity, easting, northing, elevation, '
             f'time_break, hdop, tb_date, positioning, geom) '
-            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, '
-            f'%s, %s, %s, %s, %s, %s, ST_SetSRID(%s::geometry, %s));'
+            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
+            f'?, ?, ?, ?, ?, ?, MakePoint(?, ?, ?));'
         )
 
         for vaps_record in vaps_records:
@@ -414,13 +410,13 @@ class VpDb:
                 vaps_record.hdop,
                 vaps_record.tb_date,
                 vaps_record.positioning,
-                point.wkb_hex, EPSG_PSD93
+                point.x, point.y, EPSG_PSD93
                 ))
 
             next(progress_message)
 
     @classmethod
-    def get_vp_data_by_time(cls, start_time, end_time):
+    def get_vp_data_by_time(cls, database_table, start_time, end_time):
         ''' retrieve vp data by time interval
             arguments:
               start_time: datetime object
@@ -429,28 +425,17 @@ class VpDb:
               pandas dataframe with all database attributes
         '''
         assert end_time >= start_time, "end time must be greater equal than start time"
+        if database_table == 'VAPS':
+            table = cls.table_vaps
+
+        else:
+            table = cls.table_vp
+
         engine = DbUtils().get_engine()
         sql_string = (
-            f'SELECT '
-                f'{cls.table_vp}.line, '  #pylint: disable=bad-continuation
-                f'{cls.table_vp}.station, '
-                f'{cls.table_vp}.easting, '
-                f'{cls.table_vp}.northing, '
-                f'{cls.table_vp}.elevation, '
-                f'{cls.table_vp}.time_break, '
-                f'{cls.table_vaps}.avg_phase, '
-                f'{cls.table_vaps}.peak_phase, '
-                f'{cls.table_vaps}.avg_dist, '
-                f'{cls.table_vaps}.peak_dist, '
-                f'{cls.table_vaps}.avg_force, '
-                f'{cls.table_vaps}.peak_force, '
-                f'{cls.table_vaps}.avg_stiffness, '
-                f'{cls.table_vaps}.avg_viscosity '
-            f'FROM {cls.table_vp}, {cls.table_vaps} '
-            f'WHERE '
-                f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
-                f'{cls.table_vp}.time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
-            f'ORDER BY {cls.table_vp}.time_break;'
+            f'SELECT * FROM {table} WHERE '
+            f'time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
+            f'ORDER BY time_break;'
         )
         return pd.read_sql_query(sql_string, con=engine)
 
@@ -471,45 +456,34 @@ class VpDb:
 
         engine = DbUtils().get_engine()
         sql_string = (f'SELECT * FROM {table} WHERE '
-                      f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\'')
-        return pd.read_sql_query(sql_string, con=engine)
+                      f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\';')
+        vp_df = pd.read_sql_query(sql_string, con=engine)
+        return vp_df
 
     @classmethod
-    def get_vp_data_by_line(cls, line):
+    def get_vp_data_by_line(cls, database_table, line):
         ''' retrieve vp data by line number
             arguments:
               line: integer
             returns:
               pandas dataframe with all database attributes
         '''
+        if database_table == 'VAPS':
+            table = cls.table_vaps
+
+        else:
+            table = cls.table_vp
+
         engine = DbUtils().get_engine()
         sql_string = (
-            f'SELECT '
-                f'{cls.table_vp}.line, '  #pylint: disable=bad-continuation
-                f'{cls.table_vp}.station, '
-                f'{cls.table_vp}.easting, '
-                f'{cls.table_vp}.northing, '
-                f'{cls.table_vp}.elevation, '
-                f'{cls.table_vp}.time_break, '
-                f'{cls.table_vaps}.avg_phase, '
-                f'{cls.table_vaps}.peak_phase, '
-                f'{cls.table_vaps}.avg_dist, '
-                f'{cls.table_vaps}.peak_dist, '
-                f'{cls.table_vaps}.avg_force, '
-                f'{cls.table_vaps}.peak_force, '
-                f'{cls.table_vaps}.avg_stiffness, '
-                f'{cls.table_vaps}.avg_viscosity '
-            f'FROM {cls.table_vp}, {cls.table_vaps} '
-            f'WHERE '
-                f'{cls.table_vp}.vaps_id = {cls.table_vaps}.id AND '
-                f'{cls.table_vp}.line = {line} '
-            f'ORDER BY {cls.table_vp}.station;'
+            f'SELECT * FROM {table} WHERE '
+            f'line = {line} ORDER BY station;'
         )
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
     @DbUtils.connect
-    def patch_add_distance_column(cls, database_table, start_date, end_date, *args):
+    def add_distance_column(cls, database_table, start_date, end_date, *args):
         ''' patch to add column distance to vaps table
             arguments:
               database_table: 'VAPS' or 'VP'
@@ -527,11 +501,11 @@ class VpDb:
         sql_string = (
             f'UPDATE {table} '
             f'SET'
-            f'    distance = %s, '
-            f'    time = %s, '
-            f'    velocity = %s, '
-            f'    dense_flag = %s '
-            f'WHERE id = %s;'
+            f'    distance = ?, '
+            f'    time = ?, '
+            f'    velocity = ?, '
+            f'    dense_flag = ? '
+            f'WHERE id = ?;'
         )
 
         _date = start_date
@@ -546,12 +520,14 @@ class VpDb:
             for vib in range(1, FLEETS):
                 vib_df = vp_records_df[vp_records_df['vibrator'] == vib]
 
-                vp_pts = [(id_xy[0], Point(id_xy[1], id_xy[2]), id_xy[3]) for id_xy in zip(  #pylint: disable=line-too-long
-                    vib_df['id'].to_list(),
-                    vib_df['easting'].to_list(),
-                    vib_df['northing'].to_list(),
-                    vib_df['time_break'].to_list(),
-                )]
+                vp_pts = [
+                    (id_xy[0], Point(id_xy[1], id_xy[2]), id_xy[3]) for id_xy in zip(
+                        vib_df['id'].to_list(),
+                        vib_df['easting'].to_list(),
+                        vib_df['northing'].to_list(),
+                        vib_df['time_break'].to_list(),
+                    )
+                ]
 
                 dense_flag_1 = False
 
@@ -560,9 +536,23 @@ class VpDb:
                     dx = vp_pts[i + 1][1].x - vp_pts[i][1].x
                     dy = vp_pts[i + 1][1].y - vp_pts[i][1].y
                     dist = np.sqrt(dx*dx + dy*dy)
-                    time = max(0, (
-                        vp_pts[i + 1][2] - vp_pts[i][2]).seconds -
-                               SWEEP_TIME - PAD_DOWN_TIME)
+                    try:
+                        t2 = datetime.datetime.strptime(
+                            vp_pts[i+1][2], '%Y-%m-%d %H:%M:%S.%f')
+
+                    except ValueError:
+                        t2 = datetime.datetime.strptime(
+                            vp_pts[i+1][2], '%Y-%m-%d %H:%M:%S')
+
+                    try:
+                        t1 = datetime.datetime.strptime(
+                            vp_pts[i][2], '%Y-%m-%d %H:%M:%S.%f')
+
+                    except ValueError:
+                        t1 = datetime.datetime.strptime(
+                            vp_pts[i][2], '%Y-%m-%d %H:%M:%S')
+
+                    time = max(0, ((t2 - t1).seconds - SWEEP_TIME - PAD_DOWN_TIME))
 
                     try:
                         velocity = dist / time
@@ -644,8 +634,7 @@ class RcvDb:
             f'file_name VARCHAR(100), '
             f'file_date TIMESTAMP);'
         )
-
-        cursor.execute(sql_string)
+        cursor.executescript(sql_string)
         print(f'create table {cls.table_files}')
 
     @classmethod
@@ -660,11 +649,16 @@ class RcvDb:
             f'easting DOUBLE PRECISION, '
             f'northing DOUBLE PRECISION, '
             f'elevation REAL, '
-            f'geom geometry(Point, {EPSG_PSD93}) UNIQUE, '
             f'PRIMARY KEY (line, station) '
             f');'
         )
+        cursor.executescript(sql_string)
 
+        # once table is created you can add the geomety column
+        sql_string = (
+            f'SELECT AddGeometryColumn("{cls.table_points}", '
+            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+        )
         cursor.execute(sql_string)
         print(f'create table {cls.table_points}')
 
@@ -682,8 +676,7 @@ class RcvDb:
             f'geom geometry REFERENCES {cls.table_points}(geom) ON DELETE CASCADE '
             f');'
         )
-
-        cursor.execute(sql_string)
+        cursor.executesripts(sql_string)
         print(f'create table {cls.table_attributes}')
 
     @classmethod
@@ -715,12 +708,10 @@ class RcvDb:
         sql_string = (
             f'INSERT INTO {cls.table_files} ('
             f'file_name, file_date) '
-            f'VALUES (%s, %s) '
-            f'RETURNING id;'
+            f'VALUES (?, ?) '
         )
-
         cursor.execute(sql_string, (rcv_file.file_name, rcv_file.file_date))
-        return cursor.fetchone()[0]
+        return cursor.lastrowid
 
     @classmethod
     def create_point_record(cls, cursor, rcv_record):
@@ -728,9 +719,7 @@ class RcvDb:
 
         sql_string = (
             f'SELECT geom FROM {cls.table_points} WHERE '
-            f'line = {rcv_record.line} AND '
-            f'station = {rcv_record.station} '
-            f';'
+            f'line = {rcv_record.line} AND station = {rcv_record.station}; '
         )
         cursor.execute(sql_string)
 
@@ -741,8 +730,7 @@ class RcvDb:
             sql_string = (
                 f'INSERT INTO {cls.table_points} ('
                 f'line, station, easting, northing, elevation, geom) '
-                f'VALUES (%s, %s, %s, %s, %s, ST_SetSRID(%s::geometry, %s)) '
-                f'RETURNING geom;'
+                f'VALUES (?, ?, ?, ?, ?, MakePoint(?, ?, ?)); '
             )
 
             cursor.execute(sql_string, (
@@ -751,9 +739,13 @@ class RcvDb:
                 rcv_record.easting,
                 rcv_record.northing,
                 rcv_record.elevation,
-                point.wkb_hex, EPSG_PSD93
+                point.x, point.y, EPSG_PSD93
             ))
 
+            sql_string = (
+                f'SELECT geom FROM {cls.table_points} WHERE id={cursor.lastrowid};'
+            )
+            cursor.executescript(sql_string)
             geom = cursor.fetchone()[0]
 
         return geom
@@ -764,7 +756,7 @@ class RcvDb:
             f'INSERT INTO {cls.table_attributes} ('
             f'id_file, fdu_sn, sensor_type, resistance, tilt, '
             f'noise, leakage, time_update, geom) '
-            f'VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) '
+            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
             f';'
         )
 
