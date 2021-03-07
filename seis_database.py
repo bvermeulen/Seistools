@@ -148,7 +148,7 @@ class VpDb:
             f'distance REAL, '
             f'time REAL, '
             f'velocity REAL, '
-            f'dense_flag BOOLEAN, '
+            f'dense_flag BOOLEAN);'
         )
         cursor.executescript(sql_string)
 
@@ -295,8 +295,7 @@ class VpDb:
             f'file_id, vaps_id, line, station, vibrator, time_break, '
             f'planned_easting, planned_northing, easting, northing, elevation, _offset, '
             f'peak_force, avg_force, peak_dist, avg_dist, peak_phase, avg_phase, '
-            f'qc_flag, geom) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
-            f'?, ?, ?, ?, ?, ?, ?, ?, ?, MakePoint(?, ?, ?));'
+            f'qc_flag, geom) VALUES ({", ".join(["?"*19])}, MakePoint(?, ?, ?));'
         )
 
         for vp_record in vp_records:
@@ -381,8 +380,7 @@ class VpDb:
             f'avg_phase, peak_phase, avg_dist, peak_dist, avg_force, peak_force, '
             f'avg_stiffness, avg_viscosity, easting, northing, elevation, '
             f'time_break, hdop, tb_date, positioning, geom) '
-            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, '
-            f'?, ?, ?, ?, ?, ?, MakePoint(?, ?, ?));'
+            f'VALUES ({", ".join(["?"]*21)}, MakePoint(?, ?, ?));'
         )
 
         for vaps_record in vaps_records:
@@ -597,91 +595,161 @@ class VpDb:
 
 
 class RcvDb:
-    table_files = 'rcv_files'
-    table_points = 'rcv_points'
-    table_attributes = 'rcv_attributes'
+    table_rcvr_points = 'rcvr_points'
+    table_node_files = 'node_files'
+    table_node_attributes = 'node_attributes'
 
     @classmethod
     @DbUtils.connect
-    def delete_table_records(cls, *args):
+    def delete_table_rcvr_points(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_attributes} CASCADE;'
+        sql_string = f'DROP TABLE {cls.table_rcvr_points};'
         cursor.execute(sql_string)
-        print(f'delete table {cls.table_attributes}')
-
-        sql_string = f'DROP TABLE {cls.table_points} CASCADE;'
-        cursor.execute(sql_string)
-        print(f'delete table {cls.table_points}')
+        print(f'delete table {cls.table_rcvr_points}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_files(cls, *args):
+    def delete_table_node_attributes(cls, *args):
         cursor = DbUtils().get_cursor(args)
 
-        sql_string = f'DROP TABLE {cls.table_files} CASCADE;'
+        sql_string = f'DROP TABLE {cls.table_node_attributes};'
         cursor.execute(sql_string)
-        print(f'delete table {cls.table_files}')
+        print(f'delete table {cls.table_node_attributes}')
 
     @classmethod
     @DbUtils.connect
-    def create_table_files(cls, *args):
+    def delete_table_node_files(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = f'DROP TABLE {cls.table_node_files};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_node_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_rcvr_points(cls, *args):
+        ''' create table with receiver positions
+        '''
         cursor = DbUtils().get_cursor(args)
 
         sql_string = (
-            f'CREATE TABLE {cls.table_files} ('
-            f'id SERIAL PRIMARY KEY, '
-            f'file_name VARCHAR(100), '
-            f'file_date TIMESTAMP);'
-        )
-        cursor.executescript(sql_string)
-        print(f'create table {cls.table_files}')
-
-    @classmethod
-    @DbUtils.connect
-    def create_table_records(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
-        sql_string = (
-            f'CREATE TABLE {cls.table_points} ('
-            f'line INT NOT NULL, '
-            f'station INT NOT NULL, '
+            f'CREATE TABLE {cls.table_rcvr_points} ('
+            f'id INTEGER PRIMARY KEY, '
+            f'line INTEGER NOT NULL, '
+            f'rcvr_index INTEGER NOT NULL, '
+            f'station INTEGER NOT NULL, '
             f'easting DOUBLE PRECISION, '
             f'northing DOUBLE PRECISION, '
             f'elevation REAL, '
-            f'PRIMARY KEY (line, station) '
+            f'UNIQUE (line, station, rcvr_index) '
             f');'
         )
         cursor.executescript(sql_string)
 
         # once table is created you can add the geomety column
         sql_string = (
-            f'SELECT AddGeometryColumn("{cls.table_points}", '
+            f'SELECT AddGeometryColumn("{cls.table_rcvr_points}", '
             f'"geom", {EPSG_PSD93}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
-        print(f'create table {cls.table_points}')
+        print(f'create table {cls.table_rcvr_points}')
 
-        sql_string = (
-            f'CREATE TABLE {cls.table_attributes} ('
-            f'id SERIAL PRIMARY KEY, '
-            f'id_file INT REFERENCES {cls.table_files}(id) ON DELETE CASCADE, '
-            f'fdu_sn INT, '
-            f'sensor_type INTEGER, '
-            f'resistance REAL, '
-            f'tilt REAL, '
-            f'noise REAL, '
-            f'leakage REAL, '
-            f'time_update TIMESTAMP, '
-            f'geom geometry REFERENCES {cls.table_points}(geom) ON DELETE CASCADE '
-            f');'
-        )
-        cursor.executesripts(sql_string)
-        print(f'create table {cls.table_attributes}')
 
     @classmethod
     @DbUtils.connect
-    def update_rcv_file(cls, rcv_file, *args):
+    def create_table_node_files(cls, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = (
+            f'CREATE TABLE {cls.table_node_files} ('
+            f'id INTEGER PRIMARY KEY, '
+            f'file_name VARCHAR(100), '
+            f'file_date TIMESTAMP);'
+        )
+        cursor.executescript(sql_string)
+        print(f'create table {cls.table_node_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_node_attributes(cls, *args):
+        ''' attributes table for the Inova Quantum nodes
+            based on the IX1 analog test report (Feb-2021)
+        '''
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = (
+            f'CREATE TABLE {cls.table_node_attributes} ('
+            f'id INTEGER PRIMARY KEY, '
+            f'id_file INTEGER REFERENCES {cls.table_node_files}(id) ON DELETE CASCADE, '
+            f'id_point INTEGER REFERENCES {cls.table_rcvr_points}(id), '
+            f'qtm_sn VARCHAR(8), '
+            f'battery REAL, '
+            f'ch INTEGER, '
+            f'type VARCHAR(15), '
+            f'noise REAL, '
+            f'frequency REAL, '
+            f'damping REAL, '
+            f'sensitivity REAL, '
+            f'resistance REAL, '
+            f'leakage REAL, '
+            f'thd REAL, '
+            f'crossfeed REAL, '
+            f'power REAL, '
+            f'cmr REAL, '
+            f'tilt REAL, '
+            f'acqrate REAL, '
+            f'time_stamp TIMESTAMP);'
+        )
+        cursor.executescript(sql_string)
+        print(f'create table {cls.table_node_attributes}')
+
+    @classmethod
+    @DbUtils.connect
+    def update_rcvr_point_records(cls, rcv_records, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        progress_message = seis_utils.progress_message_generator(
+            f'populate database for table: {cls.table_rcvr_points}                      ')
+
+        sql_select_string = (
+            f'SELECT id FROM {cls.table_rcvr_points} WHERE '
+            f'line = ? AND '
+            f'station = ? AND '
+            f'rcvr_index = ?;'
+        )
+        sql_insert_string = (
+            f'INSERT INTO {cls.table_rcvr_points} ('
+            f'line, station, rcvr_index, easting, northing, elevation, geom) '
+            f'VALUES ({", ".join(["?"]*6)}, MakePoint(?, ?, ?)); '
+        )
+
+        for rcv_record in rcv_records:
+            cursor.execute(sql_select_string, (
+                rcv_record.line,
+                rcv_record.station,
+                rcv_record.rcvr_index
+            ))
+            try:
+                _ = cursor.fetchone()[0]
+
+            except TypeError:
+                point = Point(rcv_record.easting, rcv_record.northing)
+                cursor.execute(sql_insert_string, (
+                    rcv_record.line,
+                    rcv_record.station,
+                    rcv_record.rcvr_index,
+                    rcv_record.easting,
+                    rcv_record.northing,
+                    rcv_record.elevation,
+                    point.x, point.y, EPSG_PSD93
+                ))
+
+                next(progress_message)
+
+    @classmethod
+    @DbUtils.connect
+    def update_node_file(cls, node_file, *args):
         ''' method to to check if file_name exists in the database, if it does not then
             add the filename to the data base
             returns:
@@ -692,12 +760,11 @@ class RcvDb:
 
         # check if file exists
         sql_string = (
-            f'SELECT id FROM {cls.table_files} WHERE '
-            f'file_name=\'{rcv_file.file_name}\' ;'
+            f'SELECT id FROM {cls.table_node_files} WHERE '
+            f'file_name=\'{node_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:
-            # check if id exists
             _ = cursor.fetchone()[0]
             return -1
 
@@ -706,83 +773,85 @@ class RcvDb:
             pass
 
         sql_string = (
-            f'INSERT INTO {cls.table_files} ('
+            f'INSERT INTO {cls.table_node_files} ('
             f'file_name, file_date) '
             f'VALUES (?, ?) '
         )
-        cursor.execute(sql_string, (rcv_file.file_name, rcv_file.file_date))
+        cursor.execute(sql_string, (node_file.file_name, node_file.file_date))
         return cursor.lastrowid
 
     @classmethod
-    def create_point_record(cls, cursor, rcv_record):
-        point = Point(rcv_record.easting, rcv_record.northing)
-
-        sql_string = (
-            f'SELECT geom FROM {cls.table_points} WHERE '
-            f'line = {rcv_record.line} AND station = {rcv_record.station}; '
-        )
-        cursor.execute(sql_string)
-
-        try:
-            geom = cursor.fetchone()[0]
-
-        except TypeError:
-            sql_string = (
-                f'INSERT INTO {cls.table_points} ('
-                f'line, station, easting, northing, elevation, geom) '
-                f'VALUES (?, ?, ?, ?, ?, MakePoint(?, ?, ?)); '
-            )
-
-            cursor.execute(sql_string, (
-                rcv_record.line,
-                rcv_record.station,
-                rcv_record.easting,
-                rcv_record.northing,
-                rcv_record.elevation,
-                point.x, point.y, EPSG_PSD93
-            ))
-
-            sql_string = (
-                f'SELECT geom FROM {cls.table_points} WHERE id={cursor.lastrowid};'
-            )
-            cursor.executescript(sql_string)
-            geom = cursor.fetchone()[0]
-
-        return geom
-
-    @classmethod
-    def create_attr_record(cls, cursor, rcv_record):
-        sql_string = (
-            f'INSERT INTO {cls.table_attributes} ('
-            f'id_file, fdu_sn, sensor_type, resistance, tilt, '
-            f'noise, leakage, time_update, geom) '
-            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
-            f';'
-        )
-
-        cursor.execute(sql_string, (
-            rcv_record.id_file,
-            rcv_record.fdu_sn,
-            rcv_record.sensor_type,
-            rcv_record.resistance,
-            rcv_record.tilt,
-            rcv_record.noise,
-            rcv_record.leakage,
-            rcv_record.time_update,
-            rcv_record.geom
-        ))
-
-    @classmethod
     @DbUtils.connect
-    def update_rcv(cls, rcv_records, *args):
+    def update_node_attributes_records(cls, node_records, *args):
         cursor = DbUtils().get_cursor(args)
 
         progress_message = seis_utils.progress_message_generator(
-            f'populate database for table: {cls.table_points}                           ')
+            f'populate database for table: {cls.table_node_attributes}                  ')
 
-        for rcv_record in rcv_records:
+        # get the receiver ids and check all nodes have an rcvr_id
+        sql_get_rcvr_id_string = (
+            f'SELECT id FROM {cls.table_rcvr_points} WHERE '
+            f'line = ? AND '
+            f'station = ? AND '
+            f'rcvr_index = ?;'
+        )
 
-            rcv_record.geom = cls.create_point_record(cursor, rcv_record)
-            cls.create_attr_record(cursor, rcv_record)
+        rcvr_ids = []
+        for node_record in node_records:
+            cursor.execute(sql_get_rcvr_id_string, (
+                node_record.line,
+                node_record.station,
+                node_record.rcvr_index
+            ))
+            try:
+                rcvr_ids.append(cursor.fetchone()[0])
+
+            except TypeError:
+                return (
+                    'check node file, not all records have a receiver point '
+                    'in the database'
+                )
+
+        sql_insert_string = (
+            f'INSERT INTO {cls.table_node_attributes} ('
+            f'id_file, id_point, qtm_sn, battery, ch, type, noise, frequency, damping, '
+            f'sensitivity, resistance, leakage, thd, crossfeed, power, cmr, '
+            f'tilt, acqrate, time_stamp) '
+            f'VALUES ({", ".join(["?"]*19)}) '
+            f';'
+        )
+        for rcvr_id, node_record in zip(rcvr_ids, node_records):
+            cursor.execute(sql_insert_string, (
+                node_record.id_file,
+                rcvr_id,
+                node_record.qtm_sn,
+                node_record.battery,
+                node_record.ch,
+                node_record.type,
+                node_record.noise,
+                node_record.frequency,
+                node_record.damping,
+                node_record.sensitivity,
+                node_record.resistance,
+                node_record.leakage,
+                node_record.thd,
+                node_record.crossfeed,
+                node_record.power,
+                node_record.cmr,
+                node_record.tilt,
+                node_record.acqrate,
+                node_record.time_stamp,
+            ))
 
             next(progress_message)
+
+    @classmethod
+    @DbUtils.connect
+    def delete_node_file(cls, file_id, *args):
+        cursor = DbUtils().get_cursor(args)
+
+        sql_string = (
+            f'DELETE FROM {cls.table_node_files} WHERE id={file_id};'
+        )
+        cursor.execute(sql_string)
+        print(f'record {file_id} deleted from {cls.table_node_files}')

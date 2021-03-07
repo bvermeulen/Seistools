@@ -7,7 +7,8 @@ from recordtype import recordtype
 #DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS_TEST\\'
 DATA_FILES_VAPS = r'data_files\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
-DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
+#DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
+DATA_FILES_RECEIVERS = r'data_files\\nodes\\'
 
 DATABASE = 'Haniya_North'
 INIT_DB = False
@@ -142,29 +143,46 @@ plt_settings = {
     },
 }
 
-FilesRcvTable = recordtype(
-    'FilesRcvTable',
+FilesNodeTable = recordtype(
+    'FilesNodeTable',
     'file_name, '
     'file_date'
 )
 
-RcvTable = recordtype(
-    'RcvTable',
-    'id_file, '
-    'id_attr, '
-    'fdu_sn, '
+NodeTable = recordtype(
+    'NodeTable',
     'line, '
     'station, '
-    'sensor_type, '
-    'resistance, '
-    'tilt, '
+    'rcvr_index, '
+    'id_file, '
+    'id_point, '
+    'qtm_sn, '
+    'battery, '
+    'ch, '
+    'type, '
     'noise, '
+    'frequency, '
+    'damping, '
+    'sensitivity, '
+    'resistance, '
     'leakage, '
-    'time_update, '
-    'easting, '
-    'northing, '
-    'elevation, '
-    'geom'
+    'thd, '
+    'crossfeed, '
+    'power, '
+    'cmr, '
+    'tilt, '
+    'acqrate, '
+    'time_stamp'
+)
+
+RcvrTable = recordtype(
+    'RcvrTable',
+    'line, '
+    'station, '
+    'rcvr_index, '
+    'easting '
+    'northing '
+    'elevation'
 )
 
 lines = [
