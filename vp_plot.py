@@ -2,7 +2,7 @@
 '''
 import sys
 import matplotlib.pyplot as plt
-from seis_settings import MapTypes, plt_settings, lines
+from seis_settings import MapTypes, vp_plt_settings, lines
 from seis_utils import MapTools
 from seis_database import VpDb
 
@@ -45,11 +45,11 @@ class PlotMap:
 
         if cls.attribute != 'none':
             maptools.add_colorbar(cls.fig, cmap,
-                                  plt_settings[cls.attribute]['min'],
-                                  plt_settings[cls.attribute]['max'],
+                                  vp_plt_settings[cls.attribute]['min'],
+                                  vp_plt_settings[cls.attribute]['max'],
                                  )
             cls.ax.set_title(
-                f'Block 42: {plt_settings[cls.attribute]["title_attribute"]}')
+                f'Block 42: {vp_plt_settings[cls.attribute]["title_attribute"]}')
 
         else:
             cls.ax.set_title(f'Block 42')
@@ -62,8 +62,8 @@ class PlotMap:
 
         vp_gdf = maptools.convert_to_map(vp_gdf, cls.maptype)
 
-        minimum = plt_settings[cls.attribute]['min']
-        maximum = plt_settings[cls.attribute]['max']
+        minimum = vp_plt_settings[cls.attribute]['min']
+        maximum = vp_plt_settings[cls.attribute]['max']
 
         if cls.attribute == 'none':
             vp_gdf.plot(ax=cls.ax, color='black', markersize=MARKERSIZE)
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         maptype = MapTypes.no_background
 
     attribute = attribute.lower()
-    if attribute not in [attr for attr in plt_settings]:
+    if attribute not in [attr for attr in vp_plt_settings]:
         attribute = 'none'
 
     plot = PlotMap()

@@ -100,7 +100,7 @@ class VpDb:
 
         sql_string = f'DROP TABLE {cls.table_vaps_files};'
         cursor.execute(sql_string)
-        print(f'delete table {cls.table_vp_files}')
+        print(f'delete table {cls.table_vaps_files}')
 
     @classmethod
     @DbUtils.connect
@@ -258,31 +258,6 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def get_vaps_id(cls, vp_record, *args):
-        ''' get vaps_id from the database and insert into vp_record
-            arguments:
-                vp_record: VpTable recordtype
-            returns:
-                VpTable recordtype
-        '''
-        cursor = DbUtils().get_cursor(args)
-        sql_string = (
-            f'SELECT id FROM {cls.table_vaps} WHERE '
-            f'time_break=\'{vp_record.time_break}\' AND '
-            f'vibrator={vp_record.vibrator};'
-        )
-
-        cursor.execute(sql_string)
-        try:
-            vp_record.vaps_id = cursor.fetchone()[0]
-
-        except TypeError:
-            pass
-
-        return vp_record
-
-    @classmethod
-    @DbUtils.connect
     def update_vp(cls, vp_records, *args, link_vaps=False):
         cursor = DbUtils().get_cursor(args)
 
@@ -412,6 +387,125 @@ class VpDb:
                 ))
 
             next(progress_message)
+    @classmethod
+
+    @DbUtils.connect
+    def update_vp_distance(cls, database_table, prod_date, *args):
+        ''' Add values for distance, time, velocity, denseflag to the database_table
+            This can only be done after all vps have been added to the database
+            as only then it be sorted by consecutive vp points by vibrator
+            arguments:
+                database_table: either 'VAPS' or 'VP'
+                state_date: datetime.date object start date
+                end_date: datetime.date object end date
+        '''
+        cursor = DbUtils().get_cursor(args)
+
+        if database_table == 'VAPS':
+            table = cls.table_vaps
+
+        else:
+            table = cls.table_vp
+
+        sql_string = (
+            f'UPDATE {table} '
+            f'SET'
+            f'    distance = ?, '
+            f'    time = ?, '
+            f'    velocity = ?, '
+            f'    dense_flag = ? '
+            f'WHERE id = ?;'
+        )
+
+        progress_message = seis_utils.progress_message_generator(
+            f'add dist, time, vel, dense_flag to {table} for '
+            f'{prod_date.strftime("%d-%m-%Y")}                          ')
+
+        vp_records_df = cls.get_vp_data_by_date(database_table, prod_date)
+
+        for vib in range(1, FLEETS):
+            vib_df = vp_records_df[vp_records_df['vibrator'] == vib]
+            vp_pts = [
+                (val[0], Point(val[1], val[2]), val[3]) for val in zip(
+                    vib_df['id'].to_list(),
+                    vib_df['easting'].to_list(),
+                    vib_df['northing'].to_list(),
+                    vib_df['time_break'].to_list(),
+                )
+            ]
+
+            # use consecutive vp's
+            for vp_a, vp_b in zip(vp_pts, vp_pts[1:]):
+                index = vp_a[0]
+                dx = vp_b[1].x - vp_a[1].x
+                dy = vp_b[1].y - vp_a[1].y
+                dist = np.sqrt(dx*dx + dy*dy)
+                try:
+                    t2 = datetime.datetime.strptime(
+                        vp_b[2], '%Y-%m-%d %H:%M:%S.%f')
+
+                except ValueError:
+                    t2 = datetime.datetime.strptime(
+                        vp_b[2], '%Y-%m-%d %H:%M:%S')
+
+                try:
+                    t1 = datetime.datetime.strptime(
+                        vp_a[2], '%Y-%m-%d %H:%M:%S.%f')
+
+                except ValueError:
+                    t1 = datetime.datetime.strptime(
+                        vp_a[2], '%Y-%m-%d %H:%M:%S')
+
+                time = max(0, ((t2 - t1).seconds - SWEEP_TIME - PAD_DOWN_TIME))
+
+                velocity = dist / time if time > 0 else 0
+                dense_flag = True if dist < DENSE_CRITERIUM else False
+
+                cursor.execute(sql_string, (
+                    dist,
+                    time,
+                    velocity,
+                    dense_flag,
+                    index,
+                ))
+
+                next(progress_message)
+
+            # handle data for last element if there is one
+            if vp_pts:
+                index = vp_pts[-1][0]
+                cursor.execute(sql_string, (
+                    np.nan,
+                    np.nan,
+                    np.nan,
+                    dense_flag,
+                    index,
+                ))
+
+    @classmethod
+    @DbUtils.connect
+    def get_vaps_id(cls, vp_record, *args):
+        ''' get vaps_id from the database and insert into vp_record
+            arguments:
+                vp_record: VpTable recordtype
+            returns:
+                VpTable recordtype
+        '''
+        cursor = DbUtils().get_cursor(args)
+        sql_string = (
+            f'SELECT id FROM {cls.table_vaps} WHERE '
+            f'time_break=\'{vp_record.time_break}\' AND '
+            f'vibrator={vp_record.vibrator};'
+        )
+
+        cursor.execute(sql_string)
+        try:
+            vp_record.vaps_id = cursor.fetchone()[0]
+
+        except TypeError:
+            pass
+
+        return vp_record
 
     @classmethod
     def get_vp_data_by_time(cls, database_table, start_time, end_time):
@@ -438,13 +532,13 @@ class VpDb:
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
-    def get_data_by_date(cls, database_table, production_date):
+    def get_vp_data_by_date(cls, database_table, production_date):
         ''' retrieve vp data by date
             arguments:
               database_table: 'VAPS' or 'VP'
               production_date: datetime object
             returns:
-              pandas dataframe with all database attributes
+              pandas dataframe with vp attributes for production_date
         '''
         if database_table == 'VAPS':
             table = cls.table_vaps
@@ -478,120 +572,6 @@ class VpDb:
             f'line = {line} ORDER BY station;'
         )
         return pd.read_sql_query(sql_string, con=engine)
-
-    @classmethod
-    @DbUtils.connect
-    def add_distance_column(cls, database_table, start_date, end_date, *args):
-        ''' patch to add column distance to vaps table
-            arguments:
-              database_table: 'VAPS' or 'VP'
-              state_date: datetime.date object start date
-              end_date: datetime.date object end date
-        '''
-        cursor = DbUtils().get_cursor(args)
-
-        if database_table == 'VAPS':
-            table = cls.table_vaps
-
-        else:
-            table = cls.table_vp
-
-        sql_string = (
-            f'UPDATE {table} '
-            f'SET'
-            f'    distance = ?, '
-            f'    time = ?, '
-            f'    velocity = ?, '
-            f'    dense_flag = ? '
-            f'WHERE id = ?;'
-        )
-
-        _date = start_date
-
-        while _date <= end_date:
-            progress_message = seis_utils.progress_message_generator(
-                f'add dist, time, vel, dense_flag to {table} for '
-                f'{_date.strftime("%d-%m-%Y")}                          ')
-
-            vp_records_df = cls.get_data_by_date(database_table, _date)
-
-            for vib in range(1, FLEETS):
-                vib_df = vp_records_df[vp_records_df['vibrator'] == vib]
-
-                vp_pts = [
-                    (id_xy[0], Point(id_xy[1], id_xy[2]), id_xy[3]) for id_xy in zip(
-                        vib_df['id'].to_list(),
-                        vib_df['easting'].to_list(),
-                        vib_df['northing'].to_list(),
-                        vib_df['time_break'].to_list(),
-                    )
-                ]
-
-                dense_flag_1 = False
-
-                for i in range(len(vp_pts) - 1):
-                    index = vp_pts[i][0]
-                    dx = vp_pts[i + 1][1].x - vp_pts[i][1].x
-                    dy = vp_pts[i + 1][1].y - vp_pts[i][1].y
-                    dist = np.sqrt(dx*dx + dy*dy)
-                    try:
-                        t2 = datetime.datetime.strptime(
-                            vp_pts[i+1][2], '%Y-%m-%d %H:%M:%S.%f')
-
-                    except ValueError:
-                        t2 = datetime.datetime.strptime(
-                            vp_pts[i+1][2], '%Y-%m-%d %H:%M:%S')
-
-                    try:
-                        t1 = datetime.datetime.strptime(
-                            vp_pts[i][2], '%Y-%m-%d %H:%M:%S.%f')
-
-                    except ValueError:
-                        t1 = datetime.datetime.strptime(
-                            vp_pts[i][2], '%Y-%m-%d %H:%M:%S')
-
-                    time = max(0, ((t2 - t1).seconds - SWEEP_TIME - PAD_DOWN_TIME))
-
-                    try:
-                        velocity = dist / time
-
-                    except ZeroDivisionError:
-                        velocity = 0
-
-                    if dist < DENSE_CRITERIUM or dense_flag_1:
-                        dense_flag = True
-
-                    else:
-                        dense_flag = False
-
-                    cursor.execute(sql_string, (
-                        dist,
-                        time,
-                        velocity,
-                        dense_flag,
-                        index,
-                    ))
-
-                    if dist < DENSE_CRITERIUM:
-                        dense_flag_1 = True
-
-                    else:
-                        dense_flag_1 = False
-
-                    next(progress_message)
-
-                # handle data for last element if there is one
-                if vp_pts:
-                    index = vp_pts[-1][0]
-                    cursor.execute(sql_string, (
-                        np.nan,
-                        np.nan,
-                        np.nan,
-                        dense_flag_1,
-                        index,
-                    ))
-
-            _date += datetime.timedelta(days=+1)
 
 
 class RcvDb:
@@ -855,3 +835,29 @@ class RcvDb:
         )
         cursor.execute(sql_string)
         print(f'record {file_id} deleted from {cls.table_node_files}')
+
+    @classmethod
+    def get_node_data_by_date(cls, production_date):
+        ''' retrieve node data by date
+            arguments:
+              production_date: datetime object
+            returns:
+              pandas dataframe with node attributes for production date
+        '''
+        engine = DbUtils().get_engine()
+        sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
+                      f'DATE(time_stamp) = \'{production_date.strftime("%Y-%m-%d")}\';')
+        return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    def get_node_data_by_node(cls, qtm_sn: str) -> pd.DataFrame:
+        ''' retrieve node data by quantum node serial number
+            arguments:
+              qtm_sn: serial number of quantum node (str)
+            returns:
+              pandas dataframe with node attributes for qtm_sn
+        '''
+        engine = DbUtils().get_engine()
+        sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
+                      f'qtm_sn = {qtm_sn};')
+        return pd.read_sql_query(sql_string, con=engine)

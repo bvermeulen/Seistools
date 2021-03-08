@@ -4,14 +4,15 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, plt_settings
+from seis_settings import FLEETS, vp_plt_settings
 
 
 class VpAttributes:
 
     @classmethod
     def select_data(cls, production_date):
-        cls.vaps_records_df = vp_database.VpDb().get_vp_data_by_date(production_date)
+        cls.vaps_records_df = seis_database.VpDb().get_vp_data_by_date(
+            'VAPS', production_date)
 
     @classmethod
     def plot_vaps_data(cls):
@@ -24,7 +25,7 @@ class VpAttributes:
         # plt.subplots_adjust(hspace=10)
 
         plt_index = 0
-        for key, plt_setting in plt_settings.items():
+        for key, plt_setting in vp_plt_settings.items():
             cls.total_records = 1
             if key in ['avg_stiffness', 'avg_viscosity']:
                 ax0[plt_index] = cls.plot_attribute(ax0[plt_index], key, plt_setting)
@@ -100,7 +101,7 @@ if __name__ == "__main__":
     vp_attr = VpAttributes()
 
     while True:
-        production_date = vp_utils.get_production_date()
+        production_date = seis_utils.get_production_date()
         if production_date == -1:
             break
 

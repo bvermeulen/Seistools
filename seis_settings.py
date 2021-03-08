@@ -5,9 +5,9 @@ from enum import IntEnum
 from recordtype import recordtype
 
 #DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS_TEST\\'
-DATA_FILES_VAPS = r'data_files\\'
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 #DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
+DATA_FILES_VAPS = r'data_files\\vibes\\'
 DATA_FILES_RECEIVERS = r'data_files\\nodes\\'
 
 DATABASE = 'Haniya_North'
@@ -20,7 +20,8 @@ SWEEP_TIME = 9
 PAD_DOWN_TIME = 2.5
 
 FLEETS = 13
-MARKERSIZE = 0.2
+MARKERSIZE_VP = 0.2
+MARKERSIZE_NODE = 1.0
 AREA_EASTING_MIN = 610_000
 AREA_EASTING_MAX = 760_000
 AREA_NORTHING_MIN = 2_345_000
@@ -33,7 +34,12 @@ EPSG_WGS84 = 4326
 EPSG_OSM = 3857
 EPSG_PSD93 = 3440
 
-plt_settings = {
+class MapTypes(IntEnum):
+    local = 0
+    osm = 1
+    no_background = 3
+
+vp_plt_settings = {
     'peak_phase': {
         'title_attribute': 'Peak Phase',
         'y-axis_label_attribute': 'Degrees',
@@ -42,7 +48,7 @@ plt_settings = {
         'min': 0,
         'max': 30,
         'interval': 0.5,
-        },
+    },
 
     'peak_dist': {
         'title_attribute': 'Peak Distortion',
@@ -52,7 +58,7 @@ plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
-        },
+    },
 
     'peak_force': {
         'title_attribute': 'Peak Force',
@@ -62,7 +68,7 @@ plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
-        },
+    },
 
     'avg_phase': {
         'title_attribute': 'Average Phase',
@@ -72,7 +78,7 @@ plt_settings = {
         'min': 0,
         'max': 20,
         'interval': 0.5,
-        },
+    },
 
     'avg_dist': {
         'title_attribute': 'Average Distortion',
@@ -82,7 +88,7 @@ plt_settings = {
         'min': 0,
         'max': 80,
         'interval': 1,
-        },
+    },
 
     'avg_force': {
         'title_attribute': 'Average Force',
@@ -92,7 +98,7 @@ plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
-        },
+    },
 
     'elevation': {
         'title_attribute': 'Elevation',
@@ -102,7 +108,7 @@ plt_settings = {
         'min': 0,
         'max': 200,
         'interval': 1,
-        },
+    },
 
     'avg_stiffness': {
         'title_attribute': 'Stiffness',
@@ -112,7 +118,7 @@ plt_settings = {
         'min': 0,
         'max': 50,
         'interval': 1,
-        },
+    },
 
     'avg_viscosity': {
         'title_attribute': 'Viscosity',
@@ -122,7 +128,7 @@ plt_settings = {
         'min': 15,
         'max': 25,
         'interval': 1,
-        },
+    },
 
     'none': {
         'title_attribute': '',
@@ -132,7 +138,7 @@ plt_settings = {
         'min': 0,
         'max': 0,
         'interval': 0,
-        },
+    },
 
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
@@ -140,6 +146,88 @@ plt_settings = {
         'tick_intval_vp_hour': 20,
         'max_vibs': 5,
         'tick_intval_vibs': 1,
+    },
+}
+
+node_plt_settings = {
+    'frequency': {
+        'title_attribute': 'Frequency',
+        'y-axis_label_attribute': 'Hz',
+        'title_density': 'Frequency density',
+        'y-axis_label_density': '',
+        'min': 3,
+        'max': 7,
+        'interval': 0.01,
+    },
+
+    'damping': {
+        'title_attribute': 'Damping',
+        'y-axis_label_attribute': '%',
+        'title_density': 'Damping density',
+        'y-axis_label_density': '',
+        'min': 50,
+        'max': 70,
+        'interval': 0.1,
+    },
+
+    'sensitivity': {
+        'title_attribute': 'Sensitivity',
+        'y-axis_label_attribute': 'V / (m/s)',
+        'title_density': 'Sensitivity density',
+        'y-axis_label_density': '',
+        'min': 70,
+        'max': 90,
+        'interval': 0.1,
+    },
+
+    'resistance': {
+        'title_attribute': 'Resistance',
+        'y-axis_label_attribute': 'Ohm',
+        'title_density': 'Resistance density',
+        'y-axis_label_density': '',
+        'min': 1700,
+        'max': 2000,
+        'interval': 0.5,
+    },
+
+    'thd': {
+        'title_attribute': 'Distortion',
+        'y-axis_label_attribute': '%',
+        'title_density': 'Distortion density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 0.15,
+        'interval': 0.005,
+    },
+
+    'battery': {
+        'title_attribute': 'Battery',
+        'y-axis_label_attribute': 'Volt',
+        'title_density': 'Battery density',
+        'y-axis_label_density': '',
+        'min': 7,
+        'max': 10,
+        'interval': 0.05,
+    },
+
+    'noise': {
+        'title_attribute': 'Noise',
+        'y-axis_label_attribute': 'microVolt',
+        'title_density': 'Noise density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 1,
+        'interval': 0.01,
+    },
+
+    'tilt': {
+        'title_attribute': 'Tilt',
+        'y-axis_label_attribute': 'Degrees',
+        'title_density': 'Tilt density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 15,
+        'interval': 0.05,
     },
 }
 
@@ -184,18 +272,6 @@ RcvrTable = recordtype(
     'northing '
     'elevation'
 )
-
-lines = [
-    1001, 1010, 1008, 1028, 1007, 1006, 1004, 1002, 1003, 1009,
-    1025, 1021, 1020, 1029, 1016, 1022, 1014, 1013, 1015, 1019,
-    1018, 1005, 1025, 1012, 1023, 1024, 1027, 1017, 1011,
-]
-
-
-class MapTypes(IntEnum):
-    local = 0
-    osm = 1
-    no_background = 3
 
 FilesVpTable = recordtype(
     'FilesVpTable',

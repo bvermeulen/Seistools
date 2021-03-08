@@ -72,11 +72,11 @@ def get_animation_dates():
     while not valid:
         start = get_production_date(question='start date (YYMMDD) [q - quit]: ')
         if start == -1:
-            return -1, -1, 0
+            return -1, -1, 0, True
 
         end = get_production_date(question='end date (YYMMDD) [q - quit]: ')
         if end == -1:
-            return -1, -1, 0
+            return -1, -1, 0, True
 
 
         if end >= start:

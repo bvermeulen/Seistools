@@ -14,7 +14,7 @@ from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_
                            FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                           )
 
-# ignore warning velocity =  dist / time in method add_distance_column
+# ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 class Vaps:
@@ -65,8 +65,9 @@ class Vaps:
 
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
-                    _date = vaps_records[0].time_break.date()
-                    cls.vp_db.add_distance_column('VAPS', _date, _date)
+                    cls.vp_db.update_vp_distance(
+                        'VAPS', vaps_records[0].time_break.date()
+                    )
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
@@ -155,8 +156,9 @@ class Vp:
 
                 if vp_records:
                     cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
-                    _date = vp_records[0].time_break.date()
-                    cls.vp_db.add_distance_column('VP', _date, _date)
+                    cls.vp_db.update_vp_distance(
+                        'VP', vp_records[0].time_break.date()
+                    )
 
                 print()
 

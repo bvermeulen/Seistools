@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE, plt_settings
+from seis_settings import FLEETS, DATABASE_TABLE, vp_plt_settings
 
 seconds_per_day = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -38,7 +38,7 @@ class VpActive:
         )
 
     def select_data(self, database_table):
-        self.vp_records_df = seis_database.VpDb().get_data_by_date(
+        self.vp_records_df = seis_database.VpDb().get_vp_data_by_date(
             database_table, self.production_date)
 
     def populate_vps_by_second(self):
@@ -117,19 +117,19 @@ class VpActive:
 
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
         fig.suptitle(
-            f'{plt_settings["vib_activity"]["fig_title"]}'
+            f'{vp_plt_settings["vib_activity"]["fig_title"]}'
             f'{self.production_date.strftime("%d-%b-%Y")}'
         )
         ax1.set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
         ax2.set_title(f'Vibs operational - interval {interval / 60:.0f} minutes')
 
-        max_val = plt_settings['vib_activity']['max_vp_hour']
-        intval = plt_settings['vib_activity']['tick_intval_vp_hour']
+        max_val = vp_plt_settings['vib_activity']['max_vp_hour']
+        intval = vp_plt_settings['vib_activity']['tick_intval_vp_hour']
         ax1.set_ylim(bottom=0, top=max_val)
         ax1.yaxis.set_ticks(np.arange(0, max_val+1, intval))
 
-        max_val = plt_settings['vib_activity']['max_vibs']
-        intval = plt_settings['vib_activity']['tick_intval_vibs']
+        max_val = vp_plt_settings['vib_activity']['max_vibs']
+        intval = vp_plt_settings['vib_activity']['tick_intval_vibs']
         ax2.set_ylim(bottom=0, top=max_val)
         ax2.yaxis.set_ticks(np.arange(0, max_val+1, intval))
         time_format = mdates.DateFormatter('%H:%M')

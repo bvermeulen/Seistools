@@ -18,7 +18,7 @@
 import sys
 import datetime
 import matplotlib.pyplot as plt
-from seis_settings import GMT_OFFSET, MapTypes, plt_settings
+from seis_settings import GMT_OFFSET, MapTypes, vp_plt_settings
 from seis_utils import MapTools, get_animation_dates
 from seis_database import VpDb
 
@@ -49,8 +49,8 @@ class PlotMap:
         self.animation_started = False
         self.pause = False
         self.date_gid = None
-        self.attr_min = plt_settings[self.attribute]['min']
-        self.attr_max = plt_settings[self.attribute]['max']
+        self.attr_min = vp_plt_settings[self.attribute]['min']
+        self.attr_max = vp_plt_settings[self.attribute]['max']
         self.time_stamp = ''
         self.line = ''
 
@@ -83,7 +83,7 @@ class PlotMap:
         if self.attribute != 'none':
             maptools.add_colorbar(self.fig, cmap, self.attr_min, self.attr_max)
             self.ax.set_title(
-                f'{TITLE}: {plt_settings[self.attribute]["title_attribute"]}')
+                f'{TITLE}: {vp_plt_settings[self.attribute]["title_attribute"]}')
 
         else:
             self.ax.set_title(f'{TITLE}')
@@ -197,7 +197,7 @@ if __name__ == '__main__':
         maptype = MapTypes.no_background
 
     attribute = attribute.lower()
-    if attribute not in [attr for attr in plt_settings]:
+    if attribute not in [attr for attr in vp_plt_settings]:
         attribute = 'none'
 
     plot = PlotMap(attribute, start, end, interval, pause, maptype=maptype)

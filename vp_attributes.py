@@ -8,14 +8,14 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE, MARKERSIZE, plt_settings
+from seis_settings import FLEETS, DATABASE_TABLE, MARKERSIZE_VP, vp_plt_settings
 
 
 class VpAttributes:
 
     @classmethod
     def select_data(cls, database_table, production_date):
-        cls.vp_records_df = seis_database.VpDb().get_data_by_date(
+        cls.vp_records_df = seis_database.VpDb().get_vp_data_by_date(
             database_table, production_date)
 
     @classmethod
@@ -32,7 +32,7 @@ class VpAttributes:
 
         # plt.subplots_adjust(hspace=10)
 
-        for i_plt, (key, plt_setting) in enumerate(plt_settings.items()):
+        for i_plt, (key, plt_setting) in enumerate(vp_plt_settings.items()):
             cls.total_records = 1
             if key in ['avg_phase', 'peak_phase', 'avg_dist',
                        'peak_dist', 'avg_force', 'peak_force']:
@@ -69,7 +69,9 @@ class VpAttributes:
                 cls.total_records += len(vib_data)
                 vib_data = np.array(vib_data)
                 label_vib = f'{vib} ({len(records)})'
-                axis.plot(records, vib_data, '.', label=label_vib, markersize=MARKERSIZE)
+                axis.plot(
+                    records, vib_data, '.', label=label_vib, markersize=MARKERSIZE_VP
+                )
 
         return axis
 
