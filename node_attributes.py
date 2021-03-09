@@ -8,7 +8,7 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
 import seis_database
-from seis_settings import MARKERSIZE_NODE, node_plt_settings
+from seis_settings import MARKERSIZE_NODE, TOL_COLOR, node_plt_settings
 
 
 class NodeAttributes:
@@ -22,13 +22,13 @@ class NodeAttributes:
         ax0 = [None for i in range(9)]
         ax1 = [None for i in range(9)]
         fig1, (
-                (ax0[0], ax1[0]), (ax0[1], ax1[1]), (ax0[2], ax1[2]),
-                (ax0[3], ax1[3]), (ax0[4], ax1[4]),
-            ) = plt.subplots(nrows=5, ncols=2, figsize=(8, 8))
+            (ax0[0], ax1[0]), (ax0[1], ax1[1]), (ax0[2], ax1[2]),
+            (ax0[3], ax1[3]), (ax0[4], ax1[4]),
+        ) = plt.subplots(nrows=5, ncols=2, figsize=(8, 8))
 
         fig2, (
-                (ax0[5], ax1[5]), (ax0[6], ax1[6]), (ax0[7], ax1[7]),
-            ) = plt.subplots(nrows=3, ncols=2, figsize=(8, 8))
+            (ax0[5], ax1[5]), (ax0[6], ax1[6]), (ax0[7], ax1[7]),
+        ) = plt.subplots(nrows=3, ncols=2, figsize=(8, 8))
 
         # plt.subplots_adjust(hspace=10)
 
@@ -36,19 +36,10 @@ class NodeAttributes:
             if key in ['frequency', 'damping', 'sensitivity', 'resistance',
                        'thd', 'battery', 'noise', 'tilt']:
                 ax0[i_plt] = cls.plot_attribute(ax0[i_plt], key, plt_setting)
-                ax1[i_plt] = cls.plot_density(ax1[i_plt], key, plt_setting)
+                ax1[i_plt] = cls.plot_histogram(ax1[i_plt], key, plt_setting)
 
-        handles, labels = ax0[0].get_legend_handles_labels()
-        fig1.legend(
-            handles, labels, loc='upper right', frameon=True,
-            fontsize='small', framealpha=1, markerscale=40)
         fig1.tight_layout()
-
-        fig2.legend(
-            handles, labels, loc='upper right', frameon=True,
-            fontsize='small', framealpha=1, markerscale=40)
         fig2.tight_layout()
-
         plt.show()
 
     @classmethod
@@ -63,6 +54,11 @@ class NodeAttributes:
             axis.plot(
                 range(len(node_data)), node_data, '.', markersize=MARKERSIZE_NODE
             )
+            if setting['tol_min'] is not None:
+                axis.axhline(setting['tol_min'], color=TOL_COLOR, linewidth=0.5)
+
+            if setting['tol_max'] is not None:
+                axis.axhline(setting['tol_max'], color=TOL_COLOR, linewidth=0.5)
 
         return axis
 
@@ -82,7 +78,6 @@ class NodeAttributes:
             setting['max'],
             setting['interval']
         )
-
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
 
@@ -99,6 +94,34 @@ class NodeAttributes:
 
         return axis
 
+    @classmethod
+    def plot_histogram(cls, axis, key, setting):
+        '''  method to plot the attribute histogram.
+        '''
+        axis.set_title(setting['title_density'])
+        axis.set_ylabel(setting['y-axis_label_density'])
+        node_data = np.array(cls.node_records_df[key].to_list())
+        if node_data.size > 0:
+            axis.hist(
+                node_data, histtype='step', bins=50,
+                range=(setting['min'], setting['max'])
+            )
+            if setting['tol_min'] is not None:
+                axis.axvline(setting['tol_min'], color=TOL_COLOR, linewidth=0.5)
+
+            if setting['tol_max'] is not None:
+                axis.axvline(setting['tol_max'], color=TOL_COLOR, linewidth=0.5)
+
+            axis.axvline(
+                node_data.mean(), linestyle='dashed', color='black', linewidth=0.7)
+
+            d = 0 if node_data.mean() > 1000 else 2
+            axis.text(
+                0.98, 0.98, f'Mean: {node_data.mean():.{d}f}', size='smaller',
+                horizontalalignment='right', verticalalignment='top',
+                transform=axis.transAxes)
+
+        return axis
 
 if __name__ == "__main__":
     node_attr = NodeAttributes()

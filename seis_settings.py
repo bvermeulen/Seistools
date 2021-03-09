@@ -22,6 +22,7 @@ PAD_DOWN_TIME = 2.5
 FLEETS = 13
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
+TOL_COLOR = 'red'
 AREA_EASTING_MIN = 610_000
 AREA_EASTING_MAX = 760_000
 AREA_NORTHING_MIN = 2_345_000
@@ -47,7 +48,7 @@ vp_plt_settings = {
         'y-axis_label_density': '',
         'min': 0,
         'max': 30,
-        'interval': 0.5,
+        'interval': 0.1,
     },
 
     'peak_dist': {
@@ -77,7 +78,7 @@ vp_plt_settings = {
         'y-axis_label_density': '',
         'min': 0,
         'max': 20,
-        'interval': 0.5,
+        'interval': 0.1,
     },
 
     'avg_dist': {
@@ -151,83 +152,99 @@ vp_plt_settings = {
 
 node_plt_settings = {
     'frequency': {
-        'title_attribute': 'Frequency',
+        'title_attribute': 'Natural Frequency',
         'y-axis_label_attribute': 'Hz',
-        'title_density': 'Frequency density',
+        'title_density': 'Natural Frequency',
         'y-axis_label_density': '',
         'min': 3,
         'max': 7,
         'interval': 0.01,
+        'tol_min': 4.6,
+        'tol_max': 5.4,
     },
 
     'damping': {
         'title_attribute': 'Damping',
         'y-axis_label_attribute': '%',
-        'title_density': 'Damping density',
+        'title_density': 'Damping',
         'y-axis_label_density': '',
         'min': 50,
         'max': 70,
         'interval': 0.1,
+        'tol_min': 55.2,
+        'tol_max': 64.8,
     },
 
     'sensitivity': {
         'title_attribute': 'Sensitivity',
         'y-axis_label_attribute': 'V / (m/s)',
-        'title_density': 'Sensitivity density',
+        'title_density': 'Sensitivity',
         'y-axis_label_density': '',
         'min': 70,
         'max': 90,
         'interval': 0.1,
+        'tol_min': 75.2,
+        'tol_max': 84.8,
     },
 
     'resistance': {
         'title_attribute': 'Resistance',
         'y-axis_label_attribute': 'Ohm',
-        'title_density': 'Resistance density',
+        'title_density': 'Resistance',
         'y-axis_label_density': '',
         'min': 1700,
         'max': 2000,
         'interval': 0.5,
+        'tol_min': 1739,
+        'tol_max': 1961,
     },
 
     'thd': {
         'title_attribute': 'Distortion',
         'y-axis_label_attribute': '%',
-        'title_density': 'Distortion density',
+        'title_density': 'Distortion',
         'y-axis_label_density': '',
         'min': 0,
         'max': 0.15,
         'interval': 0.005,
+        'tol_min': None,
+        'tol_max': 0.1,
     },
 
     'battery': {
         'title_attribute': 'Battery',
         'y-axis_label_attribute': 'Volt',
-        'title_density': 'Battery density',
+        'title_density': 'Battery',
         'y-axis_label_density': '',
         'min': 7,
         'max': 10,
         'interval': 0.05,
+        'tol_min': 7,
+        'tol_max': 9,
     },
 
     'noise': {
         'title_attribute': 'Noise',
         'y-axis_label_attribute': 'microVolt',
-        'title_density': 'Noise density',
+        'title_density': 'Noise',
         'y-axis_label_density': '',
         'min': 0,
         'max': 1,
         'interval': 0.01,
+        'tol_min': None,
+        'tol_max': None,
     },
 
     'tilt': {
         'title_attribute': 'Tilt',
         'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Tilt density',
+        'title_density': 'Tilt',
         'y-axis_label_density': '',
         'min': 0,
         'max': 15,
         'interval': 0.05,
+        'tol_min': None,
+        'tol_max': 10,
     },
 }
 
