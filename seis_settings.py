@@ -49,6 +49,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 30,
         'interval': 0.1,
+        'tol_min': None,
+        'tol_max': 8,
     },
 
     'peak_dist': {
@@ -59,6 +61,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
+        'tol_min': None,
+        'tol_max': 35,
     },
 
     'peak_force': {
@@ -69,6 +73,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
+        'tol_min': None,
+        'tol_max': None,
     },
 
     'avg_phase': {
@@ -79,6 +85,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 20,
         'interval': 0.1,
+        'tol_min': None,
+        'tol_max': 4,
     },
 
     'avg_dist': {
@@ -89,6 +97,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 80,
         'interval': 1,
+        'tol_min': None,
+        'tol_max': 25,
     },
 
     'avg_force': {
@@ -99,6 +109,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
+        'tol_min': None,
+        'tol_max': None,
     },
 
     'elevation': {

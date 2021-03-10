@@ -8,7 +8,9 @@ from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE, MARKERSIZE_VP, vp_plt_settings
+from seis_settings import (
+    FLEETS, DATABASE_TABLE, TOL_COLOR, MARKERSIZE_VP, vp_plt_settings
+)
 
 
 class VpAttributes:
@@ -59,6 +61,7 @@ class VpAttributes:
         axis.set_xlabel('Index')
         axis.set_ylim(bottom=setting['min'], top=setting['max'])
 
+        plt_tol_lines = True
         for vib in range(1, FLEETS + 1):
             vib_data = cls.vp_records_df[
                 cls.vp_records_df['vibrator'] == vib][key].to_list()
@@ -72,6 +75,13 @@ class VpAttributes:
                 axis.plot(
                     records, vib_data, '.', label=label_vib, markersize=MARKERSIZE_VP
                 )
+                if plt_tol_lines:
+                    if setting['tol_min'] is not None:
+                        axis.axhline(setting['tol_min'], color=TOL_COLOR, linewidth=0.5)
+
+                    if setting['tol_max'] is not None:
+                        axis.axhline(setting['tol_max'], color=TOL_COLOR, linewidth=0.5)
+                    plt_tol_lines = False
 
         return axis
 
@@ -94,21 +104,29 @@ class VpAttributes:
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
 
+        plt_tol_lines = True
         for vib in range(1, FLEETS + 1):
             vib_data = np.array(
                 cls.vp_records_df[cls.vp_records_df['vibrator'] == vib][key].to_list()
             )
-            if vib_data.size == 0:
-                continue
+            if vib_data.size > 0:
+                try:
+                    vib_density_data = stats.kde.gaussian_kde(vib_data)
+                    axis.plot(
+                        x_values, setting['interval'] * vib_density_data(x_values),
+                        label=vib
+                    )
+                except np.linalg.LinAlgError:
+                    vib_data = [dirac_function(x) for x in range(len(x_values))]
+                    axis.plot(x_values, vib_data, label=vib)
 
-            try:
-                vib_density_data = stats.kde.gaussian_kde(vib_data)
-                axis.plot(
-                    x_values, setting['interval'] * vib_density_data(x_values), label=vib
-                )
-            except np.linalg.LinAlgError:
-                vib_data = [dirac_function(x) for x in range(len(x_values))]
-                axis.plot(x_values, vib_data, label=vib)
+                if plt_tol_lines:
+                    if setting['tol_min'] is not None:
+                        axis.axvline(setting['tol_min'], color=TOL_COLOR, linewidth=0.5)
+
+                    if setting['tol_max'] is not None:
+                        axis.axvline(setting['tol_max'], color=TOL_COLOR, linewidth=0.5)
+                    plt_tol_lines = False
 
         return axis
 
@@ -119,6 +137,7 @@ class VpAttributes:
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
 
+        plt_tol_lines = True
         for vib in range(1, FLEETS + 1):
             vib_data = np.array(
                 cls.vp_records_df[cls.vp_records_df['vibrator'] == vib][key].to_list()
@@ -128,6 +147,14 @@ class VpAttributes:
                     vib_data, histtype='step', bins=50, range=(setting['min'],
                     setting['max']), label=vib
                 )
+
+                if plt_tol_lines:
+                    if setting['tol_min'] is not None:
+                        axis.axvline(setting['tol_min'], color=TOL_COLOR, linewidth=0.5)
+
+                    if setting['tol_max'] is not None:
+                        axis.axvline(setting['tol_max'], color=TOL_COLOR, linewidth=0.5)
+                    plt_tol_lines = False
 
         return axis
 

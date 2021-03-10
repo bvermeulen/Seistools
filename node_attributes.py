@@ -86,7 +86,7 @@ class NodeAttributes:
         if node_data.size > 0:
             try:
                 node_density_data = stats.kde.gaussian_kde(node_data)
-                axis.plot(x_values, node_density_data(x_values))
+                axis.plot(x_values, setting['interval'] * node_density_data(x_values))
 
             except np.linalg.LinAlgError:
                 node_data = [dirac_function(x) for x in range(len(x_values))]
