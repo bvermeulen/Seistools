@@ -1,6 +1,6 @@
-import update_vaps
+import seis_database
 
-vp_db = update_vaps.VpDb()
+vp_db = seis_database.VpDb()
 vp_db.delete_table_vp()
 vp_db.delete_table_vp_files()
 vp_db.delete_table_vaps()

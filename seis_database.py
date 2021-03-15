@@ -16,7 +16,7 @@ from seis_settings import (
 class DbUtils:
     '''  utility methods for database
     '''
-    database = DATABASE + '_db.sqlite3'
+    database = DATABASE
 
     @classmethod
     def connect(cls, func):
@@ -47,18 +47,9 @@ class DbUtils:
         return wrapper
 
     @classmethod
-    def get_engine(cls):
-        return create_engine(
-            f'sqlite:///{cls.database}')
+    def get_db_engine(cls):
+        return create_engine(f'sqlite:///{cls.database}')
 
-    @staticmethod
-    def get_cursor(cursor):
-        if cursor:
-            return cursor[0]
-
-        else:
-            print('unable to connect to database')
-            raise()
 
 class VpDb:
     table_vp_files = 'vp_files'
@@ -68,45 +59,35 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def delete_table_vp(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_vp(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_vp};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_vp}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_vp_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_vp_files(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_vp_files};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_vp_files}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_vaps(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_vaps(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_vaps};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_vaps}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_vaps_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_vaps_files(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_vaps_files};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_vaps_files}')
 
     @classmethod
     @DbUtils.connect
-    def create_table_vp_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def create_table_vp_files(cls, cursor):
         sql_string = (
             f'CREATE TABLE {cls.table_vp_files} ('
             f'id INTEGER PRIMARY KEY, '
@@ -119,9 +100,7 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def create_table_vp(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def create_table_vp(cls, cursor):
         # first create the table
         sql_string = (
             f'CREATE TABLE {cls.table_vp} ('
@@ -163,9 +142,7 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def create_table_vaps_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def create_table_vaps_files(cls, cursor):
         sql_string = (
             f'CREATE TABLE {cls.table_vaps_files} ('
             f'id INTEGER PRIMARY KEY, '
@@ -178,9 +155,7 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def create_table_vaps(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def create_table_vaps(cls, cursor):
         sql_string = (
             f'CREATE TABLE {cls.table_vaps} ('
             f'id INTEGER PRIMARY KEY, '
@@ -223,15 +198,13 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vp_file(cls, vp_file, *args):
+    def update_vp_file(cls, vp_file, cursor):
         ''' method to to check if file_name exists in the database, if it does not then
             add the filename to the data base
             returns:
             -1, if file is found
             n, new file_id number if no file is found
         '''
-        cursor = DbUtils().get_cursor(args)
-
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vp_files} WHERE '
@@ -258,9 +231,7 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vp(cls, vp_records, *args, link_vaps=False):
-        cursor = DbUtils().get_cursor(args)
-
+    def update_vp(cls, vp_records, cursor, link_vaps=False):
         progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_vp}                   ')
 
@@ -306,15 +277,13 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vaps_file(cls, vaps_file, *args):
+    def update_vaps_file(cls, vaps_file, cursor):
         ''' method to to check if file_name exists in the database, if it does not then
             add the filename to the data base
             returns:
             -1, if file is found
             n, new file_id number if no file is found
         '''
-        cursor = DbUtils().get_cursor(args)
-
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vaps_files} WHERE '
@@ -343,9 +312,7 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def update_vaps(cls, vaps_records, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def update_vaps(cls, vaps_records, cursor):
         progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_vaps}                             ')
 
@@ -390,7 +357,7 @@ class VpDb:
     @classmethod
 
     @DbUtils.connect
-    def update_vp_distance(cls, database_table, prod_date, *args):
+    def update_vp_distance(cls, database_table, prod_date, cursor):
         ''' Add values for distance, time, velocity, denseflag to the database_table
             This can only be done after all vps have been added to the database
             as only then it be sorted by consecutive vp points by vibrator
@@ -399,8 +366,6 @@ class VpDb:
                 state_date: datetime.date object start date
                 end_date: datetime.date object end date
         '''
-        cursor = DbUtils().get_cursor(args)
-
         if database_table == 'VAPS':
             table = cls.table_vaps
 
@@ -484,14 +449,13 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def get_vaps_id(cls, vp_record, *args):
+    def get_vaps_id(cls, vp_record, cursor):
         ''' get vaps_id from the database and insert into vp_record
             arguments:
                 vp_record: VpTable recordtype
             returns:
                 VpTable recordtype
         '''
-        cursor = DbUtils().get_cursor(args)
         sql_string = (
             f'SELECT id FROM {cls.table_vaps} WHERE '
             f'time_break=\'{vp_record.time_break}\' AND '
@@ -523,7 +487,7 @@ class VpDb:
         else:
             table = cls.table_vp
 
-        engine = DbUtils().get_engine()
+        engine = DbUtils().get_db_engine()
         sql_string = (
             f'SELECT * FROM {table} WHERE '
             f'time_break BETWEEN \'{start_time}\' AND \'{end_time}\' '
@@ -546,7 +510,7 @@ class VpDb:
         else:
             table = cls.table_vp
 
-        engine = DbUtils().get_engine()
+        engine = DbUtils().get_db_engine()
         sql_string = (f'SELECT * FROM {table} WHERE '
                       f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\';')
         vp_df = pd.read_sql_query(sql_string, con=engine)
@@ -566,7 +530,7 @@ class VpDb:
         else:
             table = cls.table_vp
 
-        engine = DbUtils().get_engine()
+        engine = DbUtils().get_db_engine()
         sql_string = (
             f'SELECT * FROM {table} WHERE '
             f'line = {line} ORDER BY station;'
@@ -581,38 +545,30 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def delete_table_rcvr_points(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_rcvr_points(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_rcvr_points};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_rcvr_points}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_node_attributes(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_node_attributes(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_node_attributes};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_node_attributes}')
 
     @classmethod
     @DbUtils.connect
-    def delete_table_node_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_table_node_files(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_node_files};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_node_files}')
 
     @classmethod
     @DbUtils.connect
-    def create_table_rcvr_points(cls, *args):
+    def create_table_rcvr_points(cls, cursor):
         ''' create table with receiver positions
         '''
-        cursor = DbUtils().get_cursor(args)
-
         sql_string = (
             f'CREATE TABLE {cls.table_rcvr_points} ('
             f'id INTEGER PRIMARY KEY, '
@@ -635,12 +591,9 @@ class RcvDb:
         cursor.execute(sql_string)
         print(f'create table {cls.table_rcvr_points}')
 
-
     @classmethod
     @DbUtils.connect
-    def create_table_node_files(cls, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def create_table_node_files(cls, cursor):
         sql_string = (
             f'CREATE TABLE {cls.table_node_files} ('
             f'id INTEGER PRIMARY KEY, '
@@ -652,12 +605,10 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def create_table_node_attributes(cls, *args):
+    def create_table_node_attributes(cls, cursor):
         ''' attributes table for the Inova Quantum nodes
             based on the IX1 analog test report (Feb-2021)
         '''
-        cursor = DbUtils().get_cursor(args)
-
         sql_string = (
             f'CREATE TABLE {cls.table_node_attributes} ('
             f'id INTEGER PRIMARY KEY, '
@@ -686,9 +637,7 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def update_rcvr_point_records(cls, rcv_records, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def update_rcvr_point_records(cls, rcv_records, cursor):
         progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_rcvr_points}                      ')
 
@@ -729,15 +678,13 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def update_node_file(cls, node_file, *args):
+    def update_node_file(cls, node_file, cursor):
         ''' method to to check if file_name exists in the database, if it does not then
             add the filename to the data base
             returns:
             -1, if file is found
             n, new file_id number if no file is found
         '''
-        cursor = DbUtils().get_cursor(args)
-
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_node_files} WHERE '
@@ -762,9 +709,7 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def update_node_attributes_records(cls, node_records, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def update_node_attributes_records(cls, node_records, cursor):
         progress_message = seis_utils.progress_message_generator(
             f'populate database for table: {cls.table_node_attributes}                  ')
 
@@ -827,9 +772,7 @@ class RcvDb:
 
     @classmethod
     @DbUtils.connect
-    def delete_node_file(cls, file_id, *args):
-        cursor = DbUtils().get_cursor(args)
-
+    def delete_node_file(cls, file_id, cursor):
         sql_string = (
             f'DELETE FROM {cls.table_node_files} WHERE id={file_id};'
         )
@@ -844,7 +787,7 @@ class RcvDb:
             returns:
               pandas dataframe with node attributes for production date
         '''
-        engine = DbUtils().get_engine()
+        engine = DbUtils().get_db_engine()
         sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
                       f'DATE(time_stamp) = \'{production_date.strftime("%Y-%m-%d")}\';')
         return pd.read_sql_query(sql_string, con=engine)
@@ -857,7 +800,7 @@ class RcvDb:
             returns:
               pandas dataframe with node attributes for qtm_sn
         '''
-        engine = DbUtils().get_engine()
+        engine = DbUtils().get_db_engine()
         sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
                       f'qtm_sn = {qtm_sn};')
         return pd.read_sql_query(sql_string, con=engine)

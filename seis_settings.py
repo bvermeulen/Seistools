@@ -10,7 +10,7 @@ DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATA_FILES_VAPS = r'data_files\\vibes\\'
 DATA_FILES_RECEIVERS = r'data_files\\nodes\\'
 
-DATABASE = 'Haniya_North'
+DATABASE = 'Haniya_North_db.sqlite3'
 INIT_DB = False
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
