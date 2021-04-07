@@ -10,7 +10,8 @@ DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATA_FILES_VAPS = r'data_files\\vibes\\'
 DATA_FILES_RECEIVERS = r'data_files\\nodes\\'
 
-DATABASE = 'Haniya_North_db.sqlite3'
+#DATABASE = 'Haniya_North_db.sqlite3'
+DATABASE = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\34 Maps & scouting\\Haniya_North_db.sqlite3'  #pylint: disable=line-too-long
 INIT_DB = False
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
@@ -155,10 +156,12 @@ vp_plt_settings = {
 
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
-        'max_vp_hour': 200,
-        'tick_intval_vp_hour': 20,
-        'max_vibs': 5,
+        'max_vp_hour': 1500,
+        'tick_intval_vp_hour': 100,
+        'vp_hour_target': 1060,
+        'max_vibs': 15,
         'tick_intval_vibs': 1,
+        'vibs_target': 10,
     },
 }
 

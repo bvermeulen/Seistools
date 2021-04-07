@@ -388,7 +388,7 @@ class VpDb:
 
         vp_records_df = cls.get_vp_data_by_date(database_table, prod_date)
 
-        for vib in range(1, FLEETS):
+        for vib in range(1, FLEETS + 1):
             vib_df = vp_records_df[vp_records_df['vibrator'] == vib]
             vp_pts = [
                 (val[0], Point(val[1], val[2]), val[3]) for val in zip(

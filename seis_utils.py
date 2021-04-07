@@ -106,12 +106,7 @@ def get_animation_dates():
 
 
 def get_year(day_of_year):
-    split_year_at_day = 180
-    if day_of_year > split_year_at_day:
-        return 2019
-
-    else:
-        return 2020
+    return 2021
 
 
 def convert_ecw_to_tiff(file_name):

@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE, vp_plt_settings
+from seis_settings import FLEETS, DATABASE_TABLE, TOL_COLOR, vp_plt_settings
 
 seconds_per_day = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -139,14 +139,18 @@ class VpActive:
         self.populate_vps_by_second()
         self.aggregate_vps_by_interval(interval)
         times = self.vps_by_interval_df['time'].to_list()
-        ax1.step(times,
-                 self.vps_by_interval_df['vps_hour'].to_list(),
-                 where='post', markersize=5,
-                )
-        ax2.step(times,
-                 self.vps_by_interval_df['num_vibs'].to_list(),
-                 where='post', markersize=5,
-                )
+        vibs = self.vps_by_interval_df['num_vibs'].to_list()
+        colors = [
+            TOL_COLOR if nv < vp_plt_settings['vib_activity']['vibs_target']
+            else 'green' for nv in vibs
+        ]
+        width = interval / (24 * 3600)
+        ax1.step(times, self.vps_by_interval_df['vps_hour'].to_list(), where='post')
+        ax1.axhline(
+            vp_plt_settings['vib_activity']['vp_hour_target'],
+            color=TOL_COLOR, linewidth=0.5
+        )
+        ax2.bar(times, vibs, color=colors, width=width, align='edge')
 
         fig.tight_layout()
         plt.show()
