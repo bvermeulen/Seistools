@@ -34,7 +34,7 @@ class NodeAttributes:
 
         for i_plt, (key, plt_setting) in enumerate(node_plt_settings.items()):
             if key in ['frequency', 'damping', 'sensitivity', 'resistance',
-                       'thd', 'battery', 'noise', 'tilt']:
+                       'thd', 'battery', 'noise_bits', 'tilt']:
                 ax0[i_plt] = cls.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = cls.plot_histogram(ax1[i_plt], key, plt_setting)
 

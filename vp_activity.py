@@ -90,6 +90,8 @@ class VpActive:
                 vps_in_interval: list with number of vps in interval
                 vibs_in_interval: list of number of vibs operational in interval
         '''
+        progress_message = seis_utils.progress_message_generator(
+            f'aggreate VPs for {self.production_date.strftime("%d-%b-%Y")}')
         total_vps = 0
         second = 0
         while second < seconds_per_day:
@@ -108,6 +110,7 @@ class VpActive:
 
             total_vps += len(vibs_list)
             second += interval
+            next(progress_message)
 
         self.add_vps_interval(interval, seconds_per_day, [])
 
@@ -144,7 +147,7 @@ class VpActive:
             TOL_COLOR if nv < vp_plt_settings['vib_activity']['vibs_target']
             else 'green' for nv in vibs
         ]
-        width = interval / (24 * 3600)
+        width = interval / seconds_per_day
         ax1.step(times, self.vps_by_interval_df['vps_hour'].to_list(), where='post')
         ax1.axhline(
             vp_plt_settings['vib_activity']['vp_hour_target'],

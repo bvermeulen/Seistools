@@ -618,7 +618,8 @@ class RcvDb:
             f'battery REAL, '
             f'ch INTEGER, '
             f'type VARCHAR(15), '
-            f'noise REAL, '
+            f'noise_qc REAL, '
+            f'noise_bits REAL, '
             f'frequency REAL, '
             f'damping REAL, '
             f'sensitivity REAL, '
@@ -739,10 +740,10 @@ class RcvDb:
 
         sql_insert_string = (
             f'INSERT INTO {cls.table_node_attributes} ('
-            f'id_file, id_point, qtm_sn, battery, ch, type, noise, frequency, damping, '
-            f'sensitivity, resistance, leakage, thd, crossfeed, power, cmr, '
-            f'tilt, acqrate, time_stamp) '
-            f'VALUES ({", ".join(["?"]*19)}) '
+            f'id_file, id_point, qtm_sn, battery, ch, type, noise_qc, noise_bits, '
+            f'frequency, damping, sensitivity, resistance, leakage, thd, crossfeed, '
+            f'power, cmr, tilt, acqrate, time_stamp) '
+            f'VALUES ({", ".join(["?"]*20)}) '
             f';'
         )
         for rcvr_id, node_record in zip(rcvr_ids, node_records):
@@ -753,7 +754,8 @@ class RcvDb:
                 node_record.battery,
                 node_record.ch,
                 node_record.type,
-                node_record.noise,
+                node_record.noise_qc,
+                node_record.noise_bits,
                 node_record.frequency,
                 node_record.damping,
                 node_record.sensitivity,

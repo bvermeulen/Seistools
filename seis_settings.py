@@ -10,7 +10,7 @@ DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATA_FILES_VAPS = r'data_files\\vibes\\'
 DATA_FILES_RECEIVERS = r'data_files\\nodes\\'
 
-#DATABASE = 'Haniya_North_db.sqlite3'
+# DATABASE = 'Haniya_North_db.sqlite3'
 DATABASE = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\34 Maps & scouting\\Haniya_North_db.sqlite3'  #pylint: disable=line-too-long
 INIT_DB = False
 LINK_VP_TO_VAPS = False
@@ -238,14 +238,14 @@ node_plt_settings = {
         'tol_max': 9,
     },
 
-    'noise': {
+    'noise_bits': {
         'title_attribute': 'Noise',
         'y-axis_label_attribute': 'microVolt',
         'title_density': 'Noise',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 1,
-        'interval': 0.01,
+        'max': 100,
+        'interval': 1,
         'tol_min': None,
         'tol_max': None,
     },
@@ -280,7 +280,8 @@ NodeTable = recordtype(
     'battery, '
     'ch, '
     'type, '
-    'noise, '
+    'noise_qc, '
+    'noise_bits, '
     'frequency, '
     'damping, '
     'sensitivity, '
