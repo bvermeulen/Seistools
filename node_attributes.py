@@ -10,45 +10,49 @@ import seis_utils
 import seis_database
 from seis_settings import MARKERSIZE_NODE, TOL_COLOR, node_plt_settings
 
+SMALL_SIZE = 8
+plt.rc('xtick', labelsize=SMALL_SIZE)
+plt.rc('ytick', labelsize=SMALL_SIZE)
+plt.rc('axes', labelsize=SMALL_SIZE)
+FIGSIZE = (12, 8)
+
 
 class NodeAttributes:
 
-    @classmethod
-    def select_data(cls, production_date):
-        cls.node_records_df = seis_database.RcvDb().get_node_data_by_date(production_date)
+    def __init__(self, production_date):
+        self.production_date = production_date
 
-    @classmethod
-    def plot_node_data(cls):
-        ax0 = [None for i in range(9)]
-        ax1 = [None for i in range(9)]
-        fig1, (
-            (ax0[0], ax1[0]), (ax0[1], ax1[1]), (ax0[2], ax1[2]),
-            (ax0[3], ax1[3]), (ax0[4], ax1[4]),
-        ) = plt.subplots(nrows=5, ncols=2, figsize=(8, 8))
+    def select_data(self):
+        self.node_records_df = seis_database.RcvDb().get_node_data_by_date(
+            self.production_date
+        )
 
-        fig2, (
-            (ax0[5], ax1[5]), (ax0[6], ax1[6]), (ax0[7], ax1[7]),
-        ) = plt.subplots(nrows=3, ncols=2, figsize=(8, 8))
-
-        # plt.subplots_adjust(hspace=10)
+    def plot_node_data(self):
+        ax0 = [None for i in range(8)]
+        ax1 = [None for i in range(8)]
+        fig, (
+            (ax0[0], ax1[0], ax0[1], ax1[1]),
+            (ax0[2], ax1[2], ax0[3], ax1[3]),
+            (ax0[4], ax1[4], ax0[5], ax1[5]),
+            (ax0[6], ax1[6], ax0[7], ax1[7]),
+        ) = plt.subplots(nrows=4, ncols=4, figsize=FIGSIZE)
+        fig.suptitle(f'Daily tests for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')
 
         for i_plt, (key, plt_setting) in enumerate(node_plt_settings.items()):
             if key in ['frequency', 'damping', 'sensitivity', 'resistance',
                        'thd', 'battery', 'noise_bits', 'tilt']:
-                ax0[i_plt] = cls.plot_attribute(ax0[i_plt], key, plt_setting)
-                ax1[i_plt] = cls.plot_histogram(ax1[i_plt], key, plt_setting)
+                ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
+                ax1[i_plt] = self.plot_histogram(ax1[i_plt], key, plt_setting)
 
-        fig1.tight_layout()
-        fig2.tight_layout()
+        fig.tight_layout()
         plt.show()
 
-    @classmethod
-    def plot_attribute(cls, axis, key, setting):
+    def plot_attribute(self, axis, key, setting):
         axis.set_title(setting['title_attribute'])
         axis.set_ylabel(setting['y-axis_label_attribute'])
         axis.set_ylim(bottom=setting['min'], top=setting['max'])
 
-        node_data = np.array(cls.node_records_df[key].to_list())
+        node_data = np.array(self.node_records_df[key].to_list())
 
         if node_data.size > 0:
             axis.plot(
@@ -62,8 +66,7 @@ class NodeAttributes:
 
         return axis
 
-    @classmethod
-    def plot_density(cls, axis, key, setting):
+    def plot_density(self, axis, key, setting):
         '''  method to plot the attribute density function. If no density plot can be
              made then plot unity density
         '''
@@ -81,7 +84,7 @@ class NodeAttributes:
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
 
-        node_data = np.array(cls.node_records_df[key].to_list())
+        node_data = np.array(self.node_records_df[key].to_list())
 
         if node_data.size > 0:
             try:
@@ -94,13 +97,12 @@ class NodeAttributes:
 
         return axis
 
-    @classmethod
-    def plot_histogram(cls, axis, key, setting):
+    def plot_histogram(self, axis, key, setting):
         '''  method to plot the attribute histogram.
         '''
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
-        node_data = np.array(cls.node_records_df[key].to_list())
+        node_data = np.array(self.node_records_df[key].to_list())
         if node_data.size > 0:
             axis.hist(
                 node_data, histtype='step', bins=50,
@@ -124,12 +126,12 @@ class NodeAttributes:
         return axis
 
 if __name__ == "__main__":
-    node_attr = NodeAttributes()
 
     while True:
         production_date = seis_utils.get_production_date()
         if production_date == -1:
             break
 
-        node_attr.select_data(production_date)
+        node_attr = NodeAttributes(production_date)
+        node_attr.select_data()
         node_attr.plot_node_data()
