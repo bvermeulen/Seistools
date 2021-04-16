@@ -606,32 +606,34 @@ class RcvDb:
     @classmethod
     @DbUtils.connect
     def create_table_node_attributes(cls, cursor):
-        ''' attributes table for the Inova Quantum nodes
-            based on the IX1 analog test report (Feb-2021)
+        ''' attributes table for the Inova Quantum nodes based on BITS report
         '''
         sql_string = (
             f'CREATE TABLE {cls.table_node_attributes} ('
             f'id INTEGER PRIMARY KEY, '
             f'id_file INTEGER REFERENCES {cls.table_node_files}(id) ON DELETE CASCADE, '
             f'id_point INTEGER REFERENCES {cls.table_rcvr_points}(id), '
-            f'qtm_sn VARCHAR(8), '
-            f'battery REAL, '
-            f'ch INTEGER, '
-            f'type VARCHAR(15), '
-            f'noise_qc REAL, '
-            f'noise_bits REAL, '
+            f'qtm_sn VARCHAR(10), '
+            f'software VARCHAR(20), '
+            f'geoph_model VARCHAR(10), '
+            f'test_time TIMESTAMP, '
+            f'temp REAL, '
+            f'bits_type VARCHAR(15), '
+            f'tilt REAL, '
+            f'config_id INTEGER, '
+            f'resistance REAL, '
+            f'noise REAL, '
+            f'thd REAL, '
+            f'polarity VARCHAR(15), '
             f'frequency REAL, '
             f'damping REAL, '
             f'sensitivity REAL, '
-            f'resistance REAL, '
-            f'leakage REAL, '
-            f'thd REAL, '
-            f'crossfeed REAL, '
-            f'power REAL, '
-            f'cmr REAL, '
-            f'tilt REAL, '
-            f'acqrate REAL, '
-            f'time_stamp TIMESTAMP);'
+            f'dyn_range REAL, '
+            f'ein REAL, '
+            f'gain REAL, '
+            f'offset REAL, '
+            f'gps_time INTEGER, '
+            f'ext_geophone BOOLEAN);'
         )
         cursor.executescript(sql_string)
         print(f'create table {cls.table_node_attributes}')
@@ -721,7 +723,6 @@ class RcvDb:
             f'station = ? AND '
             f'rcvr_index = ?;'
         )
-
         rcvr_ids = []
         for node_record in node_records:
             cursor.execute(sql_get_rcvr_id_string, (
@@ -740,34 +741,37 @@ class RcvDb:
 
         sql_insert_string = (
             f'INSERT INTO {cls.table_node_attributes} ('
-            f'id_file, id_point, qtm_sn, battery, ch, type, noise_qc, noise_bits, '
-            f'frequency, damping, sensitivity, resistance, leakage, thd, crossfeed, '
-            f'power, cmr, tilt, acqrate, time_stamp) '
-            f'VALUES ({", ".join(["?"]*20)}) '
-            f';'
+            f'id_file, id_point, qtm_sn, software, geoph_model, test_time, temp, '
+            f'bits_type, tilt, config_id, resistance, noise, thd, polarity, '
+            f'frequency, damping, sensitivity, dyn_range, ein, gain, offset, '
+            f'gps_time, ext_geophone) '
+            f'VALUES ({", ".join(["?"]*23)}); '
         )
         for rcvr_id, node_record in zip(rcvr_ids, node_records):
             cursor.execute(sql_insert_string, (
                 node_record.id_file,
                 rcvr_id,
                 node_record.qtm_sn,
-                node_record.battery,
-                node_record.ch,
-                node_record.type,
-                node_record.noise_qc,
-                node_record.noise_bits,
+                node_record.software,
+                node_record.geoph_model,
+                node_record.test_time,
+                node_record.temp,
+                node_record.bits_type,
+                node_record.tilt,
+                node_record.config_id,
+                node_record.resistance,
+                node_record.noise,
+                node_record.thd,
+                node_record.polarity,
                 node_record.frequency,
                 node_record.damping,
                 node_record.sensitivity,
-                node_record.resistance,
-                node_record.leakage,
-                node_record.thd,
-                node_record.crossfeed,
-                node_record.power,
-                node_record.cmr,
-                node_record.tilt,
-                node_record.acqrate,
-                node_record.time_stamp,
+                node_record.dyn_range,
+                node_record.ein,
+                node_record.gain,
+                node_record.offset,
+                node_record.gps_time,
+                node_record.ext_geophone,
             ))
 
             next(progress_message)
