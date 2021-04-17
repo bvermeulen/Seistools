@@ -786,7 +786,7 @@ class RcvDb:
         print(f'record {file_id} deleted from {cls.table_node_files}')
 
     @classmethod
-    def get_node_data_by_date(cls, production_date):
+    def get_node_data_by_date(cls, production_date: datetime) -> pd.DataFrame:
         ''' retrieve node data by date
             arguments:
               production_date: datetime object
@@ -795,7 +795,7 @@ class RcvDb:
         '''
         engine = DbUtils().get_db_engine()
         sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
-                      f'DATE(time_stamp) = \'{production_date.strftime("%Y-%m-%d")}\';')
+                      f'DATE(test_time) = \'{production_date.strftime("%Y-%m-%d")}\';')
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod

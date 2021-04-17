@@ -42,6 +42,42 @@ class MapTypes(IntEnum):
     no_background = 3
 
 vp_plt_settings = {
+    'avg_phase': {
+        'title_attribute': 'Average Phase',
+        'y-axis_label_attribute': 'Degrees',
+        'title_density': 'Average Phase Density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 15,
+        'interval': 0.1,
+        'tol_min': None,
+        'tol_max': 4,
+    },
+
+    'avg_dist': {
+        'title_attribute': 'Average Distortion',
+        'y-axis_label_attribute': 'Percentage',
+        'title_density': 'Average Distortion Density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 80,
+        'interval': 1,
+        'tol_min': None,
+        'tol_max': 25,
+    },
+
+    'avg_force': {
+        'title_attribute': 'Average Force',
+        'y-axis_label_attribute': 'Percentage',
+        'title_density': 'Average Force Density',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 100,
+        'interval': 1,
+        'tol_min': None,
+        'tol_max': None,
+    },
+
     'peak_phase': {
         'title_attribute': 'Peak Phase',
         'y-axis_label_attribute': 'Degrees',
@@ -70,42 +106,6 @@ vp_plt_settings = {
         'title_attribute': 'Peak Force',
         'y-axis_label_attribute': 'Percentage',
         'title_density': 'Peak Force Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'interval': 1,
-        'tol_min': None,
-        'tol_max': None,
-    },
-
-    'avg_phase': {
-        'title_attribute': 'Average Phase',
-        'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Average Phase Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 20,
-        'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 4,
-    },
-
-    'avg_dist': {
-        'title_attribute': 'Average Distortion',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Average Distortion Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 80,
-        'interval': 1,
-        'tol_min': None,
-        'tol_max': 25,
-    },
-
-    'avg_force': {
-        'title_attribute': 'Average Force',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Average Force Density',
         'y-axis_label_density': '',
         'min': 0,
         'max': 100,
@@ -183,11 +183,11 @@ node_plt_settings = {
         'y-axis_label_attribute': '%',
         'title_density': 'Damping',
         'y-axis_label_density': '',
-        'min': 50,
-        'max': 70,
-        'interval': 0.1,
-        'tol_min': 55.2,
-        'tol_max': 64.8,
+        'min': 0.50,
+        'max': 0.70,
+        'interval': 0.01,
+        'tol_min': 0.552,
+        'tol_max': 0.648,
     },
 
     'sensitivity': {
@@ -226,19 +226,7 @@ node_plt_settings = {
         'tol_max': 0.1,
     },
 
-    'battery': {
-        'title_attribute': 'Battery',
-        'y-axis_label_attribute': 'Volt',
-        'title_density': 'Battery',
-        'y-axis_label_density': '',
-        'min': 7,
-        'max': 10,
-        'interval': 0.05,
-        'tol_min': 7,
-        'tol_max': 9,
-    },
-
-    'noise_bits': {
+    'noise': {
         'title_attribute': 'Noise',
         'y-axis_label_attribute': 'microVolt',
         'title_density': 'Noise',

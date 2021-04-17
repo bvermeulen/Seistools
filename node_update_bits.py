@@ -34,11 +34,14 @@ class Rcv:
                 progress_message = seis_utils.progress_message_generator(
                     f'reading receiver data from {node_file.file_name}   ')
 
-                bits_df = pd.read_excel(abs_filename, header=None, skiprows=1)
-                print(len(bits_df))
-                bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
-                print(len(bits_df))
+                try:
+                    bits_df = pd.read_excel(abs_filename, header=None, skiprows=1)
 
+                except PermissionError:
+                    node_db.delete_node_file(id_file)
+                    bits_df = pd.DataFrame()
+
+                bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
                 node_records = []
                 for _, bits_row in bits_df.iterrows():
 
@@ -58,6 +61,7 @@ class Rcv:
     def parse_node_line(bits_row):
         empty_record = NodeTable(*[None]*26)
         node_record = NodeTable(*[None]*26)
+
         try:
             node_record.qtm_sn = bits_row[0]
             node_record.line = int(bits_row[1])
@@ -85,7 +89,7 @@ class Rcv:
             node_record.ext_geophone = 1 if bits_row[22] == 'TRUE' else 0
 
         except (ValueError, TypeError):
-            node_record = empty_record
+            return  empty_record
 
         # only except records where there are numerical values for all of the below keys
         keys = [
@@ -95,7 +99,10 @@ class Rcv:
             _ = sum([v for k, v in node_record._asdict().items() if k in keys])
 
         except TypeError:
-            node_record = empty_record
+            return empty_record
+
+        if node_record.line > 99999:
+            return empty_record
 
         return node_record
 

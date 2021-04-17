@@ -37,10 +37,12 @@ class NodeAttributes:
             (ax0[6], ax1[6], ax0[7], ax1[7]),
         ) = plt.subplots(nrows=4, ncols=4, figsize=FIGSIZE)
         fig.suptitle(f'Daily tests for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')
+        ax0[7].remove()
+        ax1[7].remove()
 
         for i_plt, (key, plt_setting) in enumerate(node_plt_settings.items()):
             if key in ['frequency', 'damping', 'sensitivity', 'resistance',
-                       'thd', 'battery', 'noise_bits', 'tilt']:
+                       'thd', 'noise', 'tilt']:
                 ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = self.plot_histogram(ax1[i_plt], key, plt_setting)
 
