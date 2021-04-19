@@ -74,19 +74,19 @@ class Rcv:
             node_record.bits_type = bits_row[7]
             node_record.tilt = bits_row[8] if bits_row[8] > 0 else None
             node_record.config_id = bits_row[9]
-            node_record.resistance = bits_row[10] if bits_row[10] > 0 else None
-            node_record.noise = bits_row[11] if bits_row[11] > 0 else None
-            node_record.thd = bits_row[12] if bits_row[12] > 0 else None
-            node_record.polarity = bits_row[13]
-            node_record.frequency = bits_row[14] if bits_row[14] > 0 else None
-            node_record.damping = bits_row[15] if bits_row[15] > 0 else None
-            node_record.sensitivity = bits_row[16] if bits_row[16] > 0 else None
-            node_record.dyn_range = bits_row[17]
-            node_record.ein = bits_row[18]
-            node_record.gain = bits_row[19]
-            node_record.offset = bits_row[20]
-            node_record.gps_time = int(bits_row[21])
-            node_record.ext_geophone = 1 if bits_row[22] == 'TRUE' else 0
+            node_record.resistance = float(bits_row[11]) if bits_row[11] > 0 else None
+            node_record.noise = bits_row[12] if bits_row[12] > 0 else None
+            node_record.thd = bits_row[13] if bits_row[13] > 0 else None
+            node_record.polarity = bits_row[14]
+            node_record.frequency = bits_row[15] if bits_row[15] > 0 else None
+            node_record.damping = bits_row[16] if bits_row[16] > 0 else None
+            node_record.sensitivity = bits_row[17] if bits_row[17] > 0 else None
+            node_record.dyn_range = bits_row[18]
+            node_record.ein = bits_row[19]
+            node_record.gain = bits_row[20]
+            node_record.offset = bits_row[21]
+            node_record.gps_time = int(bits_row[22])
+            node_record.ext_geophone = 1 if bits_row[23] == 'TRUE' else 0
 
         except (ValueError, TypeError):
             return  empty_record
