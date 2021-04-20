@@ -7,14 +7,14 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
-import seis_database
-from seis_settings import MARKERSIZE_NODE, TOL_COLOR, node_plt_settings
+import seis_nuseis_database
+from seis_settings import MARKERSIZE_NODE, TOL_COLOR, nuseis_plt_settings
 
 SMALL_SIZE = 8
 plt.rc('xtick', labelsize=SMALL_SIZE)
 plt.rc('ytick', labelsize=SMALL_SIZE)
 plt.rc('axes', labelsize=SMALL_SIZE)
-FIGSIZE = (12, 8)
+FIGSIZE = (12, 5.3)
 
 
 class NodeAttributes:
@@ -23,26 +23,24 @@ class NodeAttributes:
         self.production_date = production_date
 
     def select_data(self):
-        self.node_records_df = seis_database.RcvDb().get_node_data_by_date(
+        self.node_records_df = seis_nuseis_database.NuseisDb().get_node_data_by_date(
             self.production_date
         )
 
     def plot_node_data(self):
-        ax0 = [None for i in range(8)]
-        ax1 = [None for i in range(8)]
+        ax0 = [None for i in range(4)]
+        ax1 = [None for i in range(4)]
         fig, (
             (ax0[0], ax1[0], ax0[1], ax1[1]),
             (ax0[2], ax1[2], ax0[3], ax1[3]),
-            (ax0[4], ax1[4], ax0[5], ax1[5]),
-            (ax0[6], ax1[6], ax0[7], ax1[7]),
-        ) = plt.subplots(nrows=4, ncols=4, figsize=FIGSIZE)
-        fig.suptitle(f'Daily tests for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')
-        ax0[7].remove()
-        ax1[7].remove()
+        ) = plt.subplots(nrows=2, ncols=4, figsize=FIGSIZE)
+        fig.suptitle(
+            f'Daily tests for NuSeis: '
+            f'{self.production_date.strftime("%d %b %Y")}', fontweight='bold'
+        )
 
-        for i_plt, (key, plt_setting) in enumerate(node_plt_settings.items()):
-            if key in ['frequency', 'damping', 'sensitivity', 'resistance',
-                       'thd', 'noise', 'tilt']:
+        for i_plt, (key, plt_setting) in enumerate(nuseis_plt_settings.items()):
+            if key in ['resistance', 'thd', 'noise', 'tilt']:
                 ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = self.plot_histogram(ax1[i_plt], key, plt_setting)
 
@@ -107,7 +105,7 @@ class NodeAttributes:
         node_data = np.array(self.node_records_df[key].to_list())
         if node_data.size > 0:
             axis.hist(
-                node_data, histtype='step', bins=50,
+                node_data, histtype='step', bins=setting['bins'],
                 range=(setting['min'], setting['max'])
             )
             if setting['tol_min'] is not None:

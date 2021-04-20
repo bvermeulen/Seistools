@@ -8,7 +8,8 @@ from recordtype import recordtype
 DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 #DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
 DATA_FILES_VAPS = r'D:\\Haniya North\\12 QC\\vib_node_data\\vaps'
-DATA_FILES_RECEIVERS = r'D:\\Haniya North\\12 QC\\vib_node_data\\nodes'
+DATA_FILES_QUANTUM = r'D:\\Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
+DATA_FILES_NUSEIS = r'D:\\Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
 
 # DATABASE = 'Haniya_North_db.sqlite3'
 DATABASE = r'D:\\Haniya North\\6 Project outlook\\Maps\\Haniya_North_db.sqlite3'  #pylint: disable=line-too-long
@@ -156,7 +157,7 @@ vp_plt_settings = {
 
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
-        'max_vp_hour': 1500,
+        'max_vp_hour': 1700,
         'tick_intval_vp_hour': 100,
         'vp_hour_target': 1060,
         'max_vibs': 15,
@@ -251,14 +252,68 @@ node_plt_settings = {
     },
 }
 
+nuseis_plt_settings = {
+    'resistance': {
+        'title_attribute': 'Resistance',
+        'y-axis_label_attribute': 'Ohm',
+        'title_density': 'Resistance',
+        'y-axis_label_density': '',
+        'min': 1700,
+        'max': 2000,
+        'bins': 50,
+        'interval': 0.5,
+        'tol_min': 1739,
+        'tol_max': 1961,
+    },
+
+    'thd': {
+        'title_attribute': 'Distortion',
+        'y-axis_label_attribute': '%',
+        'title_density': 'Distortion',
+        'y-axis_label_density': '',
+        'min': 119,
+        'max': 122,
+        'bins': 28,
+        'interval': 0.01,
+        'tol_min': None,
+        'tol_max': 121,
+    },
+
+    'noise': {
+        'title_attribute': 'Noise',
+        'y-axis_label_attribute': 'microVolt',
+        'title_density': 'Noise',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 1000,
+        'bins': 50,
+        'interval': 10,
+        'tol_min': None,
+        'tol_max': None,
+    },
+
+    'tilt': {
+        'title_attribute': 'Tilt',
+        'y-axis_label_attribute': 'Degrees',
+        'title_density': 'Tilt',
+        'y-axis_label_density': '',
+        'min': 0,
+        'max': 20,
+        'bins': 20,
+        'interval': 0.05,
+        'tol_min': None,
+        'tol_max': 10,
+    },
+}
+
 FilesNodeTable = recordtype(
     'FilesNodeTable',
     'file_name, '
     'file_date'
 )
 
-NodeTable = recordtype(
-    'NodeTable',
+QuantumTable = recordtype(
+    'QuantumTable',
     'line, '
     'station, '
     'rcvr_index, '
@@ -286,7 +341,21 @@ NodeTable = recordtype(
     'gps_time, '
     'ext_geophone'
 )
-
+NuseisTable = recordtype(
+    'NuseisTable',
+    'line, '
+    'station, '
+    'rcvr_index, '
+    'id_file, '
+    'id_point, '
+    'nuseis_sn, '
+    'tilt, '
+    'noise, '
+    'resistance, '
+    'impedance, '
+    'thd, '
+    'test_time'
+)
 RcvrTable = recordtype(
     'RcvrTable',
     'line, '

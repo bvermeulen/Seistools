@@ -3,9 +3,9 @@
 import sys
 from pathlib import Path
 from seis_settings import RcvrTable
-import seis_database
+import seis_quantum_database
 
-rcv_db = seis_database.RcvDb()
+rcv_db = seis_quantum_database.QuantumDb()
 
 class Rcv:
 

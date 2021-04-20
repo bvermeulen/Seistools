@@ -3,17 +3,17 @@
 import os
 from datetime import datetime
 import pandas as pd
-from seis_settings import DATA_FILES_RECEIVERS, FilesNodeTable, NodeTable
+from seis_settings import DATA_FILES_QUANTUM, FilesNodeTable, QuantumTable
 import seis_utils
-import seis_database
+import seis_quantum_database
 
-node_db = seis_database.RcvDb()
+node_db = seis_quantum_database.QuantumDb()
 
 class Rcv:
 
     @classmethod
     def read_nodes(cls):
-        for foldername, _, filenames in os.walk(DATA_FILES_RECEIVERS):
+        for foldername, _, filenames in os.walk(DATA_FILES_QUANTUM):
             for filename in filenames:
                 if filename[-5:] not in ['.xlsx', '.XLSX']:
                     continue
@@ -59,8 +59,8 @@ class Rcv:
 
     @staticmethod
     def parse_node_line(bits_row):
-        empty_record = NodeTable(*[None]*26)
-        node_record = NodeTable(*[None]*26)
+        empty_record = QuantumTable(*[None]*26)
+        node_record = QuantumTable(*[None]*26)
 
         try:
             node_record.qtm_sn = bits_row[0]
