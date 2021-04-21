@@ -68,16 +68,26 @@ class Rcv:
             node_record.line = int(nuseis_row['Line'])
             node_record.station = int(nuseis_row['Station'])
             node_record.rcvr_index = 1
-            node_record.tilt = float(
-                180.0 - nuseis_row['Tilt_Angle']) if nuseis_row['Tilt_Angle'] > 0 else None
-            node_record.noise = float(
-                nuseis_row['Spread_Noise']) if nuseis_row['Spread_Noise'] > 0 else None
-            node_record.resistance = float(
-                nuseis_row['Resistance']) if nuseis_row['Resistance'] > 0 else None
-            node_record.impedance = float(
-                nuseis_row['Impedance']) if nuseis_row['Impedance'] > 0 else None
-            node_record.thd = float(
-                nuseis_row['Total_Harmonic_Distortion']) if nuseis_row['Total_Harmonic_Distortion'] > 0 else None
+            node_record.tilt = (
+                float(180.0 - nuseis_row['Tilt_Angle'])
+                if nuseis_row['Tilt_Angle'] > 0 else None
+            )
+            node_record.noise = (
+                float(nuseis_row['Spread_Noise']) * 0.001
+                if nuseis_row['Spread_Noise'] > 0 else None
+            )
+            node_record.resistance = (
+                float(nuseis_row['Resistance'])
+                if nuseis_row['Resistance'] > 0 else None
+            )
+            node_record.impedance = (
+                float(nuseis_row['Impedance'])
+                if nuseis_row['Impedance'] > 0 else None
+            )
+            node_record.thd = (
+                float(nuseis_row['Total_Harmonic_Distortion'])
+                if nuseis_row['Total_Harmonic_Distortion'] > 0 else None
+            )
             node_record.test_time = (
                 datetime.strptime(nuseis_row['DLast_Scan_UTC'], '%d-%m-%Y %H:%M:%S') +
                 timedelta(hours=4)).strftime('%Y-%m-%d %H:%M:%S')

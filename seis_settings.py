@@ -12,7 +12,7 @@ DATA_FILES_QUANTUM = r'D:\\Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
 DATA_FILES_NUSEIS = r'D:\\Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
 
 # DATABASE = 'Haniya_North_db.sqlite3'
-DATABASE = r'D:\\Haniya North\\6 Project outlook\\Maps\\Haniya_North_db.sqlite3'  #pylint: disable=line-too-long
+DATABASE = r'D:\\Haniya North\\6 Project outlook\\Maps\\Haniya_North_db.sqlite3'
 INIT_DB = False
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
@@ -285,9 +285,9 @@ nuseis_plt_settings = {
         'title_density': 'Noise',
         'y-axis_label_density': '',
         'min': 0,
-        'max': 1000,
+        'max': 100,
         'bins': 50,
-        'interval': 10,
+        'interval': 1,
         'tol_min': None,
         'tol_max': None,
     },

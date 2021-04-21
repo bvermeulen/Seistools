@@ -10,8 +10,8 @@ class QuantumDb:
     '''  database method for Inova Quantum nodes
     '''
     table_rcvr_points = 'rcvr_points'
-    table_node_files = 'node_files'
-    table_node_attributes = 'node_attributes'
+    table_node_files = 'node_quantum_files'
+    table_node_attributes = 'node_quantum_attributes'
 
     @classmethod
     @DbUtils.connect
