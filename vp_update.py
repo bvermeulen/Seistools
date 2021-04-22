@@ -33,7 +33,7 @@ class Vaps:
                 vaps_file = FilesVapsTable(*[None]*3)
 
                 abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                vaps_file.file_name = abs_filename
+                vaps_file.file_name = filename
                 vaps_file.file_date = (
                     datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
 
@@ -124,7 +124,7 @@ class Vp:
                 vp_file = FilesVpTable(*[None]*3)
 
                 abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                vp_file.file_name = abs_filename
+                vp_file.file_name = filename
                 vp_file.file_date = (
                     datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
 

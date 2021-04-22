@@ -161,7 +161,7 @@ class QuantumDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_node_files} WHERE '
-            f'file_name=\'{node_file.file_name}\' ;'
+            f'file_name like \'%{node_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:

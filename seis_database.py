@@ -208,7 +208,7 @@ class VpDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vp_files} WHERE '
-            f'file_name=\'{vp_file.file_name}\' ;'
+            f'file_name like \'%{vp_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
         try:
@@ -287,7 +287,7 @@ class VpDb:
         # check if file exists
         sql_string = (
             f'SELECT id FROM {cls.table_vaps_files} WHERE '
-            f'file_name=\'{vaps_file.file_name}\' ;'
+            f'file_name like \'%{vaps_file.file_name}\' ;'
         )
         cursor.execute(sql_string)
 

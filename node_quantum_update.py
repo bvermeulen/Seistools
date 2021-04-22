@@ -21,7 +21,7 @@ class Rcv:
                 node_file = FilesNodeTable(*[None]*2)
 
                 abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                node_file.file_name = abs_filename
+                node_file.file_name = filename
                 node_file.file_date = (
                     datetime.fromtimestamp(os.stat(abs_filename).st_mtime).strftime(
                         '%Y-%m-%d %H:%M:%S')
