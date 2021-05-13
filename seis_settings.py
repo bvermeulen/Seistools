@@ -354,7 +354,8 @@ NuseisTable = recordtype(
     'resistance, '
     'impedance, '
     'thd, '
-    'test_time'
+    'time_deployment, '
+    'time_lastscan'
 )
 RcvrTable = recordtype(
     'RcvrTable',

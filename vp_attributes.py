@@ -40,12 +40,14 @@ class VpAttributes:
         fig.suptitle(f'Vib attributes for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')  #pylint: disable=line-too-long
 
         for i_plt, (key, plt_setting) in enumerate(vp_plt_settings.items()):
-            self.total_records = 1
             if key in ['avg_phase', 'peak_phase', 'avg_dist',
                        'peak_dist', 'avg_force', 'peak_force']:
+                self.total_records = 0
                 ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = self.plot_density(ax1[i_plt], key, plt_setting)
 
+        # add total vp's as extra label in the legend
+        ax0[0].plot([], [], ' ', label=f'Ttl ({self.total_records:,})')
         handles, labels = ax0[0].get_legend_handles_labels()
         fig.legend(
             handles, labels, loc='upper right', frameon=True,

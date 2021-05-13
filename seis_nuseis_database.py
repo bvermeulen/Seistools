@@ -53,7 +53,8 @@ class NuseisDb:
             f'resistance REAL, '
             f'impedance REAL, '
             f'thd REAL, '
-            f'test_time TIME_STAMP);'
+            f'time_deployment TIME_STAMP, '
+            f'time_lastscan TIME_STAMP);'
         )
         cursor.executescript(sql_string)
         print(f'create table {cls.table_node_attributes}')
@@ -121,8 +122,8 @@ class NuseisDb:
         sql_insert_string = (
             f'INSERT INTO {cls.table_node_attributes} ('
             f'id_file, id_point, nuseis_sn, tilt, noise, resistance, '
-            f'impedance, thd, test_time) '
-            f'VALUES ({", ".join(["?"]*9)}); '
+            f'impedance, thd, time_deployment, time_lastscan) '
+            f'VALUES ({", ".join(["?"]*10)}); '
         )
         for rcvr_id, node_record in zip(rcvr_ids, node_records):
             cursor.execute(sql_insert_string, (
@@ -134,7 +135,8 @@ class NuseisDb:
                 node_record.resistance,
                 node_record.impedance,
                 node_record.thd,
-                node_record.test_time,
+                node_record.time_deployment,
+                node_record.time_lastscan,
             ))
 
             next(progress_message)
@@ -158,7 +160,7 @@ class NuseisDb:
         '''
         engine = DbUtils().get_db_engine()
         sql_string = (f'SELECT * FROM {cls.table_node_attributes} WHERE '
-                      f'DATE(test_time) = \'{production_date.strftime("%Y-%m-%d")}\';')
+                      f'DATE(time_lastscan) = \'{production_date.strftime("%Y-%m-%d")}\';')
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod

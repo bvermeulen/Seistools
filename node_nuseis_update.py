@@ -60,8 +60,8 @@ class Rcv:
 
     @staticmethod
     def parse_node_line(nuseis_row):
-        empty_record = NuseisTable(*[None]*12)
-        node_record = NuseisTable(*[None]*12)
+        empty_record = NuseisTable(*[None]*13)
+        node_record = NuseisTable(*[None]*13)
 
         try:
             node_record.nuseis_sn = int(nuseis_row['Serial_Number'])
@@ -88,11 +88,20 @@ class Rcv:
                 float(nuseis_row['Total_Harmonic_Distortion'])
                 if nuseis_row['Total_Harmonic_Distortion'] > 0 else None
             )
-            node_record.test_time = (
-                datetime.strptime(nuseis_row['DLast_Scan_UTC'], '%d-%m-%Y %H:%M:%S') +
+            node_record.time_deployment = (
+                datetime.strptime(
+                    nuseis_row['Deployment_Date_Time_UTC'], '%d-%m-%y %H:%M') +
+                    timedelta(hours=4)).strftime('%Y-%m-%d %H:%M:%S')
+            node_record.time_lastscan = (
+                datetime.strptime(nuseis_row['DLast_Scan_UTC'], '%d-%m-%y %H:%M') +
                 timedelta(hours=4)).strftime('%Y-%m-%d %H:%M:%S')
 
         except (ValueError, TypeError):
+            return empty_record
+
+
+        # skip records where scan date is same as the deployment date
+        if node_record.time_lastscan[:10] == node_record.time_deployment[:10]:
             return empty_record
 
         # only except records where there are numerical values for all of the below keys
@@ -100,10 +109,14 @@ class Rcv:
             'tilt', 'noise', 'resistance', 'impedance', 'thd'
         ]
         try:
-            _ = sum([v for k, v in node_record._asdict().items() if k in keys])
+            r = sum([v for k, v in node_record._asdict().items() if k in keys])
+            if r < 0.5:
+                return empty_record
 
         except TypeError:
             return empty_record
+
+
 
         return node_record
 

@@ -241,7 +241,7 @@ class VpDb:
             f'file_id, vaps_id, line, station, vibrator, time_break, '
             f'planned_easting, planned_northing, easting, northing, elevation, _offset, '
             f'peak_force, avg_force, peak_dist, avg_dist, peak_phase, avg_phase, '
-            f'qc_flag, geom) VALUES ({", ".join(["?"*19])}, MakePoint(?, ?, ?));'
+            f'qc_flag, geom) VALUES ({", ".join(["?"]*19)}, MakePoint(?, ?, ?));'
         )
 
         for vp_record in vp_records:
