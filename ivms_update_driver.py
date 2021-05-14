@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
-from dataclasses import asdict, replace
 import pandas as pd
 import numpy as np
+from seis_utils import set_val
 from ivms_settings import IVMS_FOLDER, DRIVER_TRAINING, IvmsDriver
 from ivms_database import IvmsDb
 
@@ -31,29 +31,6 @@ class Driver:
                 self.db.update_driver_records(driver_records)
 
     def update_driver_training(self):
-        def set_val(value, dtype):
-            try:
-                if dtype == 'str':
-                    return str(int(value))
-
-                elif dtype == 'int':
-                    return int(value)
-
-                elif dtype == 'float':
-                    return float(value)
-
-                elif dtype == 'bool':
-                    return bool(value)
-
-                elif dtype == 'date':
-                    return np.datetime_as_string(value, unit='D')
-
-                else:
-                    return value
-
-            except (TypeError, ValueError):
-                return value
-
         training_df = pd.read_excel(DRIVER_TRAINING, skiprows=2)
         driver_records = self.db.fetch_driver_records()
 

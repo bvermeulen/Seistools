@@ -5,7 +5,7 @@ import datetime
 from dataclasses import dataclass
 
 IVMS_FOLDER = Path(r'.\\data_files\\IVMS')
-DRIVER_TRAINING = Path(r'.\\data_files\\IVMS\\driver_db.xlsx')
+DRIVER_TRAINING = Path(r'.\\data_files\\IVMS\\driver_training_db.xlsx')
 DATABASE = r'ivms_db.sqlite3'
 
 
@@ -53,43 +53,44 @@ class IvmsDriver:
 
 @dataclass
 class IvmsFileTripReport:
-    file_name: str
-    file_date: datetime.datetime
+    file_name: str = None
+    file_date: datetime.datetime = None
 
 
 @dataclass
 class IvmsTripReport:
-    id_file: int
-    id_vehicle: int
-    report_date: datetime.datetime
-    driving_time: datetime.time
-    standing_time: datetime.time
-    duration: datetime.time
-    idle_time: datetime.time
-    distance: float
-    avg_speed: float
-    max_speed: float
+    id_file: int = None
+    id_vehicle: int = None
+    report_date: datetime.datetime = None
+    driving_time: datetime.time = None
+    standing_time: datetime.time = None
+    duration: datetime.time = None
+    idle_time: datetime.time = None
+    distance: float = None
+    avg_speed: float = None
+    max_speed: float = None
 
 
 @dataclass
 class IvmsFileRag:
-    file_name: str
-    file_date: datetime.datetime
+    filename: str = None
+    file_date: datetime.datetime = None
 
 
 @dataclass
 class IvmsRag:
-    id_file: int
-    id_driver: int
-    distance: float
-    driving_time: datetime.time
-    harsh_accel: int
-    harsh_brake: int
-    seatbelt_violation_time: datetime.time
-    highest_speed: float
-    overspeeding_time: float
-    accel_violation_score: float
-    decel_violation_score: float
-    seatbelt_violation_score: float
-    overspeeding_violation_score: float
-    total_score: float
+    rag_report: datetime.datetime = None
+    id_file: int = None
+    id_driver: int = None
+    distance: float = None
+    driving_time: datetime.time = None
+    harsh_accel: int = None
+    harsh_brake: int = None
+    highest_speed: float = None
+    overspeeding_time: float = None
+    seatbelt_violation_time: datetime.time = None
+    accel_violation_score: float = None
+    decel_violation_score: float = None
+    seatbelt_violation_score: float = None
+    overspeeding_violation_score: float = None
+    total_score: float = None

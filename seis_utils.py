@@ -109,6 +109,41 @@ def get_year(day_of_year):
     return 2021
 
 
+def set_val(value, dtype):
+    try:
+        if dtype == 'str':
+            return str(int(value))
+
+        elif dtype == 'int':
+            return int(value)
+
+        elif dtype == 'float':
+            return float(value)
+
+        elif dtype == 'bool':
+            return bool(value)
+
+        elif dtype == 'date':
+            try:
+                return value.strftime('%Y-%m-%d')
+
+            except AttributeError:
+                return np.datetime_as_string(value, unit='D')
+
+        elif dtype == 'time':
+            try:
+                return value.strftime('%H:%M:%S')
+
+            except AttributeError:
+                return value
+
+        else:
+            return value
+
+    except (TypeError, ValueError):
+        return value
+
+
 def convert_ecw_to_tiff(file_name):
     src = gdal.Open(file_name)
     output_file = 'map_test.jpg'

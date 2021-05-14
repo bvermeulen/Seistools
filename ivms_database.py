@@ -48,6 +48,8 @@ class DbUtils:
 
 class IvmsDb:
     table_driver = 'ivms_driver'
+    table_rag_files = 'rag_files'
+    table_rag = 'rag_records'
 
     @classmethod
     @DbUtils.connect
@@ -55,6 +57,20 @@ class IvmsDb:
         sql_string = f'DROP TABLE {cls.table_driver};'
         cursor.execute(sql_string)
         print(f'delete table {cls.table_driver}')
+
+    @classmethod
+    @DbUtils.connect
+    def delete_table_rag_files(cls, cursor):
+        sql_string = f'DROP TABLE {cls.table_rag_files};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_rag_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def delete_table_rag(cls, cursor):
+        sql_string = f'DROP TABLE {cls.table_rag};'
+        cursor.execute(sql_string)
+        print(f'delete table {cls.table_rag}')
 
     @classmethod
     @DbUtils.connect
@@ -91,9 +107,47 @@ class IvmsDb:
             f'training_comment TEXT'
             f');'
         )
-
         cursor.execute(sql_string)
         print(f'create table {cls.table_driver}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_rag_files(cls, cursor):
+        sql_string = (
+            f'CREATE TABLE {cls.table_rag_files} ('
+            f'id INTEGER PRIMARY KEY, '
+            f'filename VARCHAR(100), '
+            f'file_date TIMESTAMP'
+            f');'
+        )
+        cursor.execute(sql_string)
+        print(f'create table {cls.table_rag_files}')
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_rag(cls, cursor):
+        sql_string = (
+            f'CREATE TABLE {cls.table_rag} ('
+            f'id INTEGER PRIMARY KEY, '
+            f'rag_report TIMESTAMP, '
+            f'id_file INTEGER, '
+            f'id_driver INTEGER, '
+            f'distance REAL, '
+            f'driving_time TIMESTAMP, '
+            f'harsh_accel INTEGER, '
+            f'harsh_brake INTEGER, '
+            f'highest_speed REAL,'
+            f'overspeeding_time TIMESTAMP, '
+            f'seatbelt_violation_time TIMESTAMP, '
+            f'accel_violation_score REAL, '
+            f'decel_violation_score REAL, '
+            f'seatbelt_violation_score REAL, '
+            f'overspeeding_violation_score REAL, '
+            f'total_score REAL'
+            f');'
+        )
+        cursor.execute(sql_string)
+        print(f'create table {cls.table_rag}')
 
     @classmethod
     @DbUtils.connect
@@ -213,5 +267,65 @@ class IvmsDb:
 
             driver_records.append(driver_record)
 
-
         return driver_records
+
+    @classmethod
+    @DbUtils.connect
+    def update_rag_file(cls, rag_file, cursor):
+        ''' method to to check if filename exists in the database, if it does not then
+            add the filename to the data base
+            returns:
+            -1, if file is found
+            n, new file_id number if no file is found
+        '''
+        # check if file exists
+        sql_string = (
+            f'SELECT id FROM {cls.table_rag_files} WHERE '
+            f'filename like \'%{rag_file.filename}\' ;'
+        )
+        cursor.execute(sql_string)
+        try:
+            # check if id exists
+            _ = cursor.fetchone()[0]
+            return -1
+
+        except TypeError:
+            # no id was found so go on to create one
+            pass
+
+        sql_string = (
+            f'INSERT INTO {cls.table_rag_files} ('
+            f'filename, file_date) '
+            f'VALUES (?, ?); '
+        )
+        cursor.execute(sql_string, (rag_file.filename, rag_file.file_date))
+
+        return cursor.lastrowid
+
+    @classmethod
+    @DbUtils.connect
+    def update_rag_records(cls, rag_records, cursor):
+        ''' method to update the driver records
+        '''
+        progress_message = seis_utils.progress_message_generator(
+            f'update database for table: {cls.table_rag}                              '
+        )
+        sql_string = (
+            f'INSERT INTO {cls.table_rag} ('
+            f'rag_report, id_file, id_driver, distance, driving_time, harsh_accel, '
+            f'harsh_brake, highest_speed, overspeeding_time, seatbelt_violation_time, '
+            f'accel_violation_score, decel_violation_score, seatbelt_violation_score, '
+            f'overspeeding_violation_score, total_score'
+            f') VALUES ({", ".join(["?"]*15)})'
+        )
+        for rag_record in rag_records:
+            cursor.execute(sql_string, (
+                rag_record.rag_report, rag_record.id_file, rag_record.id_driver,
+                rag_record.distance, rag_record.driving_time, rag_record.harsh_accel,
+                rag_record.harsh_brake, rag_record.highest_speed ,
+                rag_record.overspeeding_time, rag_record.seatbelt_violation_time,
+                rag_record.accel_violation_score, rag_record.decel_violation_score,
+                rag_record.seatbelt_violation_score,
+                rag_record.overspeeding_violation_score , rag_record.total_score,
+            ))
+            next(progress_message)
