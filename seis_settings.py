@@ -11,9 +11,7 @@ DATA_FILES_VAPS = r'D:\\Haniya North\\12 QC\\vib_node_data\\vaps'
 DATA_FILES_QUANTUM = r'D:\\Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
 DATA_FILES_NUSEIS = r'D:\\Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
 
-# DATABASE = 'Haniya_North_db.sqlite3'
-DATABASE = r'D:\\Haniya North\\6 Project outlook\\Maps\\Haniya_North_db.sqlite3'
-INIT_DB = False
+DATABASE = r'D:\\Haniya North\\6 Project mapping\\Maps\\Haniya_North_db.sqlite3'
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
 GMT_OFFSET = datetime.timedelta(hours=+4)

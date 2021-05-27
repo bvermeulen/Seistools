@@ -9,7 +9,7 @@ from shapely.geometry import Point
 from sqlalchemy import create_engine
 import seis_utils
 from seis_settings import (
-    DATABASE, INIT_DB, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM, EPSG_PSD93
+    DATABASE, FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM, EPSG_PSD93
 )
 
 
@@ -27,8 +27,6 @@ class DbUtils:
                 connection = sqlite3.connect(cls.database)
                 connection.enable_load_extension(True)
                 connection.execute('SELECT load_extension("mod_spatialite")')
-                if INIT_DB:
-                    connection.execute('SELECT InitSpatialMetaData(1);')
                 cursor = connection.cursor()
                 result = func(*args, cursor, **kwargs)
                 connection.commit()
@@ -51,11 +49,33 @@ class DbUtils:
         return create_engine(f'sqlite:///{cls.database}')
 
 
+    @classmethod
+    def create_database(cls):
+        connection = None
+        try:
+            connection = sqlite3.connect(cls.database)
+            connection.enable_load_extension(True)
+            connection.execute('SELECT load_extension("mod_spatialite")')
+            connection.execute('SELECT InitSpatialMetaData(1);')
+
+        except sqlite3.Error as error:
+            print(f'error while connect to sqlite {cls.database}: '
+                  f'{error}')
+
+        finally:
+            if connection:
+                connection.close()
+
+
 class VpDb:
     table_vp_files = 'vp_files'
     table_vp = 'vp_records'
     table_vaps_files = 'vaps_files'
     table_vaps = 'vaps_records'
+
+    @classmethod
+    def create_database(cls):
+        DbUtils().create_database()
 
     @classmethod
     @DbUtils.connect
