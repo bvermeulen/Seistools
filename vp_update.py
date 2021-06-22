@@ -8,6 +8,7 @@ import os
 import warnings
 import datetime
 import numpy as np
+from progress.bar import Bar
 import seis_database
 import seis_utils
 from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
@@ -16,6 +17,8 @@ from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_
 
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+HEADER_ROWS = 71
+
 
 class Vaps:
 
@@ -42,14 +45,19 @@ class Vaps:
                 if file_id == -1:
                     continue
 
-                progress_message = seis_utils.progress_message_generator(
-                    f'reading vaps from {vaps_file.file_name}   ')
-
                 vaps_records = []
                 vaps_signatures = np.array([])
                 count = 0
                 with open(abs_filename, mode='rt') as vaps:
-                    for vaps_line in vaps.readlines():
+
+                    vaps_lines = vaps.readlines()
+                    progress_bar = Bar(
+                        f'reading vaps from {vaps_file.file_name}',
+                        max=len(vaps_lines) - HEADER_ROWS,
+                    )
+
+                    for vaps_line in vaps_lines:
+
                         if vaps_line[0] != 'A':
                             continue
 
@@ -57,11 +65,12 @@ class Vaps:
                         vaps_records, vaps_signatures = seis_utils.update_records(
                             vaps_records, vaps_signatures, vaps_record)
 
-                        next(progress_message)
                         count += 1
+                        progress_bar.next()
 
                 print(f'\n{count - len(vaps_records)} '
                       f'duplicates have been deleted ...', end='')
+                progress_bar.finish()
 
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
@@ -133,13 +142,17 @@ class Vp:
                 if file_id == -1:
                     continue
 
-                progress_message = seis_utils.progress_message_generator(
-                    f'reading vp from {vp_file.file_name}   ')
-
                 vp_records = []
                 vp_signatures = np.array([])
                 count = 0
                 with open(abs_filename, mode='rt') as vp:
+
+                    vp_lines = vp.readlines()
+                    progress_bar = Bar(
+                        f'reading vaps from {vp_file.file_name}',
+                        max=len(vp_lines) - HEADER_ROWS,
+                    )
+
                     for vp_line in vp.readlines():
                         if vp_line[0:9].strip() == 'Line':
                             continue
@@ -148,11 +161,12 @@ class Vp:
                         vp_records, vp_signatures = seis_utils.update_records(
                             vp_records, vp_signatures, vp_record)
 
-                        next(progress_message)
+                        progress_bar.next()
                         count += 1
 
                 print(f'\n{count - len(vp_records)} '
                       f'duplicates have been deleted ...', end='')
+                progress_bar.finish()
 
                 if vp_records:
                     cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
@@ -160,7 +174,6 @@ class Vp:
                         'VP', vp_records[0].time_break.date()
                     )
 
-                print()
 
     @staticmethod
     def parse_vp_line(vp_line, file_id):
