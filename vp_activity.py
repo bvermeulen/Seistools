@@ -17,7 +17,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
 import seis_database
-from seis_settings import FLEETS, DATABASE_TABLE, TOL_COLOR, vp_plt_settings
+from seis_settings import (
+    FLEETS, DATABASE_TABLE, TOL_COLOR, RESULTS_FOLDER, vp_plt_settings,
+)
 
 seconds_per_day = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -180,7 +182,7 @@ def main():
         vp_activity.select_data(DATABASE_TABLE)
         vp_activity.plot_vps_by_interval(interval)
 
-        results_file = f'.\\vp_activity_{production_date.strftime("%y%m%d")}.xlsx'
+        results_file = RESULTS_FOLDER / f'vp_activity_{production_date.strftime("%y%m%d")}.xlsx'
         vp_activity.results_to_excel(results_file)
 
 if __name__ == '__main__':
