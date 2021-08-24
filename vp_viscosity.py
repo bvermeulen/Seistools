@@ -3,7 +3,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
-import seis_database
+from seis_vibe_database import VpDb
 from seis_settings import FLEETS, vp_plt_settings
 
 
@@ -11,7 +11,7 @@ class VpAttributes:
 
     @classmethod
     def select_data(cls, production_date):
-        cls.vaps_records_df = seis_database.VpDb().get_vp_data_by_date(
+        cls.vaps_records_df = VpDb().get_vp_data_by_date(
             'VAPS', production_date)
 
     @classmethod

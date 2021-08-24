@@ -11,7 +11,8 @@ DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
 DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\vaps'
 DATA_FILES_QUANTUM = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
 DATA_FILES_NUSEIS = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
-RESULTS_FOLDER = Path('D:/OneDrive/Work\PDO/2021 Haniya North/5 Financials/Less Vibs Penalty/Daily vibe activity')
+DATA_FILES_SPS_FINAL = Path('D:/OneDrive/Work/2021 Haniya North/12 QC/vib_node_data/sps_fina')
+RESULTS_FOLDER = Path('D:/OneDrive/Work/PDO/2021 Haniya North/5 Financials/Less Vibs Penalty/Daily vibe activity')
 
 DATABASE = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\6 Project mapping\\Maps\\Haniya_North_db.sqlite3'
 LINK_VP_TO_VAPS = False

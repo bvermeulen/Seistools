@@ -3,11 +3,11 @@
 import os
 from datetime import datetime
 import pandas as pd
-from seis_settings import DATA_FILES_QUANTUM, FilesNodeTable, QuantumTable
 import seis_utils
-import seis_quantum_database
+from seis_quantum_database import QuantumDb
+from seis_settings import DATA_FILES_QUANTUM, FilesNodeTable, QuantumTable
 
-node_db = seis_quantum_database.QuantumDb()
+node_db = QuantumDb()
 
 class Rcv:
 

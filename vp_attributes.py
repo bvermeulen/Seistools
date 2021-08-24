@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
-import seis_database
+from seis_vibe_database import VpDb
 from seis_settings import (
     FLEETS, DATABASE_TABLE, TOL_COLOR, MARKERSIZE_VP, vp_plt_settings
 )
@@ -26,7 +26,7 @@ class VpAttributes:
         self.production_date = production_date
 
     def select_data(self):
-        self.vp_records_df = seis_database.VpDb().get_vp_data_by_date(
+        self.vp_records_df = VpDb().get_vp_data_by_date(
             self.database_table, self.production_date)
 
     def plot_vp_data(self):

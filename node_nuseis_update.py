@@ -3,11 +3,11 @@
 import os
 from datetime import datetime, timedelta
 import pandas as pd
-from seis_settings import DATA_FILES_NUSEIS, FilesNodeTable, NuseisTable
 import seis_utils
-import seis_nuseis_database
+from seis_nuseis_database import NuseisDb
+from seis_settings import DATA_FILES_NUSEIS, FilesNodeTable, NuseisTable
 
-node_db = seis_nuseis_database.NuseisDb()
+node_db = NuseisDb()
 
 class Rcv:
 

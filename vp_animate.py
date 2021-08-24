@@ -20,7 +20,7 @@ import datetime
 import matplotlib.pyplot as plt
 from seis_settings import GMT_OFFSET, MapTypes, vp_plt_settings
 from seis_utils import MapTools, get_animation_dates
-from seis_database import VpDb
+from seis_vibe_database import VpDb
 
 FIGSIZE = (7, 7)
 EDGECOLOR = 'None'

@@ -7,7 +7,7 @@ import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
 import seis_utils
-import seis_nuseis_database
+from seis_nuseis_database import NuseisDb
 from seis_settings import MARKERSIZE_NODE, TOL_COLOR, nuseis_plt_settings
 
 SMALL_SIZE = 8
@@ -23,7 +23,7 @@ class NodeAttributes:
         self.production_date = production_date
 
     def select_data(self):
-        self.node_records_df = seis_nuseis_database.NuseisDb().get_node_data_by_date(
+        self.node_records_df = NuseisDb().get_node_data_by_date(
             self.production_date
         )
 

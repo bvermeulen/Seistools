@@ -4,7 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 from seis_settings import MapTypes, vp_plt_settings, lines
 from seis_utils import MapTools
-from seis_database import VpDb
+from seis_vibe_database import VpDb
 
 FIGSIZE = (7, 7)
 EDGECOLOR = 'black'

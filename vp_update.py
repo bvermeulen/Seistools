@@ -9,8 +9,8 @@ import warnings
 import datetime
 import numpy as np
 from progress.bar import Bar
-import seis_database
 import seis_utils
+from seis_vibe_database import VpDb
 from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
                            FilesVpTable, VpTable, FilesVapsTable, VapsTable,
                           )
@@ -23,7 +23,7 @@ HEADER_ROWS = 71
 class Vaps:
 
     vaps_base_folder = DATA_FILES_VAPS
-    vp_db = seis_database.VpDb()
+    vp_db = VpDb()
 
     @classmethod
     def read_vaps(cls):
@@ -121,7 +121,7 @@ class Vaps:
 
 class Vp:
     vp_base_folder = DATA_FILES_VP
-    vp_db = seis_database.VpDb()
+    vp_db = VpDb()
 
     @classmethod
     def read_vp(cls):
@@ -214,7 +214,7 @@ class Vp:
 
 
 if __name__ == '__main__':
-    vp_db = seis_database.VpDb()
+    vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
     # vp_db.create_table_vp_files()

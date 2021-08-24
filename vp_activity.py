@@ -16,7 +16,7 @@ from pandas.plotting import register_matplotlib_converters
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import seis_utils
-import seis_database
+from seis_vibe_database import VpDb
 from seis_settings import (
     FLEETS, DATABASE_TABLE, TOL_COLOR, RESULTS_FOLDER, vp_plt_settings,
 )
@@ -40,7 +40,7 @@ class VpActive:
         )
 
     def select_data(self, database_table):
-        self.vp_records_df = seis_database.VpDb().get_vp_data_by_date(
+        self.vp_records_df = VpDb().get_vp_data_by_date(
             database_table, self.production_date)
 
     def populate_vps_by_second(self):
