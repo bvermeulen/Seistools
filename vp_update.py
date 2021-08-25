@@ -4,7 +4,6 @@
     Copyright: 2021
 
 '''
-import os
 import warnings
 import datetime
 import numpy as np
@@ -27,56 +26,52 @@ class Vaps:
 
     @classmethod
     def read_vaps(cls):
-        for foldername, _, filenames in os.walk(cls.vaps_base_folder):
-            for filename in filenames:
-                if not (filename[-5:] in ['.vaps', '.VAPS'] or
-                        filename[-4:] in ['.txt', '.TXT']):
-                    continue
+        for filename in cls.vaps_base_folder.glob('*.*'):
+            if not filename.is_file() or filename.suffix.lower not in ['.vaps', '.txt']:
+                continue
 
-                vaps_file = FilesVapsTable(*[None]*3)
+            vaps_file = FilesVapsTable(*[None]*3)
 
-                abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                vaps_file.file_name = filename
-                vaps_file.file_date = (
-                    datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
+            vaps_file.file_name = filename.name
+            vaps_file.file_date = (
+                datetime.datetime.fromtimestamp(filename.stat().st_mtime)
+            )
+            file_id = cls.vp_db.update_vaps_file(vaps_file)
 
-                file_id = cls.vp_db.update_vaps_file(vaps_file)
+            if file_id == -1:
+                continue
 
-                if file_id == -1:
-                    continue
+            vaps_records = []
+            vaps_signatures = np.array([])
+            count = 0
+            with open(filename, mode='rt') as vaps:
 
-                vaps_records = []
-                vaps_signatures = np.array([])
-                count = 0
-                with open(abs_filename, mode='rt') as vaps:
+                vaps_lines = vaps.readlines()
+                progress_bar = Bar(
+                    f'reading vaps from {vaps_file.file_name}',
+                    max=len(vaps_lines) - HEADER_ROWS,
+                )
+                for vaps_line in vaps_lines:
+                    if vaps_line[0] != 'A':
+                        continue
 
-                    vaps_lines = vaps.readlines()
-                    progress_bar = Bar(
-                        f'reading vaps from {vaps_file.file_name}',
-                        max=len(vaps_lines) - HEADER_ROWS,
-                    )
+                    vaps_record = cls.parse_vaps_line(vaps_line, file_id)
+                    vaps_records, vaps_signatures = cls.update_vp_records(
+                        vaps_records, vaps_signatures, vaps_record)
 
-                    for vaps_line in vaps_lines:
-
-                        if vaps_line[0] != 'A':
-                            continue
-
-                        vaps_record = cls.parse_vaps_line(vaps_line, file_id)
-                        vaps_records, vaps_signatures = seis_utils.update_records(
-                            vaps_records, vaps_signatures, vaps_record)
-
-                        count += 1
+                    if count % 10 == 0:
                         progress_bar.next()
+                    count += 1
 
                 print(f'\n{count - len(vaps_records)} '
                       f'duplicates have been deleted ...', end='')
-                progress_bar.finish()
 
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
                     cls.vp_db.update_vp_distance(
                         'VAPS', vaps_records[0].time_break.date()
                     )
+                progress_bar.finish()
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
@@ -125,55 +120,51 @@ class Vp:
 
     @classmethod
     def read_vp(cls):
-        for foldername, _, filenames in os.walk(cls.vp_base_folder):
-            for filename in filenames:
-                if filename[-4:] not in ['.txt', '.TXT']:
-                    continue
+        for filename in cls.vp_base_folder.glob('*.*'):
+            if not filename.is_file() or filename.suffix.lower != '.txt':
+                continue
 
-                vp_file = FilesVpTable(*[None]*3)
+            vp_file = FilesVpTable(*[None]*3)
 
-                abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                vp_file.file_name = filename
-                vp_file.file_date = (
-                    datetime.datetime.fromtimestamp(os.stat(abs_filename).st_mtime))
+            vp_file.file_name = filename.name
+            vp_file.file_date = (
+                datetime.datetime.fromtimestamp(filename.stat().st_mtime)
+            )
+            file_id = cls.vp_db.update_vp_file(vp_file)
 
-                file_id = cls.vp_db.update_vp_file(vp_file)
+            if file_id == -1:
+                continue
 
-                if file_id == -1:
-                    continue
+            vp_records = []
+            vp_signatures = np.array([])
+            count = 0
+            with open(filename, mode='rt') as vp:
 
-                vp_records = []
-                vp_signatures = np.array([])
-                count = 0
-                with open(abs_filename, mode='rt') as vp:
+                vp_lines = vp.readlines()
+                progress_bar = Bar(
+                    f'reading vaps from {vp_file.file_name}',
+                    max=len(vp_lines) - HEADER_ROWS,
+                )
+                for vp_line in vp_lines:
+                    if vp_line[0:9].strip() == 'Line':
+                        continue
 
-                    vp_lines = vp.readlines()
-                    progress_bar = Bar(
-                        f'reading vaps from {vp_file.file_name}',
-                        max=len(vp_lines) - HEADER_ROWS,
-                    )
+                    vp_record = cls.parse_vp_line(vp_line, file_id)
+                    vp_records, vp_signatures = cls.update_vp_records(
+                        vp_records, vp_signatures, vp_record)
 
-                    for vp_line in vp.readlines():
-                        if vp_line[0:9].strip() == 'Line':
-                            continue
-
-                        vp_record = cls.parse_vp_line(vp_line, file_id)
-                        vp_records, vp_signatures = seis_utils.update_records(
-                            vp_records, vp_signatures, vp_record)
-
-                        progress_bar.next()
-                        count += 1
+                    progress_bar.next()
+                    count += 1
 
                 print(f'\n{count - len(vp_records)} '
                       f'duplicates have been deleted ...', end='')
-                progress_bar.finish()
 
                 if vp_records:
                     cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
                     cls.vp_db.update_vp_distance(
                         'VP', vp_records[0].time_break.date()
                     )
-
+                progress_bar.finish()
 
     @staticmethod
     def parse_vp_line(vp_line, file_id):
@@ -211,6 +202,44 @@ class Vp:
             vp_record = VpTable(*[None]*24)
 
         return vp_record
+
+    @staticmethod
+    def update_vp_records(vp_records, record_signatures, vp_record):
+        ''' function to add vp_record to the list vp_records. For each record it makes a 10
+            digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
+            of the indexes of duplicates
+            arguments:
+                vp_records: list of vp_records
+                record_signatures: np array of record signatures
+                duplicates: np array of duplicae indexes
+                vp_record: vp attributes of type VpRecord
+            return:
+                vp_records: list of vp_records of type VpRecord
+                record_signatures: np array of record signatures of type string
+                duplicates: np array of indexes of type int
+        '''
+        if not vp_record.line:
+            return vp_records, record_signatures
+
+        # search duplicate records and remove
+        line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
+        record_signature = f'{line:04}' + f'{station:04}' + f'{vib:02}'
+
+        # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
+        # gets removed on first instance
+        duplicate = np.where(record_signatures == record_signature)[0]
+
+        # bug fix: if duplicate: returns False if first and only element of the array has a
+        # a value of 0!! Therefore test on numpy size the array.
+        if  duplicate.size != 0:
+            vp_records.pop(duplicate[0])
+            record_signatures = np.delete(record_signatures, duplicate)
+
+        # add the record ...
+        vp_records.append(vp_record)
+        record_signatures = np.append(record_signatures, record_signature)
+
+        return vp_records, record_signatures
 
 
 if __name__ == '__main__':

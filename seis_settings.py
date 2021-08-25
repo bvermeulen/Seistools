@@ -5,13 +5,11 @@ from pathlib import Path
 from enum import IntEnum
 from recordtype import recordtype
 
-#DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\VP data\VAPS_TEST\\'
-DATA_FILES_VP = r'D:\\OneDrive\\Work\\PDO\\Lekhwair 3D\\VP data\\VP_RECORD\\'
-#DATA_FILES_RECEIVERS = r'D:\\OneDrive\\Work\\PDO\Lekhwair 3D\\Receiver data\\'
-DATA_FILES_VAPS = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\vaps'
+DATA_FILES_VP = Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
+DATA_FILES_VAPS = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data/vaps')
 DATA_FILES_QUANTUM = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
 DATA_FILES_NUSEIS = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
-DATA_FILES_SPS_FINAL = Path('D:/OneDrive/Work/2021 Haniya North/12 QC/vib_node_data/sps_fina')
+DATA_FILES_SPS = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data/sps_final')
 RESULTS_FOLDER = Path('D:/OneDrive/Work/PDO/2021 Haniya North/5 Financials/Less Vibs Penalty/Daily vibe activity')
 
 DATABASE = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\6 Project mapping\\Maps\\Haniya_North_db.sqlite3'
@@ -55,7 +53,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': 4,
     },
-
     'avg_dist': {
         'title_attribute': 'Average Distortion',
         'y-axis_label_attribute': 'Percentage',
@@ -67,7 +64,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': 25,
     },
-
     'avg_force': {
         'title_attribute': 'Average Force',
         'y-axis_label_attribute': 'Percentage',
@@ -79,7 +75,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': None,
     },
-
     'peak_phase': {
         'title_attribute': 'Peak Phase',
         'y-axis_label_attribute': 'Degrees',
@@ -91,7 +86,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': 8,
     },
-
     'peak_dist': {
         'title_attribute': 'Peak Distortion',
         'y-axis_label_attribute': 'Percentage',
@@ -103,7 +97,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': 35,
     },
-
     'peak_force': {
         'title_attribute': 'Peak Force',
         'y-axis_label_attribute': 'Percentage',
@@ -115,7 +108,6 @@ vp_plt_settings = {
         'tol_min': None,
         'tol_max': None,
     },
-
     'elevation': {
         'title_attribute': 'Elevation',
         'y-axis_label_attribute': 'meters',
@@ -125,7 +117,6 @@ vp_plt_settings = {
         'max': 200,
         'interval': 1,
     },
-
     'avg_stiffness': {
         'title_attribute': 'Stiffness',
         'y-axis_label_attribute': 'Level',
@@ -135,7 +126,6 @@ vp_plt_settings = {
         'max': 50,
         'interval': 1,
     },
-
     'avg_viscosity': {
         'title_attribute': 'Viscosity',
         'y-axis_label_attribute': 'Level',
@@ -145,7 +135,6 @@ vp_plt_settings = {
         'max': 25,
         'interval': 1,
     },
-
     'none': {
         'title_attribute': '',
         'y-axis_label_attribute': '',
@@ -155,7 +144,6 @@ vp_plt_settings = {
         'max': 0,
         'interval': 0,
     },
-
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
         'max_vp_hour': 1700,
@@ -166,7 +154,6 @@ vp_plt_settings = {
         'vibs_target': 10,
     },
 }
-
 node_plt_settings = {
     'frequency': {
         'title_attribute': 'Natural Frequency',
@@ -179,7 +166,6 @@ node_plt_settings = {
         'tol_min': 4.6,
         'tol_max': 5.4,
     },
-
     'damping': {
         'title_attribute': 'Damping',
         'y-axis_label_attribute': '%',
@@ -191,7 +177,6 @@ node_plt_settings = {
         'tol_min': 0.552,
         'tol_max': 0.648,
     },
-
     'sensitivity': {
         'title_attribute': 'Sensitivity',
         'y-axis_label_attribute': 'V / (m/s)',
@@ -203,7 +188,6 @@ node_plt_settings = {
         'tol_min': 75.2,
         'tol_max': 84.8,
     },
-
     'resistance': {
         'title_attribute': 'Resistance',
         'y-axis_label_attribute': 'Ohm',
@@ -215,7 +199,6 @@ node_plt_settings = {
         'tol_min': 1739,
         'tol_max': 1961,
     },
-
     'thd': {
         'title_attribute': 'Distortion',
         'y-axis_label_attribute': '%',
@@ -227,7 +210,6 @@ node_plt_settings = {
         'tol_min': None,
         'tol_max': 0.1,
     },
-
     'noise': {
         'title_attribute': 'Noise',
         'y-axis_label_attribute': 'microVolt',
@@ -239,7 +221,6 @@ node_plt_settings = {
         'tol_min': None,
         'tol_max': None,
     },
-
     'tilt': {
         'title_attribute': 'Tilt',
         'y-axis_label_attribute': 'Degrees',
@@ -252,7 +233,6 @@ node_plt_settings = {
         'tol_max': 10,
     },
 }
-
 nuseis_plt_settings = {
     'resistance': {
         'title_attribute': 'Resistance',
@@ -266,7 +246,6 @@ nuseis_plt_settings = {
         'tol_min': 1739,
         'tol_max': 1961,
     },
-
     'thd': {
         'title_attribute': 'Distortion',
         'y-axis_label_attribute': '%',
@@ -279,7 +258,6 @@ nuseis_plt_settings = {
         'tol_min': None,
         'tol_max': 121,
     },
-
     'noise': {
         'title_attribute': 'Noise',
         'y-axis_label_attribute': 'microVolt',
@@ -292,7 +270,6 @@ nuseis_plt_settings = {
         'tol_min': None,
         'tol_max': None,
     },
-
     'tilt': {
         'title_attribute': 'Tilt',
         'y-axis_label_attribute': 'Degrees',
@@ -306,13 +283,11 @@ nuseis_plt_settings = {
         'tol_max': 10,
     },
 }
-
 FilesNodeTable = recordtype(
     'FilesNodeTable',
     'file_name, '
     'file_date'
 )
-
 QuantumTable = recordtype(
     'QuantumTable',
     'line, '
@@ -367,14 +342,12 @@ RcvrTable = recordtype(
     'northing '
     'elevation'
 )
-
 FilesVpTable = recordtype(
     'FilesVpTable',
     'id, '
     'file_name, '
     'file_date'
 )
-
 VpTable = recordtype(
     'VpTable',
     'id, '
@@ -402,14 +375,12 @@ VpTable = recordtype(
     'velocity, '
     'dense_flag'
 )
-
 FilesVapsTable = recordtype(
     'FilesVapsTable',
     'id, '
     'file_name, '
     'file_date'
 )
-
 VapsTable = recordtype(
     'VapsTable',
     'id, '
@@ -438,4 +409,27 @@ VapsTable = recordtype(
     'time, '
     'velocity, '
     'dense_flag'
+)
+FilesSpsTable = recordtype(
+    'FilesSpsTable',
+    'id, '
+    'file_name, '
+    'file_date, '
+    'block_name'
+)
+SpsTable = recordtype(
+    'SpsTable',
+    'id, '
+    'file_id, '
+    'sps_type, '
+    'line, '
+    'point, '
+    'point_index, '
+    'source_type, '
+    'easting, '
+    'northing, '
+    'elevation, '
+    'dpg_filename, '
+    'time_break, '
+    'vibrator'
 )
