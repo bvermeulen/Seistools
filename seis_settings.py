@@ -7,12 +7,12 @@ from recordtype import recordtype
 
 DATA_FILES_VP = Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
 DATA_FILES_VAPS = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data/vaps')
-DATA_FILES_QUANTUM = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\quantum_nodes'
-DATA_FILES_NUSEIS = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\12 QC\\vib_node_data\\nuseis_nodes'
+DATA_FILES_QUANTUM = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data//quantum_nodes')
+DATA_FILES_NUSEIS = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data/nuseis_nodes')
 DATA_FILES_SPS = Path('D:/OneDrive/Work/PDO/2021 Haniya North/12 QC/vib_node_data/sps_final')
 RESULTS_FOLDER = Path('D:/OneDrive/Work/PDO/2021 Haniya North/5 Financials/Less Vibs Penalty/Daily vibe activity')
+DATABASE = Path('D:/OneDrive/Work/PDO/2021 Haniya North/6 Project mapping/Maps/Haniya_North_db.sqlite3')
 
-DATABASE = r'D:\\OneDrive\\Work\\PDO\\2021 Haniya North\\6 Project mapping\\Maps\\Haniya_North_db.sqlite3'
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
 GMT_OFFSET = datetime.timedelta(hours=+4)

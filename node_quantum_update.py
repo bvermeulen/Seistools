@@ -1,6 +1,5 @@
-''' Read noise test and store to database
+''' Read noise test for Quantum nodes and store to database
 '''
-import os
 from datetime import datetime
 import pandas as pd
 import seis_utils
@@ -13,49 +12,47 @@ class Rcv:
 
     @classmethod
     def read_nodes(cls):
-        for foldername, _, filenames in os.walk(DATA_FILES_QUANTUM):
-            for filename in filenames:
-                if filename[-5:] not in ['.xlsx', '.XLSX']:
-                    continue
+        for filename in DATA_FILES_QUANTUM.glob('*.*'):
 
-                node_file = FilesNodeTable(*[None]*2)
+            if not filename.is_file() or filename.suffix.lower() != '.xlsx':
+                continue
 
-                abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                node_file.file_name = filename
-                node_file.file_date = (
-                    datetime.fromtimestamp(os.stat(abs_filename).st_mtime).strftime(
-                        '%Y-%m-%d %H:%M:%S')
-                )
+            node_file = FilesNodeTable(*[None]*2)
 
-                id_file = node_db.update_node_file(node_file)
-                if id_file == -1:
-                    continue
+            node_file.file_name = filename.name
+            node_file.file_date = (
+                datetime.fromtimestamp(filename.stat().st_mtime).strftime(
+                    '%Y-%m-%d %H:%M:%S')
+            )
 
-                progress_message = seis_utils.progress_message_generator(
-                    f'reading receiver data from {node_file.file_name}   ')
+            id_file = node_db.update_node_file(node_file)
+            if id_file == -1:
+                continue
 
-                try:
-                    bits_df = pd.read_excel(abs_filename, header=None, skiprows=1)
+            progress_message = seis_utils.progress_message_generator(
+                f'reading receiver data from {node_file.file_name}   ')
 
-                except PermissionError:
-                    node_db.delete_node_file(id_file)
-                    bits_df = pd.DataFrame()
+            try:
+                bits_df = pd.read_excel(filename, header=None, skiprows=1)
 
-                bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
-                node_records = []
-                for _, bits_row in bits_df.iterrows():
+            except PermissionError:
+                node_db.delete_node_file(id_file)
+                bits_df = pd.DataFrame()
 
-                    node_record = cls.parse_node_line(bits_row)
+            bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
+            node_records = []
+            for _, bits_row in bits_df.iterrows():
 
-                    if node_record.qtm_sn:
-                        node_record.id_file = id_file
-                        node_records.append(node_record)
-                        next(progress_message)
+                node_record = cls.parse_node_line(bits_row)
 
-                error_message = node_db.update_node_attributes_records(node_records)
-                if error_message:
-                    print(f'\n{error_message}')
-                    node_db.delete_node_file(id_file)
+                if node_record.qtm_sn:
+                    node_record.id_file = id_file
+                    node_records.append(node_record)
+                    next(progress_message)
+
+            if error_message := node_db.update_node_attributes_records(node_records):
+                print(f'\n{error_message}')
+                node_db.delete_node_file(id_file)
 
     @staticmethod
     def parse_node_line(bits_row):

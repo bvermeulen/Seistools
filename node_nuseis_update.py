@@ -1,6 +1,5 @@
-''' Read noise test and store to database
+''' Read noise test for GTI nodes and store to database
 '''
-import os
 from datetime import datetime, timedelta
 import pandas as pd
 import seis_utils
@@ -13,50 +12,48 @@ class Rcv:
 
     @classmethod
     def read_nodes(cls):
-        for foldername, _, filenames in os.walk(DATA_FILES_NUSEIS):
-            for filename in filenames:
-                if filename[-4:] not in ['.csv', '.CSV']:
-                    continue
+        for filename in DATA_FILES_NUSEIS.glob('*.*'):
 
-                node_file = FilesNodeTable(*[None]*2)
+            if not filename.is_file() or filename.suffix.lower() != '.csv':
+                continue
 
-                abs_filename = os.path.abspath(os.path.join(foldername, filename))
-                node_file.file_name = filename
-                node_file.file_date = (
-                    datetime.fromtimestamp(os.stat(abs_filename).st_mtime).strftime(
-                        '%Y-%m-%d %H:%M:%S')
-                )
+            node_file = FilesNodeTable(*[None]*2)
 
-                id_file = node_db.update_node_file(node_file)
-                if id_file == -1:
-                    continue
+            node_file.file_name = filename.name
+            node_file.file_date = (
+                datetime.fromtimestamp(filename.stat().st_mtime).strftime(
+                    '%Y-%m-%d %H:%M:%S')
+            )
 
-                progress_message = seis_utils.progress_message_generator(
-                    f'reading receiver data from {node_file.file_name}   ')
+            id_file = node_db.update_node_file(node_file)
+            if id_file == -1:
+                continue
 
-                try:
-                    nuseis_df = pd.read_csv(abs_filename)
+            progress_message = seis_utils.progress_message_generator(
+                f'reading receiver data from {node_file.file_name}   ')
 
-                except PermissionError:
-                    node_db.delete_node_file(id_file)
-                    nuseis_df = pd.DataFrame()
+            try:
+                nuseis_df = pd.read_csv(filename)
 
-                nuseis_df = nuseis_df.drop_duplicates(
-                    subset=['Serial_Number'], keep='last')
-                node_records = []
-                for _, nuseis_row in nuseis_df.iterrows():
+            except PermissionError:
+                node_db.delete_node_file(id_file)
+                nuseis_df = pd.DataFrame()
 
-                    node_record = cls.parse_node_line(nuseis_row)
+            nuseis_df = nuseis_df.drop_duplicates(
+                subset=['Serial_Number'], keep='last')
+            node_records = []
+            for _, nuseis_row in nuseis_df.iterrows():
 
-                    if node_record.nuseis_sn:
-                        node_record.id_file = id_file
-                        node_records.append(node_record)
-                        next(progress_message)
+                node_record = cls.parse_node_line(nuseis_row)
 
-                error_message = node_db.update_node_attributes_records(node_records)
-                if error_message:
-                    print(f'\n{error_message}')
-                    node_db.delete_node_file(id_file)
+                if node_record.nuseis_sn:
+                    node_record.id_file = id_file
+                    node_records.append(node_record)
+                    next(progress_message)
+
+            if error_message := node_db.update_node_attributes_records(node_records):
+                print(f'\n{error_message}')
+                node_db.delete_node_file(id_file)
 
     @staticmethod
     def parse_node_line(nuseis_row):
