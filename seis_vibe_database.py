@@ -360,6 +360,7 @@ class VpDb:
             ]
 
             # use consecutive vp's
+            dense_flag = False
             for vp_a, vp_b in zip(vp_pts, vp_pts[1:]):
                 index = vp_a[0]
                 dx = vp_b[1].x - vp_a[1].x
@@ -393,7 +394,6 @@ class VpDb:
                     dense_flag,
                     index,
                 ))
-
                 next(progress_message)
 
             # handle data for last element if there is one

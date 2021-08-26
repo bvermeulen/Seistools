@@ -4,6 +4,7 @@
     Copyright: 2021
 
 '''
+from vp_update import PROGRESS_SKIPS
 import warnings
 import datetime
 import numpy as np
@@ -16,6 +17,16 @@ from seis_settings import (
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 89
+PROGRESS_SKIPS = 750
+
+
+def set_progress_bar(max_value, filename, skip_factor):
+    return Bar(
+        f'reading {max_value:,} records '
+        f'from {filename}',
+        max=int(1 / skip_factor * max_value),
+        suffix='%(percent)d%%'
+    )
 
 
 class Sps:
@@ -48,9 +59,8 @@ class Sps:
             with open(filename, mode='rt') as sps:
 
                 sps_lines = sps.readlines()
-                progress_bar = Bar(
-                    f'reading sps from {sps_file.file_name}',
-                    max=len(sps_lines) - HEADER_ROWS,
+                progress_bar = set_progress_bar(
+                    len(sps_lines) - HEADER_ROWS, sps_file.file_name, PROGRESS_SKIPS
                 )
                 for sps_line in sps_lines:
 
@@ -61,8 +71,9 @@ class Sps:
                     sps_records, sps_signatures = cls.update_sps_records(
                         sps_records, sps_signatures, sps_record)
 
+                    if count % PROGRESS_SKIPS == 0:
+                        progress_bar.next()
                     count += 1
-                    progress_bar.next()
 
             print(f'\n{count - len(sps_records)} '
                   f'duplicates have been deleted ...', end='')
