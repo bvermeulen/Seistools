@@ -6,6 +6,7 @@ import seis_utils
 from seis_quantum_database import QuantumDb
 from seis_settings import DATA_FILES_QUANTUM, FilesNodeTable, QuantumTable
 
+PROGRESS_SKIPS = 200
 node_db = QuantumDb()
 
 class Rcv:
@@ -29,9 +30,6 @@ class Rcv:
             if id_file == -1:
                 continue
 
-            progress_message = seis_utils.progress_message_generator(
-                f'reading receiver data from {node_file.file_name}   ')
-
             try:
                 bits_df = pd.read_excel(filename, header=None, skiprows=1)
 
@@ -41,6 +39,12 @@ class Rcv:
 
             bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
             node_records = []
+
+            progress_bar = seis_utils.set_progress_bar(
+                bits_df.shape[0], filename.name, PROGRESS_SKIPS
+            )
+
+            count = 0
             for _, bits_row in bits_df.iterrows():
 
                 node_record = cls.parse_node_line(bits_row)
@@ -48,11 +52,16 @@ class Rcv:
                 if node_record.qtm_sn:
                     node_record.id_file = id_file
                     node_records.append(node_record)
-                    next(progress_message)
+
+                if count % PROGRESS_SKIPS == 0:
+                    progress_bar.next()
+                count += 1
 
             if error_message := node_db.update_node_attributes_records(node_records):
                 print(f'\n{error_message}')
                 node_db.delete_node_file(id_file)
+
+            progress_bar.finish()
 
     @staticmethod
     def parse_node_line(bits_row):

@@ -1,11 +1,14 @@
 ''' Read noise test for GTI nodes and store to database
 '''
 from datetime import datetime, timedelta
+from vp_update import PROGRESS_SKIPS
 import pandas as pd
 import seis_utils
 from seis_nuseis_database import NuseisDb
 from seis_settings import DATA_FILES_NUSEIS, FilesNodeTable, NuseisTable
 
+
+PROGRESS_SKIPS = 200
 node_db = NuseisDb()
 
 class Rcv:
@@ -29,9 +32,6 @@ class Rcv:
             if id_file == -1:
                 continue
 
-            progress_message = seis_utils.progress_message_generator(
-                f'reading receiver data from {node_file.file_name}   ')
-
             try:
                 nuseis_df = pd.read_csv(filename)
 
@@ -42,6 +42,12 @@ class Rcv:
             nuseis_df = nuseis_df.drop_duplicates(
                 subset=['Serial_Number'], keep='last')
             node_records = []
+
+            progress_bar = seis_utils.set_progress_bar(
+                nuseis_df.shape[0], filename.name, PROGRESS_SKIPS
+            )
+
+            count = 0
             for _, nuseis_row in nuseis_df.iterrows():
 
                 node_record = cls.parse_node_line(nuseis_row)
@@ -49,11 +55,16 @@ class Rcv:
                 if node_record.nuseis_sn:
                     node_record.id_file = id_file
                     node_records.append(node_record)
-                    next(progress_message)
+
+                if count % PROGRESS_SKIPS == 0:
+                    next(progress_bar)
+                count += 1
 
             if error_message := node_db.update_node_attributes_records(node_records):
                 print(f'\n{error_message}')
                 node_db.delete_node_file(id_file)
+
+            progress_bar.finish()
 
     @staticmethod
     def parse_node_line(nuseis_row):

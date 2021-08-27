@@ -8,7 +8,7 @@ from vp_update import PROGRESS_SKIPS
 import warnings
 import datetime
 import numpy as np
-from progress.bar import Bar
+import seis_utils
 from seis_sps_database import SpsDb
 from seis_settings import (
     DATA_FILES_SPS, GMT_OFFSET, FilesSpsTable, SpsTable,
@@ -18,15 +18,6 @@ from seis_settings import (
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 89
 PROGRESS_SKIPS = 750
-
-
-def set_progress_bar(max_value, filename, skip_factor):
-    return Bar(
-        f'reading {max_value:,} records '
-        f'from {filename}',
-        max=int(1 / skip_factor * max_value),
-        suffix='%(percent)d%%'
-    )
 
 
 class Sps:
@@ -59,7 +50,7 @@ class Sps:
             with open(filename, mode='rt') as sps:
 
                 sps_lines = sps.readlines()
-                progress_bar = set_progress_bar(
+                progress_bar = seis_utils.set_progress_bar(
                     len(sps_lines) - HEADER_ROWS, sps_file.file_name, PROGRESS_SKIPS
                 )
                 for sps_line in sps_lines:

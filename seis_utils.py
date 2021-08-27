@@ -4,6 +4,7 @@ import warnings
 import datetime
 import numpy as np
 import pandas as pd
+from progress.bar import Bar
 from  osgeo import gdal
 from geopandas import GeoDataFrame, GeoSeries
 from shapely.geometry import Polygon, Point
@@ -15,8 +16,17 @@ from seis_settings import (
     MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE,
 )
 
-
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+
+def set_progress_bar(max_value, filename, skip_factor):
+    return Bar(
+        f'reading {max_value:,} records '
+        f'from {filename}',
+        max=int(1 / skip_factor * max_value),
+        suffix='%(percent)d%%'
+    )
+
 
 
 def progress_message_generator(message):
@@ -29,6 +39,7 @@ def progress_message_generator(message):
             f'\r{loop_dash[int(i/print_interval) % 4]} {i} {message}', end='')
         i += 1
         yield
+
 
 
 def get_line():

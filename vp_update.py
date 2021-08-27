@@ -7,7 +7,6 @@
 import warnings
 import datetime
 import numpy as np
-from progress.bar import Bar
 import seis_utils
 from seis_vibe_database import VpDb
 from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
@@ -18,15 +17,6 @@ from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 71
 PROGRESS_SKIPS = 750
-
-
-def set_progress_bar(max_value, filename, skip_factor):
-    return Bar(
-        f'reading {max_value:,} records '
-        f'from {filename}',
-        max=int(1 / skip_factor * max_value),
-        suffix='%(percent)d%%'
-    )
 
 
 class Vaps:
@@ -57,7 +47,7 @@ class Vaps:
             with open(filename, mode='rt') as vaps:
 
                 vaps_lines = vaps.readlines()
-                progress_bar = set_progress_bar(
+                progress_bar = seis_utils.set_progress_bar(
                     len(vaps_lines) - HEADER_ROWS, vaps_file.file_name, PROGRESS_SKIPS
                 )
                 for vaps_line in vaps_lines:
@@ -189,7 +179,7 @@ class Vp:
             with open(filename, mode='rt') as vp:
 
                 vp_lines = vp.readlines()
-                progress_bar = set_progress_bar(
+                progress_bar = seis_utils.set_progress_bar(
                     len(vp_lines) - HEADER_ROWS, vp_file.file_name, PROGRESS_SKIPS
                 )
                 for vp_line in vp_lines:
