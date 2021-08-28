@@ -80,7 +80,7 @@ class Rcv:
             node_record.bits_type = bits_row[7]
             node_record.tilt = bits_row[8] if bits_row[8] > 0 else None
             node_record.config_id = bits_row[9]
-            node_record.resistance = float(bits_row[11]) if bits_row[11] > 0 else None
+            node_record.resistance = float(bits_row[10]) if bits_row[10] > 0 else None
             node_record.noise = bits_row[12] if bits_row[12] > 0 else None
             node_record.thd = bits_row[13] if bits_row[13] > 0 else None
             node_record.polarity = bits_row[14]
