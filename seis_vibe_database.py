@@ -497,3 +497,26 @@ class VpDb:
         )
         return pd.read_sql_query(sql_string, con=engine)
 
+    @classmethod
+    @DbUtils.connect
+    def delete_last_file_id(cls, cursor):
+        '''  deletes the last vaps file record
+                returns: the name of the file
+        '''
+        sql_string = (
+            f'select file_name from {cls.table_vaps_files} '
+            f'where id = (select max(id) from {cls.table_vaps_files})'
+        )
+        cursor.execute(sql_string)
+        try:
+            filename = cursor.fetchone()[0]
+
+        except TypeError:
+            return -1
+
+        sql_string = (
+            f'delete from {cls.table_vaps_files} '
+            f'where id = (select max(id) from {cls.table_vaps_files})'
+        )
+        cursor.execute(sql_string)
+        return filename
