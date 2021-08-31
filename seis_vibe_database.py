@@ -1,6 +1,7 @@
 import datetime
 import numpy as np
 import pandas as pd
+from pandas.io import sql
 from shapely.geometry import Point
 import seis_utils
 from seis_settings import FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM, EPSG_PSD93
@@ -504,19 +505,26 @@ class VpDb:
                 returns: the name of the file
         '''
         sql_string = (
-            f'select file_name from {cls.table_vaps_files} '
+            f'select file_name, id from {cls.table_vaps_files} '
             f'where id = (select max(id) from {cls.table_vaps_files})'
         )
         cursor.execute(sql_string)
         try:
-            filename = cursor.fetchone()[0]
+            filename, id = cursor.fetchone()
 
         except TypeError:
             return -1
 
         sql_string = (
-            f'delete from {cls.table_vaps_files} '
-            f'where id = (select max(id) from {cls.table_vaps_files})'
+            f'delete from {cls.table_vaps} '
+            f'where file_id = {id}'
         )
         cursor.execute(sql_string)
+
+        sql_string = (
+            f'delete from {cls.table_vaps_files} '
+            f'where id = {id}'
+        )
+        cursor.execute(sql_string)
+
         return filename

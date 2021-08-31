@@ -10,6 +10,7 @@ def main():
     filename = vaps_db.delete_last_file_id()
     if filename == -1:
         print('There are no records ...')
+        return
 
     # remove the file
     file = DATA_FILES_VAPS / filename
