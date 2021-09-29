@@ -15,6 +15,7 @@ DATABASE =            Path('D:/OneDrive/Work/PDO/2021 Haniya North/6 Project map
 
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
+PROGRESS_SKIPS = 750
 GMT_OFFSET = datetime.timedelta(hours=+4)
 DENSE_CRITERIUM = 15  # if distance < DENSE_CRITERIUM then dense_flag is true
 SWEEP_TIME = 9

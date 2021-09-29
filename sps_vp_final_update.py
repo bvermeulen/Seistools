@@ -4,20 +4,15 @@
     Copyright: 2021
 
 '''
-from vp_update import PROGRESS_SKIPS
-import warnings
 import datetime
 import numpy as np
 import seis_utils
 from seis_sps_database import SpsDb
 from seis_settings import (
-    DATA_FILES_SPS, GMT_OFFSET, FilesSpsTable, SpsTable,
+    DATA_FILES_SPS, PROGRESS_SKIPS, GMT_OFFSET, FilesSpsTable, SpsTable,
 )
 
-# ignore warning velocity =  dist / time in method update_vo_distance
-warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 89
-PROGRESS_SKIPS = 750
 
 
 class Sps:

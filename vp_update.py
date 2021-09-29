@@ -9,14 +9,14 @@ import datetime
 import numpy as np
 import seis_utils
 from seis_vibe_database import VpDb
-from seis_settings import (DATA_FILES_VAPS, DATA_FILES_VP, LINK_VP_TO_VAPS, GMT_OFFSET,
-                           FilesVpTable, VpTable, FilesVapsTable, VapsTable,
-                          )
+from seis_settings import (
+    DATA_FILES_VAPS, DATA_FILES_VP, PROGRESS_SKIPS, LINK_VP_TO_VAPS, GMT_OFFSET,
+    FilesVpTable, VpTable, FilesVapsTable, VapsTable,
+)
 
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 71
-PROGRESS_SKIPS = 750
 
 
 class Vaps:

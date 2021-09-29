@@ -189,3 +189,33 @@ class SpsDb:
             f'line = {line} ORDER BY station;'
         )
         return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    @DbUtils.connect
+    def get_all_line_points(cls, block_name, cursor):
+        ''' get all line, point of the table_sps in a pandas df
+        '''
+        sql_string = (
+            f'CREATE VIEW line_points (line, point) '
+            f'AS SELECT line, point FROM {cls.table_sps} as r '
+            f'INNER JOIN {cls.table_sps_files} as f ON f.id = r.file_id '
+            f'WHERE f.block_name = \"{block_name}\";'
+        )
+        cursor.execute(sql_string)
+
+        engine = DbUtils().get_db_engine()
+        sql_string = (
+            f'SELECT line, point FROM line_points '
+            f'ORDER BY line, point'
+        )
+        sps_df = pd.read_sql_query(sql_string, con=engine)
+        lines = np.array(sps_df['line'].to_list()) * 10_000
+        points = np.array(sps_df['point'].to_list())
+        linepoints = np.add(lines, points)
+
+        sql_string = (
+            f'DROP VIEW IF EXISTS line_points;'
+        )
+        cursor.execute(sql_string)
+
+        return linepoints
