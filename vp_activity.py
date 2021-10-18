@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 ''' module to calculate and display vibrator activity over 24 hours time perdio
     calculates number of vp's for each second of day in hashtable and displays in
     user defined interval

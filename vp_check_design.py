@@ -47,8 +47,8 @@ class Src:
     @staticmethod
     def parse_line(row):
         try:
-            line = int(float(row[5:10]))
-            point = int(float(row[15:20]))
+            line = int(float(row[5:11]))
+            point = int(float(row[15:21]))
             return line, point
 
         except ValueError:
