@@ -5,8 +5,7 @@ import multiprocessing as mp
 import threading
 import queue
 from pathlib import Path
-from dataclasses import dataclass
-from vp_extended_qc import ExtendedQc
+from qc_extended import ExtendedQc
 from Utils.plogger import Logger, timed
 from pprint import pprint
 
@@ -23,53 +22,50 @@ extended_qc_files = [
     Path('./data_files/211006 - check VAPS/20210920/210920_VIB01.txt'),
     Path('./data_files/211006 - check VAPS/20210920/210920_VIB02.txt'),
     Path('./data_files/211006 - check VAPS/20210920/210920_VIB03.txt'),
-    Path('./data_files/211006 - check VAPS/20210920/210920_VIB04.txt'),
     Path('./data_files/211006 - check VAPS/20210920/210920_VIB05.txt'),
     Path('./data_files/211006 - check VAPS/20210920/210920_VIB07.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB08.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB09.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB10.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB11.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB12.txt'),
-    # Path('./data_files/211006 - check VAPS/20210920/210920_VIB13.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB08.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB09.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB10.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB11.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB12.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB13.txt'),
+    Path('./data_files/211006 - check VAPS/20210920/210920_VIB04.txt'),
 ]
 
 
 @timed(logger, print_log=True)
-def extended_qc_pool(file_name):
+def extended_qc(file_name, results_queue=None):
     log_message(f'run extended qc for: {file_name}')
     ext_qc = ExtendedQc(file_name)
     ext_qc.read_extended_qc()
-    return ext_qc.avg_peak_df
+    result = ext_qc.avg_peak_df
 
+    if results_queue is None:
+        return result
 
-@timed(logger, print_log=True)
-def extended_qc_thread_or_process(file_name, results_queue):
-    log_message(f'run extended qc for: {file_name}')
-    ext_qc = ExtendedQc(file_name)
-    ext_qc.read_extended_qc()
-    results_queue.put(ext_qc.avg_peak_df)
+    else:
+        results_queue['results_queue'].put(ext_qc.avg_peak_df)
+
 
 
 @timed(logger, print_log=True)
 def run_sequential():
     results = []
     log_message('start sequential ...')
-    results_queue = queue.Queue()
     for filename in extended_qc_files:
-        results.append(extended_qc_pool(filename))
+        results.append(extended_qc(filename))
 
     pprint(results)
 
 
 @timed(logger, print_log=True)
 def run_pool():
-    results = []
     log_message('start pool ...')
     cpus = mp.cpu_count()
     log_message(f'cpu\'s: {cpus}')
     with mp.Pool(cpus - 1) as pool:
-        results.append(pool.map(extended_qc_pool, extended_qc_files))
+        results = pool.map(extended_qc, extended_qc_files)
 
     pprint(results)
 
@@ -83,8 +79,8 @@ def run_processes():
     for filename in extended_qc_files:
         processes.append(
             mp.Process(
-              target=extended_qc_thread_or_process,
-                args=(filename, results_queue,),
+                target=extended_qc,
+                args=(filename, {'results_queue': results_queue}),
             )
         )
         processes[-1].start()
@@ -92,8 +88,7 @@ def run_processes():
     log_message('all processes have started ...')
     for _ in range(len(extended_qc_files)):
         results.append(results_queue.get())
-
-    # _ = [p.join() for p in processes]
+        log_message(f'get results for vibrator: {results[-1].iloc[0]["vibrator"]}')
 
     log_message('all processes have completed ...')
     pprint(results)
@@ -109,8 +104,8 @@ def run_threading():
     for filename in extended_qc_files:
         threads.append(
             threading.Thread(
-                target=extended_qc_thread_or_process,
-                args=(filename, results_queue)
+                target=extended_qc,
+                args=(filename, {'results_queue': results_queue}),
             )
         )
         threads[-1].start()

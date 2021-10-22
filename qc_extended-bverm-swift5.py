@@ -64,7 +64,7 @@ class ExtendedQc:
 
         for line in raw_qc_record:
             if line[0:16] == self.record_vibrator_id:
-                extended_qc_record.vibrator_id = line[18:20]
+                extended_qc_record.vibrator_id = int(line[18:20])
 
             elif line[0:16] == self.record_time_break:
                 extended_qc_record.time_break = (
@@ -87,12 +87,12 @@ class ExtendedQc:
         return extended_qc_record
 
     def concat_avg_peak_df(self, record):
-        avg_phase = record.attributes[record.attributes['valid'] == 1]['phase'].mean()
-        peak_phase = record.attributes[record.attributes['valid'] == 1]['phase'].max()
-        avg_dist = record.attributes[record.attributes['valid'] == 1]['dist'].mean()
-        peak_dist = record.attributes[record.attributes['valid'] == 1]['dist'].max()
-        avg_force = record.attributes[record.attributes['sweep_time'] > 3.0]['force'].mean()
-        peak_force = record.attributes[record.attributes['valid'] == 1]['force'].max()
+        avg_phase = record.attributes[record.attributes['sweep_time'] > 1.0]['phase'].mean()
+        peak_phase = record.attributes[record.attributes['sweep_time'] > 1.0]['phase'].max()
+        avg_dist = record.attributes[record.attributes['sweep_time'] > 1.0]['dist'].mean()
+        peak_dist = record.attributes[record.attributes['sweep_time'] > 1.0]['dist'].max()
+        avg_force = record.attributes[record.attributes['sweep_time'] > 1.0]['force'].mean()
+        peak_force = record.attributes[record.attributes['sweep_time'] > 1.0]['force'].max()
 
         attributes_row_df = pd.DataFrame(
             [[
