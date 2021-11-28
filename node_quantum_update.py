@@ -37,6 +37,7 @@ class Rcv:
                 node_db.delete_node_file(id_file)
                 bits_df = pd.DataFrame()
 
+            bits_df.sort_values(by=[1, 6], inplace=True)
             bits_df = bits_df.drop_duplicates(subset=[0], keep='last')
             node_records = []
 
