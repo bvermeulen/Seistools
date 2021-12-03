@@ -1,14 +1,14 @@
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.mlab import window_none
 from segpy.reader import create_reader
 
-file_name1 = 'himin.sgy'
-file_name2 = 'hilin.sgy'
-corr_file_name = 'hicut_corr.csv'
-wavelet_file_name = 'wavelet.csv'
-corr_wavelet_file_name = 'wavelet_corr.csv'
+file_name1 = Path('./data_files/himin.sgy')
+file_name2 = Path('./data_files/hilin.sgy')
+corr_file_name = Path('./data_files/hicut_corr.csv')
+wavelet_file_name = Path('./data_files/wavelet.csv')
+corr_wavelet_file_name = Path('./data_files/wavelet_corr.csv')
 dt = 4/1000 # sampling interval is 4 ms
 df = 1/dt # sampling frequency
 pi = np.pi
