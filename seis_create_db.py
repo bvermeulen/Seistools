@@ -1,4 +1,4 @@
-from seis_database import VpDb
+from seis_vibe_database import VpDb
 
 def create_db():
     VpDb().create_database()
