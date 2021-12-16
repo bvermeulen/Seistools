@@ -147,12 +147,12 @@ vp_plt_settings = {
     },
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
-        'max_vp_hour': 1700,
+        'max_vp_hour': 1500,
         'tick_intval_vp_hour': 100,
-        'vp_hour_target': 1060,
+        'vp_hour_target': 900,
         'max_vibs': 15,
         'tick_intval_vibs': 1,
-        'vibs_target': 10,
+        'vibs_target': 0,
     },
 }
 node_plt_settings = {

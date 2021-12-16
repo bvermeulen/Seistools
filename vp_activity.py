@@ -126,37 +126,43 @@ class VpActive:
             f'{vp_plt_settings["vib_activity"]["fig_title"]}'
             f'{self.production_date.strftime("%d-%b-%Y")}'
         )
-        ax1.set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
-        ax2.set_title(f'Vibs operational - interval {interval / 60:.0f} minutes')
-
-        max_val = vp_plt_settings['vib_activity']['max_vp_hour']
-        intval = vp_plt_settings['vib_activity']['tick_intval_vp_hour']
-        ax1.set_ylim(bottom=0, top=max_val)
-        ax1.yaxis.set_ticks(np.arange(0, max_val+1, intval))
-
-        max_val = vp_plt_settings['vib_activity']['max_vibs']
-        intval = vp_plt_settings['vib_activity']['tick_intval_vibs']
-        ax2.set_ylim(bottom=0, top=max_val)
-        ax2.yaxis.set_ticks(np.arange(0, max_val+1, intval))
         time_format = mdates.DateFormatter('%H:%M')
-        ax1.xaxis.set_major_formatter(time_format)
-        ax2.xaxis.set_major_formatter(time_format)
-
         self.populate_vps_by_second()
         self.aggregate_vps_by_interval(interval)
         times = self.vps_by_interval_df['time'].to_list()
+
+        # axis for VPs per hour
+        max_val = vp_plt_settings['vib_activity']['max_vp_hour']
+        intval = vp_plt_settings['vib_activity']['tick_intval_vp_hour']
+        ax1.set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
+        ax1.set_ylim(bottom=0, top=max_val)
+        ax1.yaxis.set_ticks(np.arange(0, max_val+1, intval))
+        ax1.xaxis.set_major_formatter(time_format)
+        ax1.grid(axis='y', linewidth=0.5, linestyle='-', zorder=0)
+        ax1.step(
+            times, self.vps_by_interval_df['vps_hour'].to_list(),
+            where='post', zorder=3
+        )
+        ax1.axhline(
+            vp_plt_settings['vib_activity']['vp_hour_target'],
+            color=TOL_COLOR, linewidth=0.5,
+        )
+
+        # axis for operational vibs
+        max_val = vp_plt_settings['vib_activity']['max_vibs']
+        intval = vp_plt_settings['vib_activity']['tick_intval_vibs']
+        ax2.set_title(f'Vibs operational - interval {interval / 60:.0f} minutes')
+        ax2.set_ylim(bottom=0, top=max_val)
+        ax2.yaxis.set_ticks(np.arange(0, max_val+1, intval))
+        ax2.xaxis.set_major_formatter(time_format)
+        ax2.grid(axis='y', linewidth=0.5, linestyle='-', zorder=0)
         vibs = self.vps_by_interval_df['num_vibs'].to_list()
         colors = [
             TOL_COLOR if nv < vp_plt_settings['vib_activity']['vibs_target']
             else 'green' for nv in vibs
         ]
         width = interval / seconds_per_day
-        ax1.step(times, self.vps_by_interval_df['vps_hour'].to_list(), where='post')
-        ax1.axhline(
-            vp_plt_settings['vib_activity']['vp_hour_target'],
-            color=TOL_COLOR, linewidth=0.5
-        )
-        ax2.bar(times, vibs, color=colors, width=width, align='edge')
+        ax2.bar(times, vibs, color=colors, width=width, align='edge', zorder=3)
 
         fig.tight_layout()
         plt.show()
