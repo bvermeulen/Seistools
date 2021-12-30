@@ -15,10 +15,6 @@ class VpDb:
     table_vaps = 'vaps_records'
 
     @classmethod
-    def create_database(cls):
-        DbUtils().create_database()
-
-    @classmethod
     @DbUtils.connect
     def delete_table_vp(cls, cursor):
         sql_string = f'DROP TABLE {cls.table_vp};'

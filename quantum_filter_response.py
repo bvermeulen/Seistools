@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-quantum_response_file = Path('./data_files/quantum_min_phase.csv')
-dt = 4/1000 # sampling interval is 4 ms
-df = 1/dt # sampling frequency
+quantum_response_file = Path('./data_files/quantum_zero_phase.csv')
+dt = 4/1000      # sampling interval is 4 ms
+df = 1/dt        # sampling frequency
 pi = np.pi
 max_display_frequency = 135 # Hz
 phase_display = (-200, 10) # radians
@@ -26,6 +26,7 @@ print(quantum_response_df.head())
 time = quantum_response_df['time']
 response_values = quantum_response_df['value']
 fig, ax = plt.subplots(nrows=3, ncols=1, figsize=(8, 7))
+ax[0].set_xlim(-100, 100)
 ax[0].set_title('filter response')
 ax[0].plot(time, response_values)
 

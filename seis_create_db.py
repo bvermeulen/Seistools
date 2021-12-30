@@ -1,7 +1,8 @@
-from seis_vibe_database import VpDb
+from seis_database import DbUtils
+
 
 def create_db():
-    VpDb().create_database()
+    DbUtils().create_database()
 
 if __name__ == '__main__':
     create_db()

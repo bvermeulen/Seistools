@@ -41,7 +41,6 @@ class DbUtils:
     def get_db_engine(cls):
         return create_engine(f'sqlite:///{cls.database}')
 
-
     @classmethod
     def create_database(cls):
         connection = None
@@ -58,5 +57,3 @@ class DbUtils:
         finally:
             if connection:
                 connection.close()
-
-
