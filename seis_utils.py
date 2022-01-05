@@ -117,7 +117,8 @@ def get_animation_dates():
 
 
 def get_year(day_of_year):
-    return 2021
+    #TODO fix this simple function
+    return 2022
 
 
 def set_val(value, dtype):
