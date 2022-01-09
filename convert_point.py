@@ -3,16 +3,9 @@ Convert coordinates
 '''
 import re
 from enum import Enum
-from typing import Type
-from shapely.geometry import Point
-from pyproj import Proj
+from convert_tools import ConvertTools
 
-EPSG_PSD93 = (
-    '+proj=utm +zone=40 +ellps=clrk80 +towgs84=-180.624,-225.516,173.919,'
-    '-0.81,-1.898,8.336,16.71006 +units=m +no_defs')
-utm_40n_psd93 = Proj(EPSG_PSD93)
-utm_40n = Proj('epsg:32640')
-
+ctools = ConvertTools()
 
 class Conversion(Enum):
     WGS84_PSD93 = 1
@@ -23,92 +16,10 @@ class Conversion(Enum):
     UTM_PSD93 = 6
     DEC_DMS = 7
 
-
 class DEGREE_FMT(Enum):
     DECIMAL_DEGREE = 1
     DMS = 2
 
-
-def convert_dms_to_dec_degree(answer:str):
-    try:
-        latitude, longitude = answer.split(',')
-
-    except ValueError:
-        return -1, -1
-
-    lat = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([NSns])\s*$', latitude)
-    lon = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([EWew])\s*$', longitude)
-    if lat and lon:
-        lat_d = float(lat.group(1))
-        lat_m = float(lat.group(2))
-        lat_s = float(lat.group(3))
-        lat_ns = lat.group(4)
-
-        lon_d = float(lon.group(1))
-        lon_m = float(lon.group(2))
-        lon_s = float(lon.group(3))
-        lon_ew = lon.group(4)
-
-        # check correct ranges
-        if not (0 <= lat_d < 180) or not (0 <= lon_d < 180):
-            return -1, -1
-
-        if not (0 <= lat_m < 60) or not (0 <= lon_m < 60):
-            return -1, -1
-
-        if not (0 <= lat_s < 60) or not (0 <= lon_s < 60):
-            return -1, -1
-
-        latitude = lat_d + lat_m / 60 + lat_s /3600
-        latitude = latitude if lat_ns.upper() == 'N' else latitude * -1
-
-        longitude = lon_d + lon_m / 60 + lon_s /3600
-        longitude = longitude if lon_ew.upper() == 'E' else longitude * -1
-
-        return latitude, longitude
-
-    else:
-        return -1, -1
-
-
-def convert_dec_degree_to_dms(latitude: float, longitude: float):
-    if not (0 <= latitude < 180) or not (0 <= longitude < 180):
-        return '-', '-'
-
-    else:
-        if latitude > 0:
-            lat_ns = 'N'
-
-        else:
-            lat_ns = 'S'
-
-        latitude = abs(latitude)
-        lat_d = int(latitude)
-        lat_m = (latitude - lat_d) * 60
-        lat_s = (lat_m % 1) * 60
-        lat_m = int(lat_m)
-        if int(round(lat_s, 6)) == 60:
-            lat_m += 1
-            lat_s = 0
-        lat = f'{lat_d:3d}\u00B0 {lat_m:02d}\' {lat_s:2.3f}" {lat_ns}'
-
-        if longitude > 0:
-            lon_ew = 'E'
-
-        else:
-            lon_ew = 'W'
-
-        longitude = abs(longitude)
-        lon_d = abs(int(longitude))
-        lon_m = (longitude - lon_d) * 60
-        lon_s = (lon_m % 1) * 60
-        lon_m = int(lon_m)
-        if int(round(lon_s, 6)) == 60:
-            lon_m += 1
-            lon_s = 0
-        lon = f'{lon_d:3d}\u00B0 {lon_m:02d}\' {lon_s:2.3f}" {lon_ew}'
-
-        return lat, lon
 
 def input_type_conversion(degree_format=DEGREE_FMT.DECIMAL_DEGREE):
     ''' input choices between type of conversions
@@ -118,7 +29,7 @@ def input_type_conversion(degree_format=DEGREE_FMT.DECIMAL_DEGREE):
         prompt = (
             f'Conversion between WGS84, PSD93, UTM\n'
             f'------------------------------------\n'
-            f'1: WGS84 -> PSD93 ({"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"})\n'
+            f'1: WGS84 ->7 PSD93 ({"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"})\n'
             f'2: PSD93 -> WGS84 ({"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"})\n'
             f'3: WGS84 -> UTM 40N ({"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"})\n'
             f'4: UTM 40N -> WGS84 ({"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"})\n'
@@ -182,9 +93,11 @@ def input_val1_val2(prompt_string, degree_format=None):
             return -1, -1
 
         if degree_format == DEGREE_FMT.DMS:
-            val1, val2 = convert_dms_to_dec_degree(answer)
-            if not (val1 == -1 and val2 == -1):
-                valid = True
+            vals = answer.split(',')
+            if len(vals) == 2:
+                val2, val1 = ctools.convert_dms_to_dec_degree(vals[1], vals[0])
+                if not (val1 == -1 and val2 == -1):
+                    valid = True
 
         else:
             # try to split on comma seperated values and space
@@ -207,31 +120,29 @@ def input_val1_val2(prompt_string, degree_format=None):
 
 def conversion_to_wgs84(ct, dfmt):
     if ct == Conversion.PSD93_WGS84:
-        projection = utm_40n_psd93
-        proj_str = 'PSD93'
+        easting, northing = input_val1_val2(f'Easting, Northing (PSD93) [enter q for a new conversion]: ')
+        longitude, latitude = ctools.psd93_to_wgs84(easting, northing)
 
     elif ct == Conversion.UTM_WGS84:
-        projection = utm_40n
-        proj_str = 'UTM 40N'
+        easting, northing = input_val1_val2(f'Easting, Northing (UTM 40N) [enter q for a new conversion]: ')
+        longitude, latitude = ctools.utm40n_to_wgs84(easting, northing)
 
     else:
         assert False, f'incorrect conversion {ct}'
 
     continue_input = True
-    easting, northing = input_val1_val2(f'Easting, Northing ({proj_str}) [enter q for a new conversion]: ')
     if easting == -1 and northing == -1:
         continue_input = False
 
     else:
-        converted_point = Point(projection(easting, northing, inverse=True))
         if dfmt == DEGREE_FMT.DECIMAL_DEGREE:
             print(
                 f'{"Latitude":9} | {"Longitude":9}\n'
-                f'{converted_point.y:9,.5f} | {converted_point.x:9,.5f}\n'
+                f'{latitude:9.6f} | {longitude:9.6f}\n'
                 f'----------------------------------------------------'
             )
         else:
-            lat, lon = convert_dec_degree_to_dms(converted_point.y, converted_point.x)
+            lon, lat = ctools.convert_dec_degree_to_dms(longitude, latitude)
             print(
                 f'{"Latitude":9} | {"Longitude":9}\n'
                 f'{lat} | {lon}\n'
@@ -241,17 +152,6 @@ def conversion_to_wgs84(ct, dfmt):
 
 
 def conversion_from_wgs84(ct, dfmt):
-    if ct == Conversion.WGS84_PSD93:
-        projection = utm_40n_psd93
-        proj_str = 'PSD93'
-
-    elif ct == Conversion.WGS84_UTM:
-        projection = utm_40n
-        proj_str = 'UTM 40N'
-
-    else:
-        assert False, f'incorrect conversion {ct}'
-
     continue_input = True
     if dfmt == DEGREE_FMT.DECIMAL_DEGREE:
         latitude, longitude = input_val1_val2(
@@ -266,48 +166,57 @@ def conversion_from_wgs84(ct, dfmt):
         )
     if latitude == -1 and longitude == -1:
         continue_input = False
+        return continue_input
 
-    else:
-        converted_point = Point(projection(longitude, latitude))
+    if ct == Conversion.WGS84_PSD93:
+        easting, northing = ctools.wgs84_to_psd93(longitude, latitude)
         print(
-            f'{"Easting":9} | {"Northing":11} ({proj_str})\n'
-            f'{converted_point.x:9,.1f} | {converted_point.y:11,.1f}\n'
+            f'{"Easting":9} | {"Northing":11} (PSD93)\n'
+            f'{easting:9.1f} | {northing:11.1f}\n'
             f'----------------------------------------------------'
         )
+    elif ct == Conversion.WGS84_UTM:
+        easting, northing = ctools.wgs84_to_utm40n(longitude, latitude)
+        print(
+            f'{"Easting":9} | {"Northing":11} (UTM 40N)\n'
+            f'{easting:9.1f} | {northing:11.1f}\n'
+            f'----------------------------------------------------'
+        )
+    else:
+        assert False, f'incorrect conversion {ct}'
+
     return continue_input
 
 
 def conversion_proj1_proj2(ct):
+    continue_input = True
     if ct == Conversion.PSD93_UTM:
-        proj1 = utm_40n_psd93
-        proj2 = utm_40n
-        proj1_str = 'PSD93'
-        proj2_str = 'UTM 40N'
+        easting, northing = input_val1_val2(f'Easting, Northing (PSD93) [enter q for a new conversion]: ')
+        if easting == -1 and northing == -1:
+            continue_input = False
+            return continue_input
 
+        easting, northing = ctools.psd93_to_utm40n(easting, northing)
+        print(
+            f'{"Easting":9} | {"Northing":11} (UTM 40N)\n'
+            f'{easting:9.1f} | {northing:11.1f}\n'
+            f'----------------------------------------------------'
+        )
     elif ct == Conversion.UTM_PSD93:
-        proj1 = utm_40n
-        proj2 = utm_40n_psd93
-        proj1_str = 'UTM 40N'
-        proj2_str = 'PSD93'
+        easting, northing = input_val1_val2(f'Easting, Northing (UTM 40N) [enter q for a new conversion]: ')
+        if easting == -1 and northing == -1:
+            continue_input = False
+            return continue_input
 
+        easting, northing = ctools.utm40n_to_psd93(easting, northing)
+        print(
+            f'{"Easting":9} | {"Northing":11} (PSD93)\n'
+            f'{easting:9.1f} | {northing:11.1f}\n'
+            f'----------------------------------------------------'
+        )
     else:
         assert False, f'incorrect conversion {ct}'
 
-    continue_input = True
-    easting, northing = input_val1_val2(f'Easting, Northing ({proj1_str}) [enter q for a new conversion]: ')
-    if easting == -1 and northing == -1:
-        continue_input = False
-
-    else:
-        # proj1 to lat, long
-        converted_point = Point(proj1(easting, northing, inverse=True))
-        # lat, long to proj2
-        converted_point = Point(proj2(converted_point.x, converted_point.y))
-        print(
-            f'{"Easting":9} | {"Northing":11} ({proj2_str})\n'
-            f'{converted_point.x:9,.1f} | {converted_point.y:11,.1f}\n'
-            f'----------------------------------------------------'
-        )
     return continue_input
 
 
@@ -322,7 +231,7 @@ def conversion_dec_dms(ct, dfmt):
             degree_format=dfmt
         )
         if latitude != -1 and longitude != -1:
-            lat, lon = convert_dec_degree_to_dms(latitude, longitude)
+            lon, lat = ctools.convert_dec_degree_to_dms(longitude, latitude)
             print(
                 f'{"Latitude":9} | {"Longitude":9}\n'
                 f'{lat} | {lon}\n'
@@ -340,7 +249,7 @@ def conversion_dec_dms(ct, dfmt):
         if latitude != -1 and longitude != -1:
             print(
                 f'{"Latitude":9} | {"Longitude":9}\n'
-                f'{latitude:9,.5f} | {longitude:9,.5f}\n'
+                f'{latitude:9.6f} | {longitude:9.6f}\n'
                 f'----------------------------------------------------'
             )
 
