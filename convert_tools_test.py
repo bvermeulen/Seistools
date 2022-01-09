@@ -133,7 +133,7 @@ def test_dms_to_dec_degree_value():
     assert val1 == pytest.approx(55.909611)
     assert val2 == pytest.approx(18.102086)
 
-def test_utm40n_to_wgs():
+def test_utm40n_to_wgs84():
     easting, northing = 384629.55, 2001821.11
     val1, val2 = ctools.utm40n_to_wgs84(easting, northing)
     assert val1 == pytest.approx(55.909611)
@@ -144,7 +144,7 @@ def test_utm40n_to_wgs():
     assert val1 == pytest.approx(56.606085)
     assert val2 == pytest.approx(21.868937)
 
-def test_psd93_to_wgs():
+def test_psd93_to_wgs84():
     easting, northing = 384339.0, 2001588.0
     val1, val2 = ctools.psd93_to_wgs84(easting, northing)
     assert val1 == pytest.approx(55.909611)

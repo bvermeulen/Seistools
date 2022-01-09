@@ -1,6 +1,6 @@
-''' module for conversion tools
+''' module for conversion tools for WGS84, UTM 40N and PSD93
     note the module maintains consistency in x, y; easting, northing; and
-    longitude, latitude, where x is first and y is second argument
+    longitude, latitude, where x is the first and y is the second argument
 '''
 import re
 from shapely.geometry import Point
