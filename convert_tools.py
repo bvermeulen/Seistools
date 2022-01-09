@@ -7,6 +7,9 @@ from shapely.geometry import Point
 from pyproj import Proj
 
 
+degree_symbol = '\u00B0'
+
+
 class ConvertTools:
 
     EPSG_PSD93 = (
@@ -58,7 +61,7 @@ class ConvertTools:
             return '-', '-'
 
         else:
-            if latitude > 0:
+            if latitude >= 0:
                 lat_ns = 'N'
 
             else:
@@ -69,12 +72,12 @@ class ConvertTools:
             lat_m = (latitude - lat_d) * 60
             lat_s = (lat_m % 1) * 60
             lat_m = int(lat_m)
-            if int(round(lat_s, 6)) == 60:
+            if int(round(lat_s, 3)) == 60:
                 lat_m += 1
                 lat_s = 0
-            lat = f'{lat_d:3d}\u00B0 {lat_m:02d}\' {lat_s:2.3f}" {lat_ns}'
+            lat = f'{lat_d:3d}{degree_symbol} {lat_m:02d}\' {lat_s:2.3f}" {lat_ns}'
 
-            if longitude > 0:
+            if longitude >= 0:
                 lon_ew = 'E'
 
             else:
@@ -85,10 +88,10 @@ class ConvertTools:
             lon_m = (longitude - lon_d) * 60
             lon_s = (lon_m % 1) * 60
             lon_m = int(lon_m)
-            if int(round(lon_s, 6)) == 60:
+            if int(round(lon_s, 3)) == 60:
                 lon_m += 1
                 lon_s = 0
-            lon = f'{lon_d:3d}\u00B0 {lon_m:02d}\' {lon_s:2.3f}" {lon_ew}'
+            lon = f'{lon_d:3d}{degree_symbol} {lon_m:02d}\' {lon_s:2.3f}" {lon_ew}'
 
             return lon, lat
 

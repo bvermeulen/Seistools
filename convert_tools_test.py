@@ -48,6 +48,17 @@ def test_dec_degree_to_dms_sign():
     assert v1 == f' 15{degree_symbol} 30\' 0.000" W'
     assert v2 == f'  1{degree_symbol} 06\' 0.000" S'
 
+def test_dec_degree_to_dms_rounding():
+    lat, lon = 0.0166665, 0.0166665
+    v1, v2 = ctools.convert_dec_degree_to_dms(lon, lat)
+    assert v1 == f'  0{degree_symbol} 00\' 59.999" E'
+    assert v2 == f'  0{degree_symbol} 00\' 59.999" N'
+
+    lat, lon = 0.0166666, 0.0166666
+    v1, v2 = ctools.convert_dec_degree_to_dms(lon, lat)
+    assert v1 == f'  0{degree_symbol} 01\' 0.000" E'
+    assert v2 == f'  0{degree_symbol} 01\' 0.000" N'
+
 def test_dec_degree_to_dms_value():
     lat, lon = 21.868937, 56.606085
     v1, v2 = ctools.convert_dec_degree_to_dms(lon, lat)
