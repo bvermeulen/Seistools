@@ -1,9 +1,9 @@
 ''' settings and data structures for vp app
 '''
 import datetime
+from dataclasses import dataclass
 from pathlib import Path
 from enum import IntEnum
-from Utils.recordtype import recordtype
 
 DATA_FILES_VP =       Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
 DATA_FILES_VAPS =     Path('D:/OneDrive/Work/PDO/Mudawrat B56 2022/12 QC/vib_node_data/vaps')
@@ -73,7 +73,7 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
-        'tol_min': None,
+        'tol_min': 61,
         'tol_max': None,
     },
     'peak_phase': {
@@ -107,7 +107,7 @@ vp_plt_settings = {
         'max': 100,
         'interval': 1,
         'tol_min': None,
-        'tol_max': None,
+        'tol_max': 80,
     },
     'elevation': {
         'title_attribute': 'Elevation',
@@ -284,153 +284,153 @@ nuseis_plt_settings = {
         'tol_max': 10,
     },
 }
-FilesNodeTable = recordtype(
-    'FilesNodeTable',
-    'file_name, '
-    'file_date'
-)
-QuantumTable = recordtype(
-    'QuantumTable',
-    'line, '
-    'station, '
-    'rcvr_index, '
-    'id_file, '
-    'id_point, '
-    'qtm_sn, '
-    'software, '
-    'geoph_model, '
-    'test_time, '
-    'temp, '
-    'bits_type, '
-    'tilt, '
-    'config_id, '
-    'resistance, '
-    'noise, '
-    'thd, '
-    'polarity, '
-    'frequency, '
-    'damping, '
-    'sensitivity, '
-    'dyn_range, '
-    'ein, '
-    'gain, '
-    'offset, '
-    'gps_time, '
-    'ext_geophone'
-)
-NuseisTable = recordtype(
-    'NuseisTable',
-    'line, '
-    'station, '
-    'rcvr_index, '
-    'id_file, '
-    'id_point, '
-    'nuseis_sn, '
-    'tilt, '
-    'noise, '
-    'resistance, '
-    'impedance, '
-    'thd, '
-    'time_deployment, '
-    'time_lastscan'
-)
-RcvrTable = recordtype(
-    'RcvrTable',
-    'line, '
-    'station, '
-    'rcvr_index, '
-    'easting '
-    'northing '
-    'elevation'
-)
-FilesVpTable = recordtype(
-    'FilesVpTable',
-    'id, '
-    'file_name, '
-    'file_date'
-)
-VpTable = recordtype(
-    'VpTable',
-    'id, '
-    'file_id, '
-    'vaps_id, '
-    'line, '
-    'station, '
-    'vibrator, '
-    'time_break, '
-    'planned_easting, '
-    'planned_northing, '
-    'easting, '
-    'northing, '
-    'elevation, '
-    'offset, '
-    'peak_force, '
-    'avg_force, '
-    'peak_dist, '
-    'avg_dist, '
-    'peak_phase, '
-    'avg_phase, '
-    'qc_flag, '
-    'distance, '
-    'time, '
-    'velocity, '
-    'dense_flag'
-)
-FilesVapsTable = recordtype(
-    'FilesVapsTable',
-    'id, '
-    'file_name, '
-    'file_date'
-)
-VapsTable = recordtype(
-    'VapsTable',
-    'id, '
-    'file_id, '
-    'line, '
-    'station, '
-    'fleet_nr, '
-    'vibrator, '
-    'drive, '
-    'avg_phase, '
-    'peak_phase, '
-    'avg_dist, '
-    'peak_dist, '
-    'avg_force, '
-    'peak_force, '
-    'avg_stiffness, '
-    'avg_viscosity, '
-    'easting, '
-    'northing, '
-    'elevation, '
-    'time_break, '
-    'hdop, '
-    'tb_date, '
-    'positioning, '
-    'distance, '
-    'time, '
-    'velocity, '
-    'dense_flag'
-)
-FilesSpsTable = recordtype(
-    'FilesSpsTable',
-    'id, '
-    'file_name, '
-    'file_date, '
-    'block_name'
-)
-SpsTable = recordtype(
-    'SpsTable',
-    'id, '
-    'file_id, '
-    'sps_type, '
-    'line, '
-    'point, '
-    'point_index, '
-    'source_type, '
-    'easting, '
-    'northing, '
-    'elevation, '
-    'dpg_filename, '
-    'time_break, '
-    'vibrator'
-)
+
+@dataclass
+class FilesNodeTable:
+    file_name: str
+    file_date: datetime.datetime
+
+@dataclass
+class QuantumTable:
+    line: int
+    station: int
+    rcvr_index: int
+    id_file: int
+    id_point: int
+    qtm_sn: str
+    software: str
+    geoph_model: str
+    test_time: datetime.datetime
+    temp: float
+    bits_type: str
+    tilt: float
+    config_id: int
+    resistance: float
+    noise: float
+    thd: float
+    polarity: str
+    frequency: float
+    damping: float
+    sensitivity: float
+    dyn_range: float
+    ein: float
+    gain: float
+    offset: float
+    gps_time: int
+    ext_geophone: bool
+
+@dataclass
+class NuseisTable:
+    line: int
+    station: int
+    rcvr_index: int
+    id_file: int
+    id_point: int
+    nuseis_sn: int
+    tilt: float
+    noise: float
+    resistance: float
+    impedance: float
+    thd: float
+    time_deployment: datetime.datetime
+    time_lastscan: datetime.datetime
+
+@dataclass
+class RcvrTable:
+    line: int
+    station: int
+    rcvr_index: int
+    easting: float
+    northing: float
+    elevation: float
+
+@dataclass
+class FilesVpTable:
+    id: int
+    file_name: str
+    file_date: datetime.datetime
+
+@dataclass
+class VpTable:
+    id: int
+    file_id: int
+    vaps_id: int
+    line: int
+    station: int
+    vibrator: int
+    time_break: datetime.datetime
+    planned_easting: float
+    planned_northing: float
+    easting: float
+    northing: float
+    elevation: float
+    offset: float
+    peak_force: int
+    avg_force: int
+    peak_dist: int
+    avg_dist: int
+    peak_phase: int
+    avg_phase: int
+    qc_flag: str
+    distance: float
+    time: float
+    velocity: float
+    dense_flag: bool
+
+@dataclass
+class FilesVapsTable:
+    id: int
+    file_name: str
+    file_date: datetime.datetime
+
+@dataclass
+class VapsTable:
+    id: int
+    file_id: int
+    line: int
+    station: int
+    fleet_nr: str
+    vibrator: int
+    drive: int
+    avg_phase: int
+    peak_phase: int
+    avg_dist: int
+    peak_dist: int
+    avg_force: int
+    peak_force: int
+    avg_stiffness: int
+    avg_viscosity: int
+    easting: float
+    northing: float
+    elevation: float
+    time_break: datetime.datetime
+    hdop: float
+    tb_date: str
+    positioning: str
+    distance: float
+    time: float
+    velocity: float
+    dense_flag: bool
+
+@dataclass
+class FilesSpsTable:
+    id: int
+    file_name: str
+    file_date: datetime.datetime
+    block_name: str
+
+@dataclass
+class SpsTable:
+    id: int
+    file_id: int
+    sps_type: str
+    line: int
+    point: int
+    point_index: int
+    source_type: str
+    easting: float
+    northing: float
+    elevation: float
+    dpg_filename: str
+    time_break: datetime.datetime
+    vibrator: int
