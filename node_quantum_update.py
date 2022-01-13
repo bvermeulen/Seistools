@@ -1,6 +1,7 @@
 ''' Read noise test for Quantum nodes and store to database
 '''
 from datetime import datetime
+import dataclasses
 import pandas as pd
 import seis_utils
 from seis_quantum_database import QuantumDb
@@ -103,7 +104,7 @@ class Rcv:
             'tilt', 'resistance', 'noise', 'thd', 'frequency', 'damping', 'sensitivity'
         ]
         try:
-            _ = sum([v for k, v in node_record._asdict().items() if k in keys])
+            _ = sum([v for k, v in dataclasses.asdict(node_record).items() if k in keys])
 
         except TypeError:
             return empty_record

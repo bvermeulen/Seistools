@@ -1,6 +1,7 @@
 ''' Read noise test for GTI nodes and store to database
 '''
 from datetime import datetime, timedelta
+import dataclasses
 from vp_update import PROGRESS_SKIPS
 import pandas as pd
 import seis_utils
@@ -117,14 +118,12 @@ class Rcv:
             'tilt', 'noise', 'resistance', 'impedance', 'thd'
         ]
         try:
-            r = sum([v for k, v in node_record._asdict().items() if k in keys])
+            r = sum([v for k, v in dataclasses.asdict(node_record).items() if k in keys])
             if r < 0.5:
                 return empty_record
 
         except TypeError:
             return empty_record
-
-
 
         return node_record
 

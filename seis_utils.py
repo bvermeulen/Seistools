@@ -118,7 +118,11 @@ def get_animation_dates():
 
 def get_year(day_of_year):
     #TODO fix this simple function
-    return 2022
+    if day_of_year > 180:
+        return 2021
+
+    else:
+        return 2022
 
 
 def set_val(value, dtype):

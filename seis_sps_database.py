@@ -60,7 +60,7 @@ class SpsDb:
             f'elevation REAL, '
             f'dpg_filename VARCHAR(30), '
             f'time_break TIMESTAMP, '
-            f'vibrator);'
+            f'vibrator INTEGER);'
         )
         cursor.executescript(sql_string)
 
