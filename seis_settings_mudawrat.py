@@ -3,7 +3,7 @@
 import datetime
 from pathlib import Path
 from enum import IntEnum
-from recordtype import recordtype
+from Utils.recordtype import recordtype
 
 DATA_FILES_VP =       Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
 DATA_FILES_VAPS =     Path('D:/OneDrive/Work/PDO/Mudawrat B56 2022/12 QC/vib_node_data/vaps')
