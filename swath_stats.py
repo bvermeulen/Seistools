@@ -1,12 +1,10 @@
-
+from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
-from recordtype import recordtype
-# import swath_settings_lekhwair as settings
 import swath_settings as settings
 ''' extract statistis based on GIS geometries
 '''
@@ -28,19 +26,31 @@ lead_dozer = lead_receiver + int(5000 / RLS)
 
 # parameters CTM fixed
 flat_terrain = 0.85
-rough_terrain = 0.50
+rough_terrain = 0.60
 facilities_terrain = 0.55
 dunes_terrain = 0.60
 sabkha_terrain = 0.60
-hours_day = 22
+hours_day = 24
 sweep_time = settings.sweep_time
 move_up_time = settings.move_up_time
 number_vibes = settings.number_vibes
 ctm_constant = 3600 / (sweep_time + move_up_time) * hours_day * number_vibes
 
-Production = recordtype('Production', 'doz, doz_total, prod, flat, rough, facilities, '
-                        'dunes, sabkha, layout_flat, layout_dune, pickup_flat, '
-                        'pickup_dune')
+
+@dataclass
+class Production:
+    doz: float
+    doz_total: float
+    prod: float
+    flat: float
+    rough: float
+    facilities: float
+    dunes: float
+    sabkha: float
+    layout_flat: float
+    layout_dube: float
+    pickup_flat: float
+    pickup_dune: float
 
 
 class GisCalc:
@@ -215,7 +225,7 @@ class GisCalc:
             if terrain_area > 0 and terrain_gpd['geometry'].all():
                 self.plot_gpd(terrain_gpd, color)
 
-        except (AttributeError, IndexError):
+        except (AttributeError, IndexError, KeyError):
             terrain_area = 0
 
         return terrain_area
