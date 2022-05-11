@@ -5,6 +5,7 @@ from pathlib import Path
 # project parameters
 RLS = 200
 RPS = 25
+RLS_sand = 1000
 SLS_sand = 375
 SPS_sand = 25
 SLS_flat = 37.5
