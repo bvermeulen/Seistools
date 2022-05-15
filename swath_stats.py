@@ -12,10 +12,13 @@ import swath_settings as settings
 RLS = settings.RLS
 RPS = settings.RPS
 RLS_SAND = settings.RLS_sand
-SLS_SAND = settings.SLS_sand
-SPS_SAND = settings.SPS_sand
+RPS_SAND = settings.RPS_sand
 SLS_FLAT = settings.SLS_flat
 SPS_FLAT = settings.SPS_flat
+SLS_SAND = settings.SLS_sand
+SPS_SAND = settings.SPS_sand
+RPS_INFILL = settings.RPS_infill
+RLS_INFILL = settings.RLS_infill
 PROJECT_AZIMUTH = np.pi * settings.project_azimuth
 REPEAT_FACTOR = settings.repeat_factor
 SWATH_LENGTH = settings.swath_length  # length > length of block
@@ -49,9 +52,11 @@ class Production:
     dunes: float
     sabkha: float
     layout_flat: float
-    layout_dube: float
+    layout_dune: float
+    layout_infill: float
     pickup_flat: float
     pickup_dune: float
+    pickup_infill: float
 
 
 class GisCalc:
@@ -61,18 +66,17 @@ class GisCalc:
             'swath', 'area', 'area_flat', 'area_rough', 'area_facilities', 'area_dunes',
             'area_sabkha', 'theor', 'flat', 'rough', 'facilities', 'dune_src', 'dune_rcv',
             'dunes', 'sabkha', 'skips', 'actual', 'doz_km', 'density', 'ctm'
-            ])
-
+        ])
         self.swath_rcv_stats = pd.DataFrame(columns=[
-            'swath', 'area', 'area_flat', 'area_dunes', 'theor', 'flat', 'dunes',
-            'actual', 'doz_km', 'density'
-            ])
-
+            'swath', 'area', 'area_flat', 'area_dunes', 'area_infill', 'theor', 'flat', 'dunes',
+            'infill', 'actual', 'doz_km', 'density'
+        ])
         self.prod_stats = pd.DataFrame(columns=[
             'prod_day', 'swath_first', 'swath_last', 'vp_flat', 'vp_rough',
             'vp_facilities', 'vp_dunes', 'vp_sabkha', 'vp_prod', 'doz_km', 'doz_total_km',
-            'layout_flat', 'layout_dune', 'layout', 'pickup_flat', 'pickup_dune', 'pickup'
-            ])
+            'layout_flat', 'layout_dune', 'layout_infill', 'layout', 'pickup_flat',
+            'pickup_dune', 'pickup_infill', 'pickup'
+        ])
 
         self.index = 0
         self.total_swaths = None
@@ -99,7 +103,6 @@ class GisCalc:
 
         else:
             self.facilities_gpd = None
-
 
         if settings.shapefile_dune:
             self.dunes_gpd = self.read_shapefile(settings.shapefile_dune)
@@ -147,6 +150,11 @@ class GisCalc:
         else:
             self.sabkha_gpd = None
 
+        if settings.shapefile_infill:
+            self.infill_gpd = self.read_shapefile(settings.shapefile_infill)
+
+        else:
+            self.infill_gpd = None
 
         bounds = self.source_block_gpd.geometry.bounds.iloc[0].to_list()
         self.sw_origin = (bounds[0], bounds[1])
@@ -306,16 +314,17 @@ class GisCalc:
     def convert_area_to_rcv(areas, src_dozer_km):
         rcv_theor = int(areas['area'] * 1000 / RLS * 1000 / RPS)
         rcv_flat = int(areas['area_flat'] * 1000 / RLS * 1000 / RPS)
-        rcv_dune = int(areas['area_dunes'] * 1000 / RLS * 1000 / RPS)
-        rcv_actual = int(rcv_flat + rcv_dune)
-        rcv_dozer_km = rcv_dune * RPS / 1000 * (RLS / RLS_SAND)
+        rcv_dune = int(areas['area_dunes'] * 1000 / RLS * 1000 / RPS_SAND)
+        rcv_infill = int(areas['area_infill'] * 1000 / RLS_INFILL * 1000 / RPS_INFILL)
+        rcv_actual = int(rcv_flat + rcv_dune + rcv_infill)
+        rcv_dozer_km = rcv_dune * RPS_SAND / 1000 * (RLS / RLS_SAND)
         rcv_density = rcv_actual / areas['area'] if areas['area'] > 0 else np.nan
-
 
         return {
             'theor': rcv_theor,
             'flat': rcv_flat,
             'dunes': rcv_dune,
+            'infill': rcv_infill,
             'actual': rcv_actual,
             'doz_km': rcv_dozer_km,
             'density': rcv_density,
@@ -331,13 +340,13 @@ class GisCalc:
         areas['swath'] = swath_nr
         areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
         areas['area_dunes'] = self.swath_intersection(swath_gpd, self.dunes_gpd, 'yellow')
+        areas['area_infill'] = self.swath_intersection(swath_gpd, self.infill_gpd, 'green')
         areas['area_flat'] = areas['area'] - areas['area_dunes']
-
         points = self.convert_area_to_rcv(areas, src_dozer_km)
 
         self.swath_rcv_stats = self.swath_rcv_stats.append(
-            {**areas, **points}, ignore_index=True)
-
+            {**areas, **points}, ignore_index=True
+        )
         return areas
 
     def swath_range(self, swath_reverse=False):
@@ -402,10 +411,12 @@ class GisCalc:
             'doz_total_km': prod.doz_total_km,
             'layout_flat': prod.layout_flat,
             'layout_dune': prod.layout_dune,
-            'layout': prod.layout_flat + prod.layout_dune,
+            'layout_infill': prod.layout_infill,
+            'layout': prod.layout_flat + prod.layout_dune + prod.layout_infill,
             'pickup_flat': prod.pickup_flat,
             'pickup_dune': prod.pickup_dune,
-            'pickup': prod.pickup_flat + prod.pickup_dune,
+            'pickup_infill': prod.pickup_infill,
+            'pickup': prod.pickup_flat + prod.pickup_dune + prod.pickup_infill,
         }
         self.prod_stats = self.prod_stats.append(results, ignore_index=True)
 
@@ -420,9 +431,10 @@ class GisCalc:
         production.sabkha = vp_prod[4]
         production.layout_flat = layout[0]
         production.layout_dune = layout[1]
-        production.pickup_flat = layout[2]
-        production.pickup_dune = layout[3]
-
+        production.layout_infill = layout[2]
+        production.pickup_flat = layout[3]
+        production.pickup_dune = layout[4]
+        production.pickup_infill = layout[5]
         return production
 
     @staticmethod
@@ -436,13 +448,14 @@ class GisCalc:
         production.sabkha += vp_prod[4]
         production.layout_flat += layout[0]
         production.layout_dune += layout[1]
-        production.pickup_flat += layout[2]
-        production.pickup_dune += layout[3]
-
+        production.layout_infill += layout[2]
+        production.pickup_flat += layout[3]
+        production.pickup_dune += layout[4]
+        production.pickup_infill += layout[5]
         return production
 
     def calc_prod_stats(self, swath_reverse=False):
-        production = Production(*[0]*12)
+        production = Production(*[0]*14)
 
         def sign():
             if swath_reverse:
@@ -476,13 +489,15 @@ class GisCalc:
             self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['flat'].sum()
         production.layout_dune = self.swath_rcv_stats[
             self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['dunes'].sum()
+        production.layout_infill = self.swath_rcv_stats[
+            self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['infill'].sum()
 
         self.aggregate_prod_stats(0, [], production)
 
         prod_day = 1
         day_duration = 0
         day_swaths = []
-        production = self.init_production(production, np.zeros(6), np.zeros(4), 0)
+        production = self.init_production(production, np.zeros(6), np.zeros(6), 0)
         dozer_swath = sw_doz_range[-1] + sign()
         rcv_swath_front = sw_rcv_range[-1] + sign()
         rcv_swath_back = sw_rcv_range[-1] - sign() * ACTIVE_LINES
@@ -499,7 +514,6 @@ class GisCalc:
                 result_src['sabkha'].sum(),
                 result_src['actual'].sum()
             ])
-
             vp_prod = vp_prod * REPEAT_FACTOR
             ctm = result_src['ctm'].sum() * REPEAT_FACTOR
 
@@ -516,8 +530,10 @@ class GisCalc:
             layout_pickup = np.array([
                 layout['flat'].sum(),
                 layout['dunes'].sum(),
+                layout['infill'].sum(),
                 pickup['flat'].sum(),
                 pickup['dunes'].sum(),
+                pickup['infill'].sum(),
             ])
 
             # get dozer km
@@ -533,8 +549,8 @@ class GisCalc:
                 portion_today = 1 - portion_tomorrow
                 production = self.sum_production(
                     production, vp_prod * portion_today, layout_pickup * portion_today,
-                    sw_doz_km * portion_today)
-
+                    sw_doz_km * portion_today
+                )
                 day_swaths.append(swath)
 
                 production.doz_total_km += production.doz_km
@@ -544,15 +560,15 @@ class GisCalc:
                 prod_day += 1
                 production = self.init_production(
                     production, vp_prod * portion_tomorrow,
-                    layout_pickup * portion_tomorrow, sw_doz_km * portion_tomorrow)
-
+                    layout_pickup * portion_tomorrow, sw_doz_km * portion_tomorrow
+                )
                 day_duration = production.prod / ctm
                 day_swaths = [swath]
 
             else:
                 production = self.sum_production(
-                    production, vp_prod, layout_pickup, sw_doz_km)
-
+                    production, vp_prod, layout_pickup, sw_doz_km
+                )
                 day_swaths.append(swath)
 
             dozer_swath += sign()
@@ -713,7 +729,7 @@ class GisCalc:
 
         # Chart 7: Layout
         chart7 = workbook.add_chart({'type': 'line'})
-        for col in [11, 12, 13]:
+        for col in [11, 12, 13, 14]:
             chart7.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
@@ -722,13 +738,13 @@ class GisCalc:
         chart7.set_title({'name': settings.title_chart + ' - Layout',
                           'name_font': name_font_title,})
         chart7.set_x_axis({'name': 'Day'})
-        chart7.set_y_axis({'name': 'Stations'})
+        chart7.set_y_axis({'name': 'Nodes'})
         chart7.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('R18', chart7)
 
         # Chart 8: Pickup
         chart8 = workbook.add_chart({'type': 'line'})
-        for col in [14, 15, 16]:
+        for col in [15, 16, 17, 18]:
             chart8.add_series({
                 'name': ['Prod', 0, col],
                 'categories': ['Prod', 1, 0, total_production_days, 0],
@@ -737,7 +753,7 @@ class GisCalc:
         chart8.set_title({'name': settings.title_chart + ' - Pickup',
                           'name_font': name_font_title,})
         chart8.set_x_axis({'name': 'Day'})
-        chart8.set_y_axis({'name': 'vp'})
+        chart8.set_y_axis({'name': 'Nodes'})
         chart8.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('R34', chart8)
 

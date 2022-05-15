@@ -6,15 +6,18 @@ from pathlib import Path
 RLS = 200
 RPS = 25
 RLS_sand = 1000
-SLS_sand = 375
-SPS_sand = 25
+RPS_sand = 25
 SLS_flat = 37.5
 SPS_flat = 25
+SLS_sand = 375
+SPS_sand = 25
+RLS_infill = 25
+RPS_infill = 200
 project_azimuth = 0
 repeat_factor = 1
 swath_length = 120_000  # length > length of block
 swath_1 = 100
-active_lines = 40
+active_lines = 50
 swath_reverse = True
 source_on_receivers = False
 
@@ -34,12 +37,17 @@ shapefile_rcv = (
     project_base_folder / 'boundaries/Central Oman Block_A_R.shp'
 )
 shapefile_dune = (
-    project_base_folder / 'dunes/dunes_a.shp'
+    project_base_folder / 'terrain/dunes_a.shp'
 )
-shapefile_rough = ''
-
-shapefile_facilities = ''
-
+shapefile_infill = (
+    project_base_folder / 'dunes/dunes_infill.shp'
+)
+shapefile_rough = (
+    project_base_folder / 'terrain/rough_a.shp'
+)
+shapefile_facilities = (
+    project_base_folder / 'terrain/facilities_a.shp'
+)
 shapefile_sabkha = ''
 
 # excel and chart parameters
