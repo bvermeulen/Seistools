@@ -1,18 +1,17 @@
 ''' settings and data structures for vp app
 '''
 import datetime
-from dataclasses import dataclass
 from pathlib import Path
 from enum import IntEnum
+from recordtype import recordtype
 
 DATA_FILES_VP =       Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
-DATA_FILES_VAPS =     Path('D:/PDO/Central Oman 2022/12 QC/vib_node_data/vaps')
-DATA_FILES_QUANTUM =  Path('D:/PDO/Central Oman 2022/12 QC/vib_node_data/quantum_nodes')
-DATA_FILES_NUSEIS =   Path('D:/PDO/Central Oman 2022/vib_node_data/nuseis_nodes')
-DATA_FILES_SPS =      Path('D:/PDO/Central Oman 2022/12 QC/vib_node_data/sps_final')
-DATA_FILES_WEATHER =  Path('D:/PDO/Central Oman 2022/1 Daily Reports/12 Wind Logs')
-RESULTS_FOLDER =      Path('D:/PDO/Central Oman 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
-DATABASE =            Path('D:/PDO/Central Oman 2022/6 Mapping/central_oman_db.sqlite3')
+DATA_FILES_VAPS =     Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/vaps')
+DATA_FILES_QUANTUM =  Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data//quantum_nodes')
+DATA_FILES_NUSEIS =   Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/nuseis_nodes')
+DATA_FILES_SPS =      Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/sps_final')
+RESULTS_FOLDER =      Path('D:/Projects/Central Oman 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
+DATABASE =            Path('D:/Projects/Central Oman 2022/6 Mapping/central_oman_db.sqlite3')
 
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
@@ -74,8 +73,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 1,
-        'tol_min': 61,
-        'tol_max': None,
+        'tol_min': None,
+        'tol_max': 61,
     },
     'peak_phase': {
         'title_attribute': 'Peak Phase',
@@ -108,7 +107,7 @@ vp_plt_settings = {
         'max': 100,
         'interval': 1,
         'tol_min': None,
-        'tol_max': 80,
+        'tol_max': 85,
     },
     'elevation': {
         'title_attribute': 'Elevation',
@@ -148,7 +147,7 @@ vp_plt_settings = {
     },
     'vib_activity': {
         'fig_title': 'Vibrator activity: ',
-        'max_vp_hour': 1500,
+        'max_vp_hour': 1800,
         'tick_intval_vp_hour': 100,
         'vp_hour_target': 900,
         'max_vibs': 15,
@@ -187,8 +186,8 @@ node_plt_settings = {
         'min': 70,
         'max': 90,
         'interval': 0.1,
-        'tol_min': 75.2,
-        'tol_max': 84.8,
+        'tol_min': 74.4,
+        'tol_max': 85.6,
     },
     'resistance': {
         'title_attribute': 'Resistance',
@@ -198,8 +197,8 @@ node_plt_settings = {
         'min': 1700,
         'max': 2000,
         'interval': 0.5,
-        'tol_min': 1739,
-        'tol_max': 1961,
+        'tol_min': 1702,
+        'tol_max': 1998,
     },
     'thd': {
         'title_attribute': 'Distortion',
@@ -285,169 +284,153 @@ nuseis_plt_settings = {
         'tol_max': 10,
     },
 }
-
-@dataclass
-class FilesNodeTable:
-    file_name: str
-    file_date: datetime.datetime
-
-@dataclass
-class QuantumTable:
-    line: int
-    station: int
-    rcvr_index: int
-    id_file: int
-    id_point: int
-    qtm_sn: str
-    software: str
-    geoph_model: str
-    test_time: datetime.datetime
-    temp: float
-    bits_type: str
-    tilt: float
-    config_id: int
-    resistance: float
-    noise: float
-    thd: float
-    polarity: str
-    frequency: float
-    damping: float
-    sensitivity: float
-    dyn_range: float
-    ein: float
-    gain: float
-    offset: float
-    gps_time: int
-    ext_geophone: bool
-
-@dataclass
-class NuseisTable:
-    line: int
-    station: int
-    rcvr_index: int
-    id_file: int
-    id_point: int
-    nuseis_sn: int
-    tilt: float
-    noise: float
-    resistance: float
-    impedance: float
-    thd: float
-    time_deployment: datetime.datetime
-    time_lastscan: datetime.datetime
-
-@dataclass
-class RcvrTable:
-    line: int
-    station: int
-    rcvr_index: int
-    easting: float
-    northing: float
-    elevation: float
-
-@dataclass
-class FilesVpTable:
-    id: int
-    file_name: str
-    file_date: datetime.datetime
-
-@dataclass
-class VpTable:
-    id: int
-    file_id: int
-    vaps_id: int
-    line: int
-    station: int
-    vibrator: int
-    time_break: datetime.datetime
-    planned_easting: float
-    planned_northing: float
-    easting: float
-    northing: float
-    elevation: float
-    offset: float
-    peak_force: int
-    avg_force: int
-    peak_dist: int
-    avg_dist: int
-    peak_phase: int
-    avg_phase: int
-    qc_flag: str
-    distance: float
-    time: float
-    velocity: float
-    dense_flag: bool
-
-@dataclass
-class FilesVapsTable:
-    id: int
-    file_name: str
-    file_date: datetime.datetime
-
-@dataclass
-class VapsTable:
-    id: int
-    file_id: int
-    line: int
-    station: int
-    fleet_nr: str
-    vibrator: int
-    drive: int
-    avg_phase: int
-    peak_phase: int
-    avg_dist: int
-    peak_dist: int
-    avg_force: int
-    peak_force: int
-    avg_stiffness: int
-    avg_viscosity: int
-    easting: float
-    northing: float
-    elevation: float
-    time_break: datetime.datetime
-    hdop: float
-    tb_date: str
-    positioning: str
-    distance: float
-    time: float
-    velocity: float
-    dense_flag: bool
-
-@dataclass
-class FilesSpsTable:
-    id: int
-    file_name: str
-    file_date: datetime.datetime
-    block_name: str
-
-@dataclass
-class SpsTable:
-    id: int
-    file_id: int
-    sps_type: str
-    line: int
-    point: int
-    point_index: int
-    source_type: str
-    easting: float
-    northing: float
-    elevation: float
-    dpg_filename: str
-    time_break: datetime.datetime
-    vibrator: int
-
-@dataclass
-class FilesWeatherTable:
-    file_name: str
-    file_date: datetime.datetime
-
-@dataclass
-class WeatherTable:
-    file_id: int
-    date_time: datetime.datetime
-    wind_speed: float
-    gust: float
-    pulse_count: int
-    counter_value: int
-    input_voltage: float
-    temperature: float
+FilesNodeTable = recordtype(
+    'FilesNodeTable',
+    'file_name, '
+    'file_date'
+)
+QuantumTable = recordtype(
+    'QuantumTable',
+    'line, '
+    'station, '
+    'rcvr_index, '
+    'id_file, '
+    'id_point, '
+    'qtm_sn, '
+    'software, '
+    'geoph_model, '
+    'test_time, '
+    'temp, '
+    'bits_type, '
+    'tilt, '
+    'config_id, '
+    'resistance, '
+    'noise, '
+    'thd, '
+    'polarity, '
+    'frequency, '
+    'damping, '
+    'sensitivity, '
+    'dyn_range, '
+    'ein, '
+    'gain, '
+    'offset, '
+    'gps_time, '
+    'ext_geophone'
+)
+NuseisTable = recordtype(
+    'NuseisTable',
+    'line, '
+    'station, '
+    'rcvr_index, '
+    'id_file, '
+    'id_point, '
+    'nuseis_sn, '
+    'tilt, '
+    'noise, '
+    'resistance, '
+    'impedance, '
+    'thd, '
+    'time_deployment, '
+    'time_lastscan'
+)
+RcvrTable = recordtype(
+    'RcvrTable',
+    'line, '
+    'station, '
+    'rcvr_index, '
+    'easting '
+    'northing '
+    'elevation'
+)
+FilesVpTable = recordtype(
+    'FilesVpTable',
+    'id, '
+    'file_name, '
+    'file_date'
+)
+VpTable = recordtype(
+    'VpTable',
+    'id, '
+    'file_id, '
+    'vaps_id, '
+    'line, '
+    'station, '
+    'vibrator, '
+    'time_break, '
+    'planned_easting, '
+    'planned_northing, '
+    'easting, '
+    'northing, '
+    'elevation, '
+    'offset, '
+    'peak_force, '
+    'avg_force, '
+    'peak_dist, '
+    'avg_dist, '
+    'peak_phase, '
+    'avg_phase, '
+    'qc_flag, '
+    'distance, '
+    'time, '
+    'velocity, '
+    'dense_flag'
+)
+FilesVapsTable = recordtype(
+    'FilesVapsTable',
+    'id, '
+    'file_name, '
+    'file_date'
+)
+VapsTable = recordtype(
+    'VapsTable',
+    'id, '
+    'file_id, '
+    'line, '
+    'station, '
+    'fleet_nr, '
+    'vibrator, '
+    'drive, '
+    'avg_phase, '
+    'peak_phase, '
+    'avg_dist, '
+    'peak_dist, '
+    'avg_force, '
+    'peak_force, '
+    'avg_stiffness, '
+    'avg_viscosity, '
+    'easting, '
+    'northing, '
+    'elevation, '
+    'time_break, '
+    'hdop, '
+    'tb_date, '
+    'positioning, '
+    'distance, '
+    'time, '
+    'velocity, '
+    'dense_flag'
+)
+FilesSpsTable = recordtype(
+    'FilesSpsTable',
+    'id, '
+    'file_name, '
+    'file_date, '
+    'block_name'
+)
+SpsTable = recordtype(
+    'SpsTable',
+    'id, '
+    'file_id, '
+    'sps_type, '
+    'line, '
+    'point, '
+    'point_index, '
+    'source_type, '
+    'easting, '
+    'northing, '
+    'elevation, '
+    'dpg_filename, '
+    'time_break, '
+    'vibrator'
+)
