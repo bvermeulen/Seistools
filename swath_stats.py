@@ -1,3 +1,9 @@
+''' application to calculate swath statistics based on shape files
+    set parameters in the module swath_settings.py
+
+    howdimain @2022
+    bruno.vermeulen@hotmail.com
+'''
 from dataclasses import dataclass
 import numpy as np
 import pandas as pd
@@ -17,6 +23,10 @@ SLS_FLAT = settings.SLS_flat
 SPS_FLAT = settings.SPS_flat
 SLS_SAND = settings.SLS_sand
 SPS_SAND = settings.SPS_sand
+ACCESS_SPACING = settings.access_spacing
+SOURCE_ON_RECEIVERS = settings.source_on_receivers
+ACCESS_DOZED = settings.access_dozed
+RL_DOZED = settings.RL_dozed
 RPS_INFILL = settings.RPS_infill
 RLS_INFILL = settings.RLS_infill
 PROJECT_AZIMUTH = np.pi * settings.project_azimuth
@@ -227,6 +237,8 @@ class GisCalc:
         shape_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color, linewidth=0.5)
 
     def swath_intersection(self, swath_gpd, terrain_gpd, color):
+        # to avoid duplicate layer warning
+        swath_gpd = swath_gpd.rename(columns={'LAYER':'LAYERi'})
 
         try:
             terrain_gpd = overlay(swath_gpd, terrain_gpd, how='intersection')
@@ -248,13 +260,15 @@ class GisCalc:
         vp_dune_src = int(areas['area_dunes'] * 1000 / SLS_SAND * 1000 / SPS_SAND)
         vp_dune_rcv = (
             int(areas['area_dunes'] * 1000 / RLS_SAND * 1000 / SPS_SAND)
-            if settings.source_on_receivers else 0.0
+            if SOURCE_ON_RECEIVERS else 0.0
         )
         vp_dune = int(vp_dune_src + vp_dune_rcv)
         vp_sabkha = int(areas['area_sabkha'] * 1000 / SLS_FLAT * 1000 / SPS_FLAT)
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dune + vp_sabkha)
-        vp_dozer_km = vp_dune_src * SPS_SAND / 1000
         vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dune - vp_sabkha
+
+        km_access = areas['area_dunes'] * 1000 / ACCESS_SPACING if ACCESS_DOZED else 0.0
+        dozer_km_vp = vp_dune * SPS_SAND / 1000 + km_access
 
         if areas['area'] > 0:
             vp_density = vp_actual / areas['area']
@@ -281,7 +295,7 @@ class GisCalc:
             'sabkha': vp_sabkha,
             'skips': vp_skips,
             'actual': vp_actual,
-            'doz_km': vp_dozer_km,
+            'doz_km': dozer_km_vp,
             'density': vp_density,
             'ctm': ctm,
         }
@@ -311,13 +325,15 @@ class GisCalc:
         return areas
 
     @staticmethod
-    def convert_area_to_rcv(areas, src_dozer_km):
+    def convert_area_to_rcv(areas, dozer_km_src):
         rcv_theor = int(areas['area'] * 1000 / RLS * 1000 / RPS)
         rcv_flat = int(areas['area_flat'] * 1000 / RLS * 1000 / RPS)
         rcv_dune = int(areas['area_dunes'] * 1000 / RLS * 1000 / RPS_SAND)
         rcv_infill = int(areas['area_infill'] * 1000 / RLS_INFILL * 1000 / RPS_INFILL)
         rcv_actual = int(rcv_flat + rcv_dune + rcv_infill)
-        rcv_dozer_km = rcv_dune * RPS_SAND / 1000 * (RLS / RLS_SAND)
+        dozer_km_rcv = (
+            int(areas['area_dunes'] * 1000 / RLS_SAND) if RL_DOZED else 0.0
+        )
         rcv_density = rcv_actual / areas['area'] if areas['area'] > 0 else np.nan
 
         return {
@@ -326,9 +342,9 @@ class GisCalc:
             'dunes': rcv_dune,
             'infill': rcv_infill,
             'actual': rcv_actual,
-            'doz_km': rcv_dozer_km,
+            'doz_km': dozer_km_rcv,
             'density': rcv_density,
-            'doz_total_km': src_dozer_km + rcv_dozer_km,
+            'doz_total_km': dozer_km_src + dozer_km_rcv,
         }
 
     def calc_rcv_stats(self, swath_nr, src_dozer_km):
