@@ -28,6 +28,7 @@ access_dozed = True
 sweep_time = 9
 move_up_time = 17
 number_vibes = 10
+prod_cap = {(100, 206): 22_500, (207, 460): 26_500, (461, 800): None} # {sw1, sw2: production_cap} intenval inclusive
 
 # GIS parameters
 EPSG = 3440  # PSD93_UTM40
@@ -55,4 +56,4 @@ shapefile_sabkha = None
 
 # excel and chart parameters
 excel_file = './swath_stats_central_oman_b.xlsx'
-title_chart = 'Central Oman'
+title_chart = 'Central Oman - Block B'

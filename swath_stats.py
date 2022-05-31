@@ -532,12 +532,14 @@ class GisCalc:
             ])
             vp_prod = vp_prod * REPEAT_FACTOR
             ctm = result_src['ctm'].sum() * REPEAT_FACTOR
+            for swath_interval, prod_cap in settings.prod_cap.items():
+                apply_prod_cap = (
+                    prod_cap and swath_interval[0] <= swath <= swath_interval[1] and
+                    ctm > prod_cap
+                )
+                ctm = prod_cap if apply_prod_cap else ctm
 
-            if ctm == 0:
-                sw_duration = 0
-            else:
-                sw_duration = vp_prod[5] / ctm
-
+            sw_duration = vp_prod[5] / ctm if ctm > 0 else 0
             day_duration += sw_duration
 
             # get receiver production
