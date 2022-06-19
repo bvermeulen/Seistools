@@ -37,6 +37,9 @@ class Config:
     sabkha_terrain: float = 0.60
     hours_day: float = 24.0
     prod_cap: dict[tuple, float] = field(default_factory=lambda: {(100, 800):  None})
+    ctm_constant: float = field(init=False)
+    lead_receiver: int = field(init=False)
+    lead_dozer: int = field(init=False)
     excel_file: str = './swath_stats_central_oman_a_new.xlsx'
     title_chart: str = 'Central Oman - Block A'
 
@@ -52,7 +55,13 @@ class GIS:
     # GIS parameters
     EPSG: int = 3440  # PSD93_UTM40
     project_base_folder: Path = Path('D:/OneDrive/Work/PDO/Central Oman 2022/6 Mapping/4 shape files')
-
+    shapefile_src: Path = field(init=False)
+    shapefile_rcv: Path = field(init=False)
+    shapefile_dune: Path = field (init=False)
+    shapefile_infill: Path = field(init=False)
+    shapefile_rough: Path = field(init=False)
+    shapefile_facilities: Path = field(init=False)
+    shapefile_sabkha: Path = field(init=False)
 
     def __post_init__(self):
         self.shapefile_src = (

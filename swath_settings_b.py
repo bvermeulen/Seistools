@@ -37,11 +37,11 @@ class Config:
     sabkha_terrain: float = 0.60
     hours_day: float = 24.0
     prod_cap: dict[tuple, float] = field(default_factory= lambda: {(100, 210): 24_000, (211, 460): None, (461, 800): None})
-    excel_file: str = './swath_stats_central_oman_b_new.xlsx'
-    title_chart: str = 'Central Oman - Block B'
     ctm_constant: float = field(init=False)
     lead_receiver: int = field(init=False)
     lead_dozer: int = field(init=False)
+    excel_file: str = './swath_stats_central_oman_b_new.xlsx'
+    title_chart: str = 'Central Oman - Block B'
 
     def __post_init__(self):
         self.ctm_constant = 3600 / (
