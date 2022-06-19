@@ -11,8 +11,8 @@ SLS_flat = 37.5
 SPS_flat = 25
 SLS_sand = 375
 SPS_sand = 25
-RLS_infill = 25
-RPS_infill = 200
+RLS_infill = 200
+RPS_infill = 25
 access_spacing = 1000
 project_azimuth = 0
 repeat_factor = 1
@@ -41,7 +41,7 @@ shapefile_rcv = (
     project_base_folder / 'boundaries/Central Oman Block_A_R.shp'
 )
 shapefile_dune = (
-    project_base_folder / 'terrain/dunes_a.shp'
+    project_base_folder / 'terrain/dunes_a_v2.shp'
 )
 shapefile_infill = (
     project_base_folder / 'dunes/dunes_infill.shp'
