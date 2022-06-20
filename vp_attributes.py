@@ -111,7 +111,7 @@ class VpAttributes:
             )
             if vib_data.size > 0:
                 try:
-                    vib_density_data = stats.kde.gaussian_kde(vib_data)
+                    vib_density_data = stats.gaussian_kde(vib_data)
                     axis.plot(
                         x_values, setting['interval'] * vib_density_data(x_values),
                         label=vib
