@@ -5,6 +5,7 @@
     bruno.vermeulen@hotmail.com
 '''
 from dataclasses import asdict
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from shapely.geometry.polygon import Polygon
@@ -17,10 +18,6 @@ from swath_settings import Production, Config, GIS
 gis = GIS()
 cfg = Config()
 
-cfg_df = pd.DataFrame(asdict(cfg), index=[0]).transpose()
-gis_df =pd.DataFrame(asdict(gis), index=[0]).transpose()
-print(cfg_df)
-print(gis_df)
 
 class GisCalc:
 
@@ -125,12 +122,12 @@ class GisCalc:
         # patch: assuming azimuth is zero
         if cfg.project_azimuth == 0:
             self.total_swaths = int(round((bounds[2] - bounds[0]) / cfg.rls)) + 1
+
         else:
             self.total_swaths = int(input('Total number of swaths: '))
 
-
     @staticmethod
-    def get_envelop_swath_cornerpoint(swath_origin, swath_nr, test_azimuth=-1):
+    def get_envelop_swath_cornerpoint(swath_origin, swath_nr):
         ''' get the corner points of the envelope of the swath, i.e. length
             of swath > actual swath length, so any shape of swath will be captured
             when intersected with the actual block
@@ -138,25 +135,20 @@ class GisCalc:
             azimuth is the angle between northing and receiver line in positive direction
 
             arguments:
-                swath_nr: interger [swath_1, n], counting from left to right
+                swath_origin: tuple (x, y), coordinates of origin point
+                swath_nr: integer [swath_1, n], counting from left to right
                           (azimuth < 90)
                 test_azimuth: float in degrees [0, 360], can be provided for tests
+
             returns:
                 tuple with 4 corner point tuples of swath swath_nr (ll, lr, tr, tl)
         '''
         assert swath_nr > 0, 'swath_nr must be [swath_1, n]'
 
-        if test_azimuth == -1:
-            azimuth = cfg.project_azimuth
-
-        else:
-            azimuth = np.pi * test_azimuth / 180
-            swath_origin = (10, 20)
-
-        swath_width_dx = cfg.rls * np.cos(azimuth)
-        swath_width_dy = -cfg.rls * np.sin(azimuth)
-        swath_length_dx = cfg.swath_length * np.sin(azimuth)
-        swath_length_dy = cfg.swath_length * np.cos(azimuth)
+        swath_width_dx = cfg.rls * np.cos(cfg.project_azimuth)
+        swath_width_dy = -cfg.rls * np.sin(cfg.project_azimuth)
+        swath_length_dx = cfg.swath_length * np.sin(cfg.project_azimuth)
+        swath_length_dy = cfg.swath_length * np.cos(cfg.project_azimuth)
 
         sw_ll = (swath_origin[0] + (swath_nr - cfg.swath_1) * swath_width_dx,
                  swath_origin[1] + (swath_nr - cfg.swath_1) * swath_width_dy)
@@ -204,17 +196,18 @@ class GisCalc:
 
     @staticmethod
     def convert_area_to_vps(areas):
-        vp_theor = int(areas['area'] * 1000 / cfg.sls_flat * 1000 / cfg.sps_flat)
-        vp_flat = int(areas['area_flat'] * 1000 / cfg.sls_flat * 1000 / cfg.sps_flat)
-        vp_rough = int(areas['area_rough'] * 1000 / cfg.sls_flat * 1000 / cfg.sps_flat)
-        vp_facilities = int(areas['area_facilities'] * 1000 / cfg.sls_flat * 1000 / cfg.sps_flat)
+        density_flat = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
+        vp_theor = int(areas['area'] * density_flat)
+        vp_flat = int(areas['area_flat'] * density_flat)
+        vp_rough = int(areas['area_rough'] * density_flat)
+        vp_facilities = int(areas['area_facilities'] * density_flat)
         vp_dune_src = int(areas['area_dunes'] * 1000 / cfg.sls_sand * 1000 / cfg.sps_sand)
         vp_dune_rcv = (
             int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.sps_sand)
             if cfg.source_on_receivers else 0.0
         )
         vp_dune = int(vp_dune_src + vp_dune_rcv)
-        vp_sabkha = int(areas['area_sabkha'] * 1000 / cfg.sls_flat * 1000 / cfg.sps_flat)
+        vp_sabkha = int(areas['area_sabkha'] * density_flat)
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dune + vp_sabkha)
         vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dune - vp_sabkha
 
@@ -224,13 +217,14 @@ class GisCalc:
         if areas['area'] > 0:
             vp_density = vp_actual / areas['area']
             ctm = (
-                cfg.ctm_constant *
-                   (vp_flat * cfg.flat_terrain +
-                    vp_rough * cfg.rough_terrain +
-                    vp_facilities * cfg.facilities_terrain +
-                    vp_dune * cfg.dunes_terrain +
-                    vp_sabkha * cfg.sabkha_terrain) / vp_actual
-                )
+                cfg.ctm_constant * (
+                   vp_flat * cfg.flat_terrain +
+                   vp_rough * cfg.rough_terrain +
+                   vp_facilities * cfg.facilities_terrain +
+                   vp_dune * cfg.dunes_terrain +
+                   vp_sabkha * cfg.sabkha_terrain
+                ) / vp_actual
+            )
         else:
             vp_density = np.nan
             ctm = np.nan
@@ -254,7 +248,8 @@ class GisCalc:
     def calc_src_stats(self, swath_nr):
         #pylint: disable=line-too-long
         swath_gpd = self.create_sw_gpd(
-            self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr))
+            self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr)
+        )
         swath_gpd = overlay(self.source_block_gpd, swath_gpd, how='intersection')
 
         areas = {}
@@ -277,8 +272,9 @@ class GisCalc:
 
     @staticmethod
     def convert_area_to_rcv(areas, dozer_km_src):
-        rcv_theor = int(areas['area'] * 1000 / cfg.rls * 1000 / cfg.rps)
-        rcv_flat = int(areas['area_flat'] * 1000 / cfg.rls * 1000 / cfg.rps)
+        density_flat = 1000 / cfg.rls * 1000 / cfg.rps
+        rcv_theor = int(areas['area'] * density_flat)
+        rcv_flat = int(areas['area_flat'] * density_flat)
         rcv_dune = int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.rps_sand)
         rcv_infill = int(areas['area_infill'] * 1000 / cfg.rls_infill * 1000 / cfg.rps_infill)
         rcv_actual = int(rcv_flat + rcv_dune + rcv_infill)
@@ -590,14 +586,26 @@ class GisCalc:
         writer = pd.ExcelWriter(file_name, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
         workbook = writer.book
 
-        # sum the columns
-        self.swath_src_stats.loc['Totals'] = self.swath_src_stats.sum()
-        self.swath_rcv_stats.loc['Totals'] = self.swath_rcv_stats.sum()
-        self.prod_stats.loc['Totals'] = self.prod_stats.sum()
+        # write setup to excel
+        ws_setup = workbook.add_worksheet('Setup')
+        ws_setup.write_row('A1', ['Item', 'Value'])
+        ws_setup.write_column('A2', list(asdict(cfg).keys()))
+        ws_setup.write_column(
+            'B2',
+            [str(v) if isinstance(v, dict) else v for v in asdict(cfg).values()]
+        )
+        ws_setup.write_column('A39', list(asdict(gis).keys()))
+        ws_setup.write_column(
+            'B39',
+            [str(v) if isinstance(v, Path) else v for v in asdict(gis).values()]
+        )
 
-        # write to excel
+        # sum the columns and write dataframes to excel
+        self.swath_src_stats.loc['Totals'] = self.swath_src_stats.sum()
         self.swath_src_stats.to_excel(writer, sheet_name='Source', index=False)
+        self.swath_rcv_stats.loc['Totals'] = self.swath_rcv_stats.sum()
         self.swath_rcv_stats.to_excel(writer, sheet_name='Receiver', index=False)
+        self.prod_stats.loc['Totals'] = self.prod_stats.sum()
         self.prod_stats.to_excel(writer, sheet_name='Prod', index=False)
 
         ws_charts = workbook.add_worksheet('Charts')
@@ -727,7 +735,7 @@ class GisCalc:
         ws_charts.insert_chart('R34', chart8)
 
         # ... and save it all to excel
-        ws_charts.activate()
+        ws_setup.activate()
         writer.save()
 
 
