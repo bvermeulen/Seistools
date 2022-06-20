@@ -12,9 +12,11 @@ from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
+import warnings
 from swath_settings import Production, Config, GIS
 ''' extract statistis based on GIS geometries
 '''
+warnings.filterwarnings('ignore')
 gis = GIS()
 cfg = Config()
 
