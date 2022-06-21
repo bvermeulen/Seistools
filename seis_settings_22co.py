@@ -6,12 +6,12 @@ from pathlib import Path
 from enum import IntEnum
 
 DATA_FILES_VP =       Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
-DATA_FILES_VAPS =     Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/vaps')
-DATA_FILES_QUANTUM =  Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data//quantum_nodes')
-DATA_FILES_NUSEIS =   Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/nuseis_nodes')
-DATA_FILES_SPS =      Path('D:/Projects/Central Oman 2022/12 QC/vib_node_data/sps_final')
-RESULTS_FOLDER =      Path('D:/Projects/Central Oman 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
-DATABASE =            Path('D:/Projects/Central Oman 2022/6 Mapping/central_oman_db.sqlite3')
+DATA_FILES_VAPS =     Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data/vaps')
+DATA_FILES_QUANTUM =  Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data//quantum_nodes')
+DATA_FILES_NUSEIS =   Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data/nuseis_nodes')
+DATA_FILES_SPS =      Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data/sps_final')
+RESULTS_FOLDER =      Path('D:/OneDrive/Work/PDO/Central Oman 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
+DATABASE =            Path('D:/OneDrive/Work/PDO/Central Oman 2022/6 Mapping/central_oman_db.sqlite3')
 
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
