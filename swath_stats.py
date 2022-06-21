@@ -4,24 +4,22 @@
     howdimain @2022
     bruno.vermeulen@hotmail.com
 '''
-from dataclasses import asdict
-from pathlib import Path
 import numpy as np
 import pandas as pd
 from shapely.geometry.polygon import Polygon
-import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 import matplotlib.pyplot as plt
 import warnings
-from swath_settings import Production, Config, GIS
+from swath_settings import Production, Config, Gis
+from swath_output import OutputMixin
 ''' extract statistis based on GIS geometries
 '''
 warnings.filterwarnings('ignore')
-gis = GIS()
+gis = Gis()
 cfg = Config()
 
 
-class GisCalc:
+class SwathProdCalc(OutputMixin):
 
     def __init__(self):
         self.swath_src_stats = pd.DataFrame(columns=[
@@ -39,91 +37,16 @@ class GisCalc:
             'layout_flat', 'layout_dune', 'layout_infill', 'layout', 'pickup_flat',
             'pickup_dune', 'pickup_infill', 'pickup'
         ])
-
         self.index = 0
         self.total_swaths = None
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
 
-        self.source_block_gpd = self.read_shapefile(gis.shapefile_src)
-        self.receiver_block_gpd = self.read_shapefile(gis.shapefile_rcv)
-
-        if gis.shapefile_rough:
-            self.rough_gpd = self.read_shapefile(gis.shapefile_rough)
-
-        else:
-            self.rough_gpd = None
-
-        if gis.shapefile_facilities:
-            self.facilities_gpd = self.read_shapefile(gis.shapefile_facilities)
-
-            try:
-                self.facilities_gpd = overlay(
-                    self.facilities_gpd, self.rough_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-        else:
-            self.facilities_gpd = None
-
-        if gis.shapefile_dune:
-            self.dunes_gpd = self.read_shapefile(gis.shapefile_dune)
-
-            try:
-                self.dune_gpd = overlay(
-                    self.dune_gpd, self.facilties_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.dune_gpd = overlay(
-                    self.dune_gpd, self.rough_gpd, how='difference')
-            except AttributeError:
-                pass
-
-        else:
-            self.dunes_gpd = None
-
-        if gis.shapefile_sabkha:
-            self.sabkha_gpd = self.read_shapefile(gis.shapefile_sabkha)
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.dune_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.facilties_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.rough_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-        else:
-            self.sabkha_gpd = None
-
-        if gis.shapefile_infill:
-            self.infill_gpd = self.read_shapefile(gis.shapefile_infill)
-
-        else:
-            self.infill_gpd = None
-
-        bounds = self.source_block_gpd.geometry.bounds.iloc[0].to_list()
+        bounds = gis.source_block_gpd.geometry.bounds.iloc[0].to_list()
         self.sw_origin = (bounds[0], bounds[1])
 
         # patch: assuming azimuth is zero
         if cfg.project_azimuth == 0:
-            self.total_swaths = int(round((bounds[2] - bounds[0]) / cfg.rls)) + 1
+            self.total_swaths = int(round((bounds[2] - bounds[0]) / cfg.rls_flat)) + 1
 
         else:
             self.total_swaths = int(input('Total number of swaths: '))
@@ -147,8 +70,8 @@ class GisCalc:
         '''
         assert swath_nr > 0, 'swath_nr must be [swath_1, n]'
 
-        swath_width_dx = cfg.rls * np.cos(cfg.project_azimuth)
-        swath_width_dy = -cfg.rls * np.sin(cfg.project_azimuth)
+        swath_width_dx = cfg.rls_flat * np.cos(cfg.project_azimuth)
+        swath_width_dy = -cfg.rls_flat * np.sin(cfg.project_azimuth)
         swath_length_dx = cfg.swath_length * np.sin(cfg.project_azimuth)
         swath_length_dy = cfg.swath_length * np.cos(cfg.project_azimuth)
 
@@ -164,19 +87,6 @@ class GisCalc:
     def create_sw_gpd(cornerpoints):
         return GeoDataFrame(
             crs=gis.EPSG, geometry=GeoSeries(Polygon(cornerpoints)))
-
-    @staticmethod
-    def read_shapefile(file_name):
-        ''' read a shape file and converts crs to UTM PSD93 Zone 40
-            Arguments:
-                file_name: string, full name of the shapefile with the
-                           extension .shp
-            Returns:
-                geopandas dataframe with the shapefile data
-        '''
-        shapefile_gpd = gpd.read_file(file_name)
-        shapefile_gpd.to_crs(f'EPSG:{gis.EPSG}')
-        return shapefile_gpd[shapefile_gpd['geometry'].notnull()]
 
     def plot_gpd(self, shape_gpd, color='black'):
         shape_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color, linewidth=0.5)
@@ -252,15 +162,15 @@ class GisCalc:
         swath_gpd = self.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr)
         )
-        swath_gpd = overlay(self.source_block_gpd, swath_gpd, how='intersection')
+        swath_gpd = overlay(gis.source_block_gpd, swath_gpd, how='intersection')
 
         areas = {}
         areas['swath'] = swath_nr
         areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
-        areas['area_rough'] = self.swath_intersection(swath_gpd, self.rough_gpd, 'cyan')
-        areas['area_facilities'] = self.swath_intersection(swath_gpd, self.facilities_gpd, 'red')
-        areas['area_dunes'] = self.swath_intersection(swath_gpd, self.dunes_gpd, 'yellow')
-        areas['area_sabkha'] = self.swath_intersection(swath_gpd, self.sabkha_gpd, 'brown')
+        areas['area_rough'] = self.swath_intersection(swath_gpd, gis.rough_gpd, 'cyan')
+        areas['area_facilities'] = self.swath_intersection(swath_gpd, gis.facilities_gpd, 'red')
+        areas['area_dunes'] = self.swath_intersection(swath_gpd, gis.dunes_gpd, 'yellow')
+        areas['area_sabkha'] = self.swath_intersection(swath_gpd, gis.sabkha_gpd, 'brown')
         areas['area_flat'] = (
             areas['area'] - areas['area_rough'] - areas['area_facilities'] -
             areas['area_dunes'] - areas['area_sabkha']
@@ -274,7 +184,7 @@ class GisCalc:
 
     @staticmethod
     def convert_area_to_rcv(areas, dozer_km_src):
-        density_flat = 1000 / cfg.rls * 1000 / cfg.rps
+        density_flat = 1000 / cfg.rls_flat * 1000 / cfg.rps_flat
         rcv_theor = int(areas['area'] * density_flat)
         rcv_flat = int(areas['area_flat'] * density_flat)
         rcv_dune = int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.rps_sand)
@@ -299,13 +209,13 @@ class GisCalc:
     def calc_rcv_stats(self, swath_nr, src_dozer_km):
         swath_gpd = self.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr))
-        swath_gpd = overlay(self.receiver_block_gpd, swath_gpd, how='intersection')
+        swath_gpd = overlay(gis.receiver_block_gpd, swath_gpd, how='intersection')
 
         areas = {}
         areas['swath'] = swath_nr
         areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
-        areas['area_dunes'] = self.swath_intersection(swath_gpd, self.dunes_gpd, 'yellow')
-        areas['area_infill'] = self.swath_intersection(swath_gpd, self.infill_gpd, 'green')
+        areas['area_dunes'] = self.swath_intersection(swath_gpd, gis.dunes_gpd, 'yellow')
+        areas['area_infill'] = self.swath_intersection(swath_gpd, gis.infill_gpd, 'green')
         areas['area_flat'] = areas['area'] - areas['area_dunes']
         points = self.convert_area_to_rcv(areas, src_dozer_km)
 
@@ -326,8 +236,8 @@ class GisCalc:
         ''' loop over the swaths, calculate areas and produce
             the source and receiver stastics based on source & receiver densities
         '''
-        self.plot_gpd(self.receiver_block_gpd, color='blue')
-        self.plot_gpd(self.source_block_gpd, color='red')
+        self.plot_gpd(gis.receiver_block_gpd, color='blue')
+        self.plot_gpd(gis.source_block_gpd, color='red')
 
         total_src_area, total_src_sabkha_area, total_src_dune_area = 0, 0, 0
         total_rcv_area, total_rcv_dune_area = 0, 0
@@ -348,8 +258,11 @@ class GisCalc:
 
             self.print_status(swath_nr, areas_src)
 
-        self.print_totals(total_src_area, total_src_sabkha_area, total_src_dune_area,
-                          total_rcv_area, total_rcv_dune_area)
+        self.print_totals(
+            gis,
+            total_src_area, total_src_sabkha_area, total_src_dune_area, total_rcv_area,
+            total_rcv_dune_area
+        )
 
     def aggregate_prod_stats(self, prod_day, swaths, prod):
         ''' aggregate stats by production day
@@ -547,206 +460,12 @@ class GisCalc:
 
         # TODO add final pickup
 
-    @staticmethod
-    def print_status(swath_nr, areas):
-        ''' print a status line '''
-        print(f'swath: {swath_nr}, '
-              f'area: {areas["area"]:.2f}, '
-              f'sabkha area: {areas["area_sabkha"]:.2f}, '
-              f'dune area: {areas["area_dunes"]:.2f}\r', end='')
-
-    def print_totals(self, total_src_area, total_src_sabkha_area, total_src_dune_area,
-                     total_rcv_area, total_rcv_dune_area):
-        # check if totals match the sum of the swathss
-        area_src_block = sum(self.source_block_gpd.geometry.area.to_list()) / 1e6
-        print(f'\n\narea source block: {area_src_block}')
-        print(f'area source block: {total_src_area}\n')
-
-        try:
-            area_sabkha = sum(self.sabkha_gpd.geometry.area.to_list()) / 1e6
-            print(f'area sabkha: {area_sabkha}')
-            print(f'area source sabkha: {total_src_sabkha_area}\n')
-        except AttributeError:
-            pass
-
-        try:
-            area_dunes = sum(self.dunes_gpd.geometry.area.to_list()) / 1e6
-            print(f'area dunes: {area_dunes}')
-            print(f'area source dunes: {total_src_dune_area}\n')
-        except AttributeError:
-            pass
-
-        area_rcv_block = sum(self.receiver_block_gpd.geometry.area.to_list()) / 1e6
-        print(f'area receiver block: {area_rcv_block}')
-        print(f'area receiver block: {total_rcv_area}\n')
-
-        if area_dunes > 0:
-            print(f'area dunes: {area_dunes}')
-            print(f'area dunes: {total_rcv_dune_area}')
-
-    def stats_to_excel(self, file_name):
-        writer = pd.ExcelWriter(file_name, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
-        workbook = writer.book
-
-        # write setup to excel
-        ws_setup = workbook.add_worksheet('Setup')
-        ws_setup.write_row('A1', ['Item', 'Value'])
-        ws_setup.write_column('A2', list(asdict(cfg).keys()))
-        ws_setup.write_column(
-            'B2',
-            [str(v) if isinstance(v, dict) else v for v in asdict(cfg).values()]
-        )
-        ws_setup.write_column('A39', list(asdict(gis).keys()))
-        ws_setup.write_column(
-            'B39',
-            [str(v) if isinstance(v, Path) else v for v in asdict(gis).values()]
-        )
-
-        # sum the columns and write dataframes to excel
-        self.swath_src_stats.loc['Totals'] = self.swath_src_stats.sum()
-        self.swath_src_stats.to_excel(writer, sheet_name='Source', index=False)
-        self.swath_rcv_stats.loc['Totals'] = self.swath_rcv_stats.sum()
-        self.swath_rcv_stats.to_excel(writer, sheet_name='Receiver', index=False)
-        self.prod_stats.loc['Totals'] = self.prod_stats.sum()
-        self.prod_stats.to_excel(writer, sheet_name='Prod', index=False)
-
-        ws_charts = workbook.add_worksheet('Charts')
-        total_swaths = len(self.swath_src_stats) - 1
-        total_production_days = len(self.prod_stats) - 1
-        name_font_title = {'name': 'Arial', 'size': 10}
-
-        # Chart 1: VP by type
-        # format ['sheet', first_row, first_column, last_row, last_column]
-        chart1 = workbook.add_chart({'type': 'line'})
-        for col in [7, 8, 9, 10, 13, 14, 16]:
-            chart1.add_series({
-                'name': ['Source', 0, col],
-                'categories': ['Source', 1, 0, total_swaths, 0],
-                'values': ['Source', 1, col, total_swaths, col],
-            })
-        chart1.set_title({'name': cfg.title_chart + ' - VP by type',
-                          'name_font': name_font_title,})
-        chart1.set_x_axis({'name': 'swath'})
-        chart1.set_y_axis({'name': 'vp'})
-        chart1.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('B2', chart1)
-
-        # Chart 2: CTM by swath
-        chart2 = workbook.add_chart({'type': 'line'})
-        for col in [19]:
-            chart2.add_series({
-                'name': ['Source', 0, col],
-                'categories': ['Source', 1, 0, total_swaths, 0],
-                'values': ['Source', 1, col, total_swaths, col],
-            })
-        chart2.set_title({'name': cfg.title_chart + ' - CTM by swath',
-                          'name_font': name_font_title,})
-        chart2.set_x_axis({'name': 'swath'})
-        chart2.set_y_axis({'name': 'vp'})
-        chart2.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('B18', chart2)
-
-        # Chart 3: Source density by swath
-        chart3 = workbook.add_chart({'type': 'line'})
-        for col in [18]:
-            chart3.add_series({
-                'name': ['Source', 0, col],
-                'categories': ['Source', 1, 0, total_swaths, 0],
-                'values': ['Source', 1, col, total_swaths, col],
-            })
-        chart3.set_title({'name': cfg.title_chart + ' - Source density by swath',
-                          'name_font': name_font_title,})
-        chart3.set_x_axis({'name': 'swath'})
-        chart3.set_y_axis({'name': 'vp'})
-        chart3.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('B34', chart3)
-
-        # Chart 4: dozer km per day
-        chart4 = workbook.add_chart({'type': 'line'})
-        for col in [9]:
-            chart4.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
-            })
-        chart4.set_title({'name': cfg.title_chart + ' - Dozer km',
-                          'name_font': name_font_title,})
-        chart4.set_x_axis({'name': 'Day'})
-        chart4.set_y_axis({'name': 'km'})
-        chart4.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('J2', chart4)
-
-        # # Chart 5: dozer cumulative km
-        chart5 = workbook.add_chart({'type': 'line'})
-        for col in [10]:
-            chart5.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
-            })
-        chart5.set_title({'name': cfg.title_chart + ' - Cumul. dozer km',
-                          'name_font': name_font_title,})
-        chart5.set_x_axis({'name': 'Day'})
-        chart5.set_y_axis({'name': 'km'})
-        chart5.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('J18', chart5)
-
-        # Chart 6: Production
-        chart6 = workbook.add_chart({'type': 'line'})
-        for col in [8]:
-            chart6.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
-            })
-        chart6.set_title({'name': cfg.title_chart + ' - Production',
-                          'name_font': name_font_title,})
-        chart6.set_x_axis({'name': 'Day'})
-        chart6.set_y_axis({'name': 'vp'})
-        chart6.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R2', chart6)
-
-        # Chart 7: Layout
-        chart7 = workbook.add_chart({'type': 'line'})
-        for col in [11, 12, 13, 14]:
-            chart7.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
-            })
-        chart7.set_title({'name': cfg.title_chart + ' - Layout',
-                          'name_font': name_font_title,})
-        chart7.set_x_axis({'name': 'Day'})
-        chart7.set_y_axis({'name': 'Nodes'})
-        chart7.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R18', chart7)
-
-        # Chart 8: Pickup
-        chart8 = workbook.add_chart({'type': 'line'})
-        for col in [15, 16, 17, 18]:
-            chart8.add_series({
-                'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
-                'values': ['Prod', 1, col, total_production_days, col],
-            })
-        chart8.set_title({'name': cfg.title_chart + ' - Pickup',
-                          'name_font': name_font_title,})
-        chart8.set_x_axis({'name': 'Day'})
-        chart8.set_y_axis({'name': 'Nodes'})
-        chart8.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R34', chart8)
-
-        # ... and save it all to excel
-        ws_setup.activate()
-        writer.save()
-
 
 def main():
-    gis_calc = GisCalc()
-    gis_calc.swaths_stats(swath_reverse=cfg.swath_reverse)
-    gis_calc.calc_prod_stats(swath_reverse=cfg.swath_reverse)
-    gis_calc.stats_to_excel(cfg.excel_file)
-
+    swath_prod_calc = SwathProdCalc()
+    swath_prod_calc.swaths_stats(swath_reverse=cfg.swath_reverse)
+    swath_prod_calc.calc_prod_stats(swath_reverse=cfg.swath_reverse)
+    swath_prod_calc.stats_to_excel(cfg, gis)
     plt.show()
 
 
