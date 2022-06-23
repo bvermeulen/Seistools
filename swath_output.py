@@ -7,10 +7,14 @@ class OutputMixin:
     @staticmethod
     def print_status(swath_nr, areas):
         ''' print a status line '''
-        print(f'swath: {swath_nr}, '
-              f'area: {areas["area"]:.2f}, '
-              f'sabkha area: {areas["area_sabkha"]:.2f}, '
-              f'dune area: {areas["area_dunes"]:.2f}\r', end='')
+        print(
+            f'swath: {swath_nr}, '
+            f'area: {areas["area"]:.2f}, '
+            f'rough: {areas["area_rough"]:.2f}, '
+            f'facilities: {areas["area_facilities"]:.2f}, '
+            f'dune: {areas["area_dunes"]:.2f}, '
+            f'sabkha: {areas["area_sabkha"]:.2f}\r', end=''
+        )
 
     @staticmethod
     def print_totals(gis, total_src_area, total_src_sabkha_area, total_src_dune_area,
@@ -42,7 +46,15 @@ class OutputMixin:
             print(f'area dunes: {area_dunes}')
             print(f'area dunes: {total_rcv_dune_area}')
 
-    def stats_to_excel(self, cfg, gis):
+    @staticmethod
+    def print_prod(sw1, sw2, sw_p1, sw_p2, sw_adv1, sw_adv2, print_status=False) -> None:
+        if print_status:
+            print(
+                f'prod: {sw1:4} - {sw2:4}: {sw_p1:4}: {sw_p2:4}; '
+                f'advance: {sw_adv1:4} - {sw_adv2:4}'
+            )
+
+    def stats_to_excel(self, cfg):
         writer = pd.ExcelWriter(cfg.excel_file, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
         workbook = writer.book
 
@@ -52,12 +64,8 @@ class OutputMixin:
         ws_setup.write_column('A2', list(asdict(cfg).keys()))
         ws_setup.write_column(
             'B2',
-            [str(v) if isinstance(v, dict|tuple) else v for v in asdict(cfg).values()]
-        )
-        ws_setup.write_column('A42', list(asdict(gis).keys()))
-        ws_setup.write_column(
-            'B42',
-            [str(v) if isinstance(v, Path) else v for v in asdict(gis).values()]
+            [str(v) if isinstance(v, dict|tuple|Path) else v
+                for v in asdict(cfg).values()]
         )
 
         # sum the columns and write dataframes to excel
@@ -121,78 +129,88 @@ class OutputMixin:
 
         # Chart 4: dozer km per day
         chart4 = workbook.add_chart({'type': 'line'})
-        for col in [9]:
+        for col in [10]:
             chart4.add_series({
                 'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
                 'values': ['Prod', 1, col, total_production_days, col],
             })
         chart4.set_title({'name': cfg.title_chart + ' - Dozer km',
                           'name_font': name_font_title,})
-        chart4.set_x_axis({'name': 'Day'})
+        # chart4.set_x_axis({'name': 'Day'})
         chart4.set_y_axis({'name': 'km'})
         chart4.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('J2', chart4)
 
         # # Chart 5: dozer cumulative km
         chart5 = workbook.add_chart({'type': 'line'})
-        for col in [10]:
+        for col in [11]:
             chart5.add_series({
                 'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
                 'values': ['Prod', 1, col, total_production_days, col],
             })
         chart5.set_title({'name': cfg.title_chart + ' - Cumul. dozer km',
                           'name_font': name_font_title,})
-        chart5.set_x_axis({'name': 'Day'})
         chart5.set_y_axis({'name': 'km'})
         chart5.set_legend({'position': 'bottom'})
         ws_charts.insert_chart('J18', chart5)
 
-        # Chart 6: Production
+        # Chart 6: Nodes requirement
         chart6 = workbook.add_chart({'type': 'line'})
-        for col in [8]:
+        for col in [20, 21, 22, 23, 24, 25]:
             chart6.add_series({
                 'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
                 'values': ['Prod', 1, col, total_production_days, col],
             })
-        chart6.set_title({'name': cfg.title_chart + ' - Production',
+        chart6.set_title({'name': cfg.title_chart + ' - Nodes',
                           'name_font': name_font_title,})
-        chart6.set_x_axis({'name': 'Day'})
-        chart6.set_y_axis({'name': 'vp'})
+        chart6.set_y_axis({'name': 'Nodes'})
         chart6.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R2', chart6)
+        ws_charts.insert_chart('J34', chart6)
 
-        # Chart 7: Layout
+        # Chart 7: Production
         chart7 = workbook.add_chart({'type': 'line'})
-        for col in [11, 12, 13, 14]:
+        for col in [9]:
             chart7.add_series({
                 'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
                 'values': ['Prod', 1, col, total_production_days, col],
             })
-        chart7.set_title({'name': cfg.title_chart + ' - Layout',
+        chart7.set_title({'name': cfg.title_chart + ' - Production',
                           'name_font': name_font_title,})
-        chart7.set_x_axis({'name': 'Day'})
-        chart7.set_y_axis({'name': 'Nodes'})
+        chart7.set_y_axis({'name': 'vp'})
         chart7.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R18', chart7)
+        ws_charts.insert_chart('R2', chart7)
 
-        # Chart 8: Pickup
+        # Chart 8: Layout
         chart8 = workbook.add_chart({'type': 'line'})
-        for col in [15, 16, 17, 18]:
+        for col in [12, 13, 14, 15]:
             chart8.add_series({
                 'name': ['Prod', 0, col],
-                'categories': ['Prod', 1, 0, total_production_days, 0],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
                 'values': ['Prod', 1, col, total_production_days, col],
             })
-        chart8.set_title({'name': cfg.title_chart + ' - Pickup',
+        chart8.set_title({'name': cfg.title_chart + ' - Layout',
                           'name_font': name_font_title,})
-        chart8.set_x_axis({'name': 'Day'})
         chart8.set_y_axis({'name': 'Nodes'})
         chart8.set_legend({'position': 'bottom'})
-        ws_charts.insert_chart('R34', chart8)
+        ws_charts.insert_chart('R18', chart8)
+
+        # Chart 9: Pickup
+        chart9 = workbook.add_chart({'type': 'line'})
+        for col in [16, 17, 18, 19]:
+            chart9.add_series({
+                'name': ['Prod', 0, col],
+                'categories': ['Prod', 1, 1, total_production_days, 1],
+                'values': ['Prod', 1, col, total_production_days, col],
+            })
+        chart9.set_title({'name': cfg.title_chart + ' - Pickup',
+                          'name_font': name_font_title,})
+        chart9.set_y_axis({'name': 'Nodes'})
+        chart9.set_legend({'position': 'bottom'})
+        ws_charts.insert_chart('R34', chart9)
 
         # ... and save it all to excel
         ws_setup.activate()

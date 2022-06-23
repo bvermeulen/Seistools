@@ -1,1 +1,1 @@
-swath_settings_b.py
+swath_settings_a.py

@@ -22,12 +22,13 @@ class Config:
     access_spacing: float = 1000.0
     project_azimuth: float = 0.0
     repeat_factor: int = 1
-    swath_length: float = 120_000.0  # length > length of block
+    swath_length: float = 30_000.0
     swath_1: int = 100
     dozer_buffer: float = 5000.0
-    active_lines: int = 50
+    active_lines: int = 40
     nodes_assigned: int = 48_100
     nodes_spare: int = 500
+    nodes_sand_advance_days: float = 1.6
     swath_reverse: bool = False
     source_on_receivers: bool = False
     rl_dozed: bool = False
@@ -47,18 +48,7 @@ class Config:
     lead_dozer: int = field(init=False)
     excel_file: str = './swath_stats_central_oman_b_new.xlsx'
     title_chart: str = 'Central Oman - Block B'
-    start_date: datetime.date = (2022, 7, 27)
-
-    def __post_init__(self):
-        self.ctm_constant = 3600 / (
-            self.sweep_time + self.move_up_time) * self.hours_day * self.number_vibes
-        self.lead_receiver = int(self.active_lines * self.repeat_factor / 2)
-        self.lead_dozer = self.lead_receiver + int(self.dozer_buffer / self.rls_flat)
-
-
-@dataclass
-class Gis:
-    # GIS parameters
+    start_date: datetime.date = datetime.date(2022, 7, 27)
     EPSG: int = 3440  # PSD93_UTM40
     project_base_folder: Path = Path('D:/OneDrive/Work/PDO/Central Oman 2022/6 Mapping/4 shape files')
     shapefile_src: Path = field(init=False)
@@ -70,6 +60,10 @@ class Gis:
     shapefile_sabkha: Path = field(init=False)
 
     def __post_init__(self):
+        self.ctm_constant = 3600 / (
+            self.sweep_time + self.move_up_time) * self.hours_day * self.number_vibes
+        self.lead_receiver = int(self.active_lines * self.repeat_factor / 2)
+        self.lead_dozer = self.lead_receiver + int(self.dozer_buffer / self.rls_flat)
         self.shapefile_src = (
             self.project_base_folder / 'boundaries/Central Oman Block_B_S.shp'
         )
@@ -89,115 +83,3 @@ class Gis:
             #     project_base_folder / 'terrain/facilities_a.shp'
             # )
         self.shapefile_sabkha = None
-
-        self.create_gp_dataframes()
-
-    def create_gp_dataframes(self):
-        # create the geopandas data frames
-        self.source_block_gpd = self.read_shapefile(self.shapefile_src)
-        self.receiver_block_gpd = self.read_shapefile(self.shapefile_rcv)
-
-        if self.shapefile_rough:
-            self.rough_gpd = self.read_shapefile(self.shapefile_rough)
-
-        else:
-            self.rough_gpd = None
-
-        if self.shapefile_facilities:
-            self.facilities_gpd = self.read_shapefile(self.shapefile_facilities)
-
-            try:
-                self.facilities_gpd = overlay(
-                    self.facilities_gpd, self.rough_gpd, how='difference'
-                )
-            except AttributeError:
-                pass
-
-        else:
-            self.facilities_gpd = None
-
-        if self.shapefile_dune:
-            self.dunes_gpd = self.read_shapefile(self.shapefile_dune
-            )
-            try:
-                self.dune_gpd = overlay(
-                    self.dune_gpd, self.facilties_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.dune_gpd = overlay(
-                    self.dune_gpd, self.rough_gpd, how='difference')
-            except AttributeError:
-                pass
-
-        else:
-            self.dunes_gpd = None
-
-        if self.shapefile_sabkha:
-            self.sabkha_gpd = self.read_shapefile(self.shapefile_sabkha)
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.dune_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.facilties_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-            try:
-                self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.rough_gpd, how='difference')
-
-            except AttributeError:
-                pass
-
-        else:
-            self.sabkha_gpd = None
-
-        if self.shapefile_infill:
-            self.infill_gpd = self.read_shapefile(self.shapefile_infill)
-
-        else:
-            self.infill_gpd = None
-
-    def read_shapefile(self, file_name):
-        ''' read a shape file and converts crs to UTM PSD93 Zone 40
-            Arguments:
-                file_name: string, full name of the shapefile with the
-                           extension .shp
-            Returns:
-                geopandas dataframe with the shapefile data
-        '''
-        shapefile_gpd = gpd.read_file(file_name)
-        shapefile_gpd.to_crs(f'EPSG:{self.EPSG}')
-        return shapefile_gpd[shapefile_gpd['geometry'].notnull()]
-
-
-@dataclass
-class Production:
-    doz_km: float
-    doz_total_km: float
-    prod: float
-    flat: float
-    rough: float
-    facilities: float
-    dunes: float
-    sabkha: float
-    layout_flat: float
-    layout_dune: float
-    layout_infill: float
-    pickup_flat: float
-    pickup_dune: float
-    pickup_infill: float
-
-
-
-
