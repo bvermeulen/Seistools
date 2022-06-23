@@ -309,7 +309,7 @@ class SwathProdCalc(OutputMixin):
             return results
 
         half_patch = int(cfg.active_lines * 0.5)
-        prod_swaths = abs(results['swath_last'] - results['swath_first']) + 1
+        prod_swaths = abs(results['swath_last'] - results['swath_first'])
         if results['swath_last'] >= results['swath_first']:
             sw_patch_1 = int(results['swath_first'] - half_patch - 0.5 * prod_swaths)
             sw_patch_2 = int(results['swath_last'] + half_patch + prod_swaths)

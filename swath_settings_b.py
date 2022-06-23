@@ -28,7 +28,7 @@ class Config:
     active_lines: int = 40
     nodes_assigned: int = 48_100
     nodes_spare: int = 500
-    nodes_sand_advance_days: float = 1.6
+    nodes_sand_advance_days: float = 1
     swath_reverse: bool = False
     source_on_receivers: bool = False
     rl_dozed: bool = False
@@ -42,7 +42,7 @@ class Config:
     dunes_terrain: float = 0.60
     sabkha_terrain: float = 0.60
     hours_day: float = 24.0
-    prod_cap: dict[tuple, float] = field(default_factory= lambda: {(100, 210): 24_000, (211, 460): None, (461, 800): None})
+    prod_cap: dict[tuple, float] = field(default_factory= lambda: {(100, 210): 23_500, (211, 460): 23_500, (461, 800): None})
     ctm_constant: float = field(init=False)
     lead_receiver: int = field(init=False)
     lead_dozer: int = field(init=False)

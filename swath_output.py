@@ -1,3 +1,4 @@
+import time
 from dataclasses import asdict
 from pathlib import Path
 import pandas as pd
@@ -55,6 +56,15 @@ class OutputMixin:
             )
 
     def stats_to_excel(self, cfg):
+        while True:
+            try:
+                _ = open(cfg.excel_file, 'w+')
+                break
+
+            except IOError:
+                print(f'Unable to write the excel file, please close {cfg.excel_file} ...')
+                time.sleep(5)
+
         writer = pd.ExcelWriter(cfg.excel_file, engine='xlsxwriter')  #pylint: disable=abstract-class-instantiated
         workbook = writer.book
 
