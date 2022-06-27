@@ -40,7 +40,7 @@ class Config:
     dunes_terrain: float = 0.60
     sabkha_terrain: float = 0.60
     hours_day: float = 24.0
-    prod_cap: dict[tuple, float] = field(default_factory=lambda: {(100, 800): 25_000})
+    prod_cap: dict[tuple, float] = field(default_factory=lambda: {(100, 800): None})
     ctm_constant: float = field(init=False)
     lead_receiver: int = field(init=False)
     lead_dozer: int = field(init=False)
@@ -72,7 +72,7 @@ class Config:
             self.project_base_folder / 'terrain/dunes_a_v2.shp'
         )
         self.shapefile_infill = (
-            self.project_base_folder / 'dunes/dunes_infill.shp'
+            self.project_base_folder / 'dunes/dune_infill_final.shp'
         )
         self.shapefile_rough = (
             self.project_base_folder / 'terrain/rough_a.shp'
