@@ -7,6 +7,8 @@
     Copyright: 2021
 
 '''
+#TODO implement productivity per vibe plot: see: https://stackoverflow.com/questions/20057260/how-to-remove-gaps-between-subplots-in-matplotlib
+
 import sys
 import datetime
 from collections import Counter
@@ -40,9 +42,13 @@ class VpActive:
             ['total', 'vps_hour', 'num_vibs']
         )
 
-    def select_data(self, database_table):
+    def select_data(self, database_table, interval):
         self.vp_records_df = VpDb().get_vp_data_by_date(
             database_table, self.production_date)
+
+        self.populate_vps_by_second()
+        self.aggregate_vps_by_interval(interval)
+
 
     def populate_vps_by_second(self):
         progress_message = seis_utils.progress_message_generator(
@@ -82,7 +88,9 @@ class VpActive:
                 **{'vps_hour': total * 3600 / interval},
                 **{'num_vibs': len(set(vib_list))},
             },
-            ignore_index=True)
+            ignore_index=True
+        )
+        return None
 
     def aggregate_vps_by_interval(self, interval):
         ''' aggregate number of vps by interval
@@ -95,7 +103,7 @@ class VpActive:
         '''
         progress_message = seis_utils.progress_message_generator(
             f'aggreate VPs for {self.production_date.strftime("%d-%b-%Y")}')
-        total_vps = 0
+        self.total_vps = 0
         second = 0
         while second < seconds_per_day:
             # TODO improve loop, probably over vps_by_second and check if in interval
@@ -111,25 +119,22 @@ class VpActive:
 
             self.add_vps_interval(interval, second, vibs_list)
 
-            total_vps += len(vibs_list)
+            self.total_vps += len(vibs_list)
             second += interval
             next(progress_message)
 
         self.add_vps_interval(interval, seconds_per_day, [])
 
-        print(f'\rtotal vps: {total_vps}                                           ')
+        print(f'\rtotal vps: {self.total_vps}                                        ')
 
     def plot_vps_by_interval(self, interval):
-
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
         fig.suptitle(
-            f'{vp_plt_settings["vib_activity"]["fig_title"]}'
-            f'{self.production_date.strftime("%d-%b-%Y")}'
+            f'{vp_plt_settings["vib_activity"]["fig_title"]} '
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)'
         )
         time_format = mdates.DateFormatter('%H:%M')
-        self.populate_vps_by_second()
-        self.aggregate_vps_by_interval(interval)
-        times = self.vps_by_interval_df['time'].to_list()
+        times = self.vps_by_interval_df['time'].to_numpy()
 
         # axis for VPs per hour
         max_val = vp_plt_settings['vib_activity']['max_vp_hour']
@@ -140,7 +145,7 @@ class VpActive:
         ax1.xaxis.set_major_formatter(time_format)
         ax1.grid(axis='y', linewidth=0.5, linestyle='-', zorder=0)
         ax1.step(
-            times, self.vps_by_interval_df['vps_hour'].to_list(),
+            times, self.vps_by_interval_df['vps_hour'].to_numpy(),
             where='post', zorder=3
         )
         ax1.axhline(
@@ -156,7 +161,7 @@ class VpActive:
         ax2.yaxis.set_ticks(np.arange(0, max_val+1, intval))
         ax2.xaxis.set_major_formatter(time_format)
         ax2.grid(axis='y', linewidth=0.5, linestyle='-', zorder=0)
-        vibs = self.vps_by_interval_df['num_vibs'].to_list()
+        vibs = self.vps_by_interval_df['num_vibs'].to_numpy()
         colors = [
             TOL_COLOR if nv < vp_plt_settings['vib_activity']['vibs_target']
             else 'green' for nv in vibs
@@ -166,6 +171,33 @@ class VpActive:
 
         fig.tight_layout()
         plt.show()
+        plt.close()
+
+    def plot_vps_by_vibe(self, interval):
+        ax = [None for i in range(FLEETS)]
+        fig, (ax) = plt.subplots(nrows=FLEETS, ncols=1, figsize=(7, 12), gridspec_kw={'hspace':0})
+        fig.suptitle(
+            f'{vp_plt_settings["vib_activity"]["fig_title"]} '
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)'
+        )
+        time_format = mdates.DateFormatter('%H:%M')
+
+        times = self.vps_by_interval_df['time'].to_numpy()
+        ax[0].set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
+        for vib in range(1, FLEETS + 1):
+            ax[FLEETS - vib].set_xticklabels([])
+            ax[FLEETS - vib].yaxis.set_ticks(np.arange(0, 200, 50))
+            ax[FLEETS - vib].tick_params(axis='both', labelsize=8)
+            ax[FLEETS - vib].set_ylabel(f'V{vib}', fontsize=8)
+            ax[FLEETS - vib].xaxis.set_major_formatter(time_format)
+            ax[FLEETS - vib].set_ylim(bottom=0, top=200)
+            ax[FLEETS - vib].grid(axis='y', linewidth=0.5, linestyle='-', zorder=0)
+            ax[FLEETS - vib].grid(axis='x', linewidth=0.5, linestyle='-', zorder=0)
+            vps = self.vps_by_interval_df[f'V{vib:02}'].fillna(0).to_numpy() * 3600 / interval
+            ax[FLEETS - vib].step(times, vps, where='post', linewidth=0.9, zorder=3)
+
+        plt.show()
+        plt.close()
 
     def results_to_excel(self, file_name):
         self.vps_by_interval_df.to_excel(file_name)
@@ -186,8 +218,9 @@ def main():
             break
 
         vp_activity = VpActive(production_date)
-        vp_activity.select_data(DATABASE_TABLE)
+        vp_activity.select_data(DATABASE_TABLE, interval)
         vp_activity.plot_vps_by_interval(interval)
+        vp_activity.plot_vps_by_vibe(interval)
 
         results_file = RESULTS_FOLDER / f'vp_activity_{production_date.strftime("%y%m%d")}.xlsx'
         vp_activity.results_to_excel(results_file)
