@@ -17,6 +17,8 @@ class Config:
     sps_sand: float = 25.0
     rls_infill: float = 200.0
     rps_infill: float = 25.0
+    sls_infill: float = 375
+    sps_infill: float = 25.0
     access_spacing: float = 1000.0
     project_azimuth: float = 0.0
     repeat_factor: int = 1
@@ -55,7 +57,8 @@ class Config:
     shapefile_facilities: Path = field(init=False)
     shapefile_dune: Path = field (init=False)
     shapefile_sabkha: Path = field(init=False)
-    shapefile_infill: Path = field(init=False)
+    shapefile_rcv_infill: Path = field(init=False)
+    shapefile_src_infill: Path = field(init=False)
 
     def __post_init__(self):
         self.ctm_constant = 3600 / (
@@ -68,11 +71,14 @@ class Config:
         self.shapefile_rcv = (
             self.project_base_folder / 'boundaries/Central Oman Block_A_R.shp'
         )
+        self.shapefile_rcv_infill = (
+            self.project_base_folder / 'dunes/dune_infill_final.shp'
+        )
+        self.shapefile_src_infill = None #(
+            #self.project_base_folder / 'terrain/src_infill_a.shp'
+        #)
         self.shapefile_dune = (
             self.project_base_folder / 'terrain/dunes_a_v2.shp'
-        )
-        self.shapefile_infill = (
-            self.project_base_folder / 'dunes/dune_infill_final.shp'
         )
         self.shapefile_rough = (
             self.project_base_folder / 'terrain/rough_a.shp'

@@ -1,3 +1,4 @@
+from inspect import Attribute
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
@@ -14,7 +15,8 @@ class Gis:
         self.shapefile_facilities = cfg.shapefile_facilities
         self.shapefile_dune = cfg.shapefile_dune
         self.shapefile_sabkha = cfg.shapefile_sabkha
-        self.shapefile_infill = cfg.shapefile_infill
+        self.shapefile_rcv_infill = cfg.shapefile_rcv_infill
+        self.shapefile_src_infill = cfg.shapefile_src_infill
         self.ax = ax
         self.create_gp_dataframes()
 
@@ -88,11 +90,9 @@ class Gis:
         else:
             self.sabkha_gpd = None
 
-        if self.shapefile_infill:
-            self.infill_gpd = self.read_shapefile(self.shapefile_infill)
+        self.rcv_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_rcv_infill) else None
+        self.src_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_src_infill) else None
 
-        else:
-            self.infill_gpd = None
 
     def read_shapefile(self, file_name):
         ''' read a shape file and converts crs to UTM PSD93 Zone 40
@@ -119,17 +119,31 @@ class Gis:
     def plot_gpd(self, shape_gpd, color='black') -> None:
         shape_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color, linewidth=0.5)
 
-    def swath_intersection(self, swath_gpd, terrain_gpd, color) -> float:
-        # to avoid duplicate layer warning
-        swath_gpd = swath_gpd.rename(columns={'LAYER':'LAYERi'})
+    def difference(self, main_layer: GeoDataFrame, layers: list[GeoDataFrame]) -> GeoDataFrame:
+        main_layer = main_layer.rename(columns={'LAYER':'LAYERi'})
+        for layer in layers:
+            if layer is None or layer.empty:
+                continue
+            main_layer = overlay(main_layer, layer, how='difference')
 
+        return main_layer
+
+    def intersection(self, layer1: GeoDataFrame, layer2: GeoDataFrame) -> GeoDataFrame:
+        # to avoid duplicate layer warning
+        layer1 = layer1.rename(columns={'LAYER':'LAYERi'})
         try:
-            terrain_gpd = overlay(swath_gpd, terrain_gpd, how='intersection')
-            terrain_area = sum(terrain_gpd.geometry.area.to_list())/ 1e6
-            if terrain_area > 0 and terrain_gpd['geometry'].all():
-                self.plot_gpd(terrain_gpd, color)
+            layer2 = overlay(layer1, layer2, how='intersection')
 
         except (AttributeError, IndexError, KeyError):
-            terrain_area = 0
+            layer2 = None
 
-        return terrain_area
+        return layer2
+
+    def calc_area_and_plot(self, area_gpd: GeoDataFrame, color: str) -> float:
+        area = 0.0
+        if area_gpd is not None:
+            area = sum(area_gpd.geometry.area.to_list())/ 1e6
+            if color and area > 0 and area_gpd['geometry'].all():
+                self.plot_gpd(area_gpd, color)
+
+        return area

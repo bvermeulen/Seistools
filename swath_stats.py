@@ -40,22 +40,7 @@ class Production:
 class SwathProdCalc(OutputMixin):
 
     def __init__(self):
-        self.swath_src_stats = pd.DataFrame(columns=[
-            'swath', 'area', 'area_flat', 'area_rough', 'area_facilities', 'area_dunes',
-            'area_sabkha', 'theor', 'flat', 'rough', 'facilities', 'dune_src', 'dune_rcv',
-            'dunes', 'sabkha', 'skips', 'actual', 'doz_km', 'density', 'ctm'
-        ])
-        self.swath_rcv_stats = pd.DataFrame(columns=[
-            'swath', 'area', 'area_flat', 'area_dunes', 'area_infill', 'theor', 'flat',
-            'dunes', 'infill', 'actual', 'doz_km', 'density'
-        ])
-        self.prod_stats = pd.DataFrame(columns=[
-            'prod_day', 'date', 'swath_first', 'swath_last', 'vp_flat', 'vp_rough',
-            'vp_facilities', 'vp_dunes', 'vp_sabkha', 'vp_prod', 'doz_km', 'doz_total_km',
-            'layout_flat', 'layout_dune', 'layout_infill', 'layout', 'pickup_flat',
-            'pickup_dune', 'pickup_infill', 'pickup', 'nodes_assigned', 'nodes_patch',
-            'nodes_dune_advance', 'nodes_infill', 'nodes_ts', 'nodes_total_use', 'nodes_spare'
-        ])
+
         self.index = 0
         self.total_swaths = None
         self.fig, self.ax = plt.subplots(figsize=(6, 6))
@@ -63,6 +48,50 @@ class SwathProdCalc(OutputMixin):
 
         bounds = self.gis.get_bounds(self.gis.source_block_gpd)
         self.sw_origin = (bounds[0], bounds[1])
+        self.src_infill = (
+            True if self.gis.src_infill_gpd is not None and not
+            (cfg.sls_infill < 0.01 or cfg.sps_infill < 0.01) else False
+        )
+        self.rcv_infill = (
+            True if self.gis.rcv_infill_gpd is not None and not
+            (cfg.rls_infill < 0.01 or cfg.rps_infill < 0.01) else False
+        )
+
+        if not self.src_infill:
+            self.swath_src_stats = pd.DataFrame(columns=[
+                'swath', 'area', 'area_flat', 'area_rough', 'area_facilities', 'area_dunes',
+                'area_sabkha', 'theor', 'flat', 'rough', 'facilities', 'dunes', 'sabkha',
+                'skips', 'actual', 'dunes_src', 'dunes_rcv', 'doz_km', 'density', 'ctm'
+            ])
+
+        else:
+            self.swath_src_stats = pd.DataFrame(columns=[
+                'swath', 'area', 'area_flat', 'area_flat_infill', 'area_rough', 'area_rough_infill',
+                'area_facilities', 'area_facilities_infill', 'area_dunes', 'area_dunes_infill',
+                'area_sabkha', 'area_sabkha_infill', 'theor', 'flat', 'rough', 'facilities', 'dunes',
+                'sabkha', 'skips', 'actual', 'flat_infill', 'rough_infill', 'facilities_infill',
+                'dunes_src', 'dunes_rcv', 'dunes_infill', 'sabkha_infill', 'doz_km', 'density', 'ctm'
+            ])
+
+        if not self.rcv_infill:
+            self.swath_rcv_stats = pd.DataFrame(columns=[
+                'swath', 'area', 'area_flat', 'area_dunes', 'theor', 'flat',
+                'dunes', 'actual', 'doz_km', 'density'
+            ])
+
+        else:
+            self.swath_rcv_stats = pd.DataFrame(columns=[
+                'swath', 'area', 'area_flat', 'area_dunes', 'area_infill', 'theor', 'flat',
+                'dunes', 'infill', 'actual', 'doz_km', 'density'
+            ])
+
+        self.prod_stats = pd.DataFrame(columns=[
+            'prod_day', 'date', 'swath_first', 'swath_last', 'vp_flat', 'vp_rough',
+            'vp_facilities', 'vp_dunes', 'vp_sabkha', 'vp_prod', 'doz_km', 'doz_total_km',
+            'layout_flat', 'layout_dune', 'layout_infill', 'layout', 'pickup_flat',
+            'pickup_dune', 'pickup_infill', 'pickup', 'nodes_assigned', 'nodes_patch',
+            'nodes_dune_advance', 'nodes_infill', 'nodes_ts', 'nodes_total_use', 'nodes_spare'
+        ])
 
         # patch: assuming azimuth is zero
         if cfg.project_azimuth == 0:
@@ -112,14 +141,39 @@ class SwathProdCalc(OutputMixin):
         areas = {}
         areas['swath'] = swath_nr
         areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
-        areas['area_rough'] = self.gis.swath_intersection(swath_gpd, self.gis.rough_gpd, 'cyan')
-        areas['area_facilities'] = self.gis.swath_intersection(swath_gpd, self.gis.facilities_gpd, 'red')
-        areas['area_dunes'] = self.gis.swath_intersection(swath_gpd, self.gis.dunes_gpd, 'yellow')
-        areas['area_sabkha'] = self.gis.swath_intersection(swath_gpd, self.gis.sabkha_gpd, 'brown')
+        rough_gpd = self.gis.intersection(swath_gpd, self.gis.rough_gpd)
+        areas['area_rough'] = self.gis.calc_area_and_plot(rough_gpd, 'cyan')
+        facilities_gpd = self.gis.intersection(swath_gpd, self.gis.facilities_gpd)
+        areas['area_facilities'] = self.gis.calc_area_and_plot(facilities_gpd, 'red')
+        dunes_gpd = self.gis.intersection(swath_gpd, self.gis.dunes_gpd)
+        areas['area_dunes'] = self.gis.calc_area_and_plot(dunes_gpd, 'yellow')
+        sabkha_gpd = self.gis.intersection(swath_gpd, self.gis.sabkha_gpd)
+        areas['area_sabkha'] = self.gis.calc_area_and_plot(sabkha_gpd, 'brown')
         areas['area_flat'] = (
             areas['area'] - areas['area_rough'] - areas['area_facilities'] -
             areas['area_dunes'] - areas['area_sabkha']
         )
+        #calculate infill if geometry is defined
+        if self.src_infill:
+            src_infill_swath_gpd = self.gis.intersection(swath_gpd, self.gis.src_infill_gpd)
+            rough_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.rough_gpd)
+            areas['area_rough_infill'] = self.gis.calc_area_and_plot(rough_infill_gpd, None)
+            facilities_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.facilities_gpd)
+            areas['area_facilities_infill'] = self.gis.calc_area_and_plot(facilities_infill_gpd, None)
+            dunes_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.dunes_gpd)
+            areas['area_dunes_infill'] = self.gis.calc_area_and_plot(dunes_infill_gpd, None)
+            dunes_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.dunes_gpd)
+            areas['area_dunes_infill'] = self.gis.calc_area_and_plot(dunes_infill_gpd, None)
+            sabkha_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.sabkha_gpd)
+            areas['area_sabkha_infill'] = self.gis.calc_area_and_plot(sabkha_infill_gpd, None)
+            flat_infill_gpd = self.gis.difference(
+                src_infill_swath_gpd, [
+                    rough_infill_gpd, facilities_infill_gpd,
+                    dunes_infill_gpd, sabkha_infill_gpd
+                ]
+            )
+            areas['area_flat_infill'] = self.gis.calc_area_and_plot(flat_infill_gpd, None)
+
         points = self.convert_area_to_vps(areas)
 
         self.swath_src_stats = self.swath_src_stats.append(
@@ -127,25 +181,50 @@ class SwathProdCalc(OutputMixin):
         )
         return areas
 
-    @staticmethod
-    def convert_area_to_vps(areas):
+    def convert_area_to_vps(self, areas) -> dict[int]:
         density_flat = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
         vp_theor = int(areas['area'] * density_flat)
         vp_flat = int(areas['area_flat'] * density_flat)
         vp_rough = int(areas['area_rough'] * density_flat)
         vp_facilities = int(areas['area_facilities'] * density_flat)
-        vp_dune_src = int(areas['area_dunes'] * 1000 / cfg.sls_sand * 1000 / cfg.sps_sand)
-        vp_dune_rcv = (
+        vp_dunes_src = int(areas['area_dunes'] * 1000 / cfg.sls_sand * 1000 / cfg.sps_sand)
+        vp_dunes_rcv = (
             int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.sps_sand)
             if cfg.source_on_receivers else 0.0
         )
-        vp_dune = int(vp_dune_src + vp_dune_rcv)
+        vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
         vp_sabkha = int(areas['area_sabkha'] * density_flat)
-        vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dune + vp_sabkha)
-        vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dune - vp_sabkha
-
+        vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dunes + vp_sabkha)
+        vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dunes - vp_sabkha
         km_access = areas['area_dunes'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
-        dozer_km_vp = vp_dune * cfg.sps_sand / 1000 + km_access
+        dozer_km_vp = vp_dunes * cfg.sps_sand / 1000 + km_access
+        result_dict = {
+            'theor': vp_theor, 'dunes_src': vp_dunes_src, 'dunes_rcv': vp_dunes_rcv,
+            'doz_km': dozer_km_vp,
+        }
+        if self.src_infill:
+            density_infill = 1000 / cfg.sls_infill * 1000 / cfg.sps_infill
+            vp_flat_infill = int(areas['area_flat_infill'] * density_infill)
+            vp_rough_infill = int(areas['area_rough_infill'] * density_infill)
+            vp_facilities_infill = int(areas['area_facilities_infill'] * density_infill)
+            vp_dunes_infill = int(areas['area_dunes_infill'] * density_infill)
+            vp_sabkha_infill = int(areas['area_sabkha_infill'] * density_infill)
+            result_dict.update({
+                'flat_infill': vp_flat_infill, 'rough_infill': vp_rough_infill,
+                'facilities_infill': vp_facilities_infill,
+                'dunes_infill': vp_dunes_infill, 'sabkha_infill': vp_sabkha_infill,
+            })
+            infill_total = (
+                vp_flat_infill + vp_rough_infill + vp_facilities_infill +
+                vp_dunes_infill + vp_sabkha_infill
+            )
+            vp_actual += infill_total
+            vp_skips -= infill_total
+            vp_flat += vp_flat_infill
+            vp_rough += vp_rough_infill
+            vp_facilities += vp_facilities_infill
+            vp_dunes += vp_dunes_infill
+            vp_sabkha += vp_sabkha_infill
 
         if areas['area'] > 0:
             vp_density = vp_actual / areas['area']
@@ -154,7 +233,7 @@ class SwathProdCalc(OutputMixin):
                    vp_flat * cfg.flat_terrain +
                    vp_rough * cfg.rough_terrain +
                    vp_facilities * cfg.facilities_terrain +
-                   vp_dune * cfg.dunes_terrain +
+                   vp_dunes * cfg.dunes_terrain +
                    vp_sabkha * cfg.sabkha_terrain
                 ) / vp_actual
             )
@@ -162,21 +241,12 @@ class SwathProdCalc(OutputMixin):
             vp_density = np.nan
             ctm = np.nan
 
-        return {
-            'theor': vp_theor,
-            'flat': vp_flat,
-            'rough': vp_rough,
-            'facilities': vp_facilities,
-            'dune_src': vp_dune_src,
-            'dune_rcv': vp_dune_rcv,
-            'dunes': vp_dune,
-            'sabkha': vp_sabkha,
-            'skips': vp_skips,
-            'actual': vp_actual,
-            'doz_km': dozer_km_vp,
-            'density': vp_density,
-            'ctm': ctm,
-        }
+        result_dict.update({
+            'flat': vp_flat, 'rough': vp_rough, 'facilities': vp_facilities,
+            'dunes': vp_dunes, 'sabkha': vp_sabkha, 'actual': vp_actual,
+            'skips': vp_skips, 'density': vp_density, 'ctm': ctm,
+        })
+        return result_dict
 
     def calc_rcv_stats(self, swath_nr, src_dozer_km):
         swath_gpd = self.gis.create_sw_gpd(
@@ -186,9 +256,14 @@ class SwathProdCalc(OutputMixin):
         areas = {}
         areas['swath'] = swath_nr
         areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
-        areas['area_dunes'] = self.gis.swath_intersection(swath_gpd, self.gis.dunes_gpd, 'yellow')
-        areas['area_infill'] = self.gis.swath_intersection(swath_gpd, self.gis.infill_gpd, 'green')
+        areas['area_dunes'] = self.gis.calc_area_and_plot(
+            self.gis.intersection(swath_gpd, self.gis.dunes_gpd), 'yellow'
+        )
         areas['area_flat'] = areas['area'] - areas['area_dunes']
+        if self.rcv_infill:
+            areas['area_infill'] = self.gis.calc_area_and_plot(
+                self.gis.intersection(swath_gpd, self.gis.rcv_infill_gpd), 'green'
+            )
         points = self.convert_area_to_rcv(areas, src_dozer_km)
 
         self.swath_rcv_stats = self.swath_rcv_stats.append(
@@ -196,29 +271,28 @@ class SwathProdCalc(OutputMixin):
         )
         return areas
 
-    @staticmethod
-    def convert_area_to_rcv(areas, dozer_km_src):
+    def convert_area_to_rcv(self, areas, dozer_km_src):
         density_flat = 1000 / cfg.rls_flat * 1000 / cfg.rps_flat
         rcv_theor = int(areas['area'] * density_flat)
         rcv_flat = int(areas['area_flat'] * density_flat)
         rcv_dune = int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.rps_sand)
-        rcv_infill = int(areas['area_infill'] * 1000 / cfg.rls_infill * 1000 / cfg.rps_infill)
-        rcv_actual = int(rcv_flat + rcv_dune + rcv_infill)
+        rcv_actual = int(rcv_flat + rcv_dune)
         dozer_km_rcv = (
             int(areas['area_dunes'] * 1000 / cfg.rls_sand) if cfg.rl_dozed else 0.0
         )
-        rcv_density = rcv_actual / areas['area'] if areas['area'] > 0 else np.nan
-
-        return {
-            'theor': rcv_theor,
-            'flat': rcv_flat,
-            'dunes': rcv_dune,
-            'infill': rcv_infill,
-            'actual': rcv_actual,
-            'doz_km': dozer_km_rcv,
-            'density': rcv_density,
+        result_dict = {
+            'theor': rcv_theor, 'flat': rcv_flat, 'dunes': rcv_dune, 'doz_km': dozer_km_rcv,
             'doz_total_km': dozer_km_src + dozer_km_rcv,
+
         }
+        if self.rcv_infill:
+            rcv_infill = int(areas['area_infill'] * 1000 / cfg.rls_infill * 1000 / cfg.rps_infill)
+            result_dict['infill'] = rcv_infill
+            rcv_actual += rcv_infill
+
+        result_dict['actual'] = rcv_actual
+        result_dict['density'] = result_dict['actual'] / areas['area'] if areas['area'] > 0 else np.nan
+        return result_dict
 
     def swath_range(self, swath_reverse=False):
         ''' calculate ranges depending on swath order is reversed
@@ -340,14 +414,23 @@ class SwathProdCalc(OutputMixin):
             self.swath_rcv_stats['swath'].isin(sw_patch_range)]['flat'].sum()
         n_dunes = self.swath_rcv_stats[
             self.swath_rcv_stats['swath'].isin(sw_patch_range)]['dunes'].sum()
-        n_infill = self.swath_rcv_stats[
-            self.swath_rcv_stats['swath'].isin(sw_patch_range)]['infill'].sum()
-        n_advance = (
-            self.swath_rcv_stats[
-                self.swath_rcv_stats['swath'].isin(sw_adv_range)]['dunes'].sum() +
-            self.swath_rcv_stats[
-                self.swath_rcv_stats['swath'].isin(sw_adv_range)]['infill'].sum()
-        )
+
+        if self.rcv_infill:
+            n_infill = self.swath_rcv_stats[
+                self.swath_rcv_stats['swath'].isin(sw_patch_range)]['infill'].sum()
+            n_advance = (
+                self.swath_rcv_stats[
+                    self.swath_rcv_stats['swath'].isin(sw_adv_range)]['dunes'].sum() +
+                self.swath_rcv_stats[
+                    self.swath_rcv_stats['swath'].isin(sw_adv_range)]['infill'].sum()
+            )
+        else:
+            n_infill = 0
+            n_advance = (
+                self.swath_rcv_stats[
+                    self.swath_rcv_stats['swath'].isin(sw_adv_range)]['dunes'].sum()
+            )
+
         results['nodes_patch'] = n_flat + n_dunes
         results['nodes_infill'] = n_infill
         results['nodes_dune_advance'] = n_advance
@@ -424,8 +507,9 @@ class SwathProdCalc(OutputMixin):
             self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['flat'].sum()
         production.layout_dune = self.swath_rcv_stats[
             self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['dunes'].sum()
-        production.layout_infill = self.swath_rcv_stats[
-            self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['infill'].sum()
+        if self.rcv_infill:
+            production.layout_infill = self.swath_rcv_stats[
+                self.swath_rcv_stats['swath'].isin(sw_rcv_range)]['infill'].sum()
 
         self.aggregate_prod_stats(0, [], production)
 
@@ -442,12 +526,8 @@ class SwathProdCalc(OutputMixin):
             # get vp production
             result_src = self.swath_src_stats[self.swath_src_stats['swath'] == swath]
             vp_prod = np.array([
-                result_src['flat'].sum(),
-                result_src['rough'].sum(),
-                result_src['facilities'].sum(),
-                result_src['dunes'].sum(),
-                result_src['sabkha'].sum(),
-                result_src['actual'].sum()
+                result_src['flat'].sum(), result_src['rough'].sum(), result_src['facilities'].sum(),
+                result_src['dunes'].sum(), result_src['sabkha'].sum(), result_src['actual'].sum()
             ])
             vp_prod = vp_prod * cfg.repeat_factor
             ctm = result_src['ctm'].sum() * cfg.repeat_factor
@@ -464,14 +544,17 @@ class SwathProdCalc(OutputMixin):
             # get receiver production
             layout = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_front]  #pylint: disable=line-too-long
             pickup = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_back]
-            layout_pickup = np.array([
-                layout['flat'].sum(),
-                layout['dunes'].sum(),
-                layout['infill'].sum(),
-                pickup['flat'].sum(),
-                pickup['dunes'].sum(),
-                pickup['infill'].sum(),
-            ])
+            if self.rcv_infill:
+                layout_pickup = np.array([
+                    layout['flat'].sum(), layout['dunes'].sum(), layout['infill'].sum(),
+                    pickup['flat'].sum(), pickup['dunes'].sum(), pickup['infill'].sum(),
+                ])
+
+            else:
+                layout_pickup = np.array([
+                    layout['flat'].sum(), layout['dunes'].sum(), 0,
+                    pickup['flat'].sum(), pickup['dunes'].sum(), 0,
+                ])
 
             # get dozer km
             doz_src_km = self.swath_src_stats[

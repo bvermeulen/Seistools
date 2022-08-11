@@ -94,7 +94,8 @@ class OutputMixin:
         # Chart 1: VP by type
         # format ['sheet', first_row, first_column, last_row, last_column]
         chart1 = workbook.add_chart({'type': 'line'})
-        for col in [7, 8, 9, 10, 13, 14, 16]:
+        col_range = [12, 13, 14, 15, 16, 17, 19] if self.src_infill else [7, 8, 9, 10, 11, 12, 14]
+        for col in col_range:
             chart1.add_series({
                 'name': ['Source', 0, col],
                 'categories': ['Source', 1, 0, total_swaths, 0],
@@ -109,7 +110,8 @@ class OutputMixin:
 
         # Chart 2: CTM by swath
         chart2 = workbook.add_chart({'type': 'line'})
-        for col in [19]:
+        col_range = [29] if self.src_infill else [19]
+        for col in col_range:
             chart2.add_series({
                 'name': ['Source', 0, col],
                 'categories': ['Source', 1, 0, total_swaths, 0],
@@ -124,7 +126,8 @@ class OutputMixin:
 
         # Chart 3: Source density by swath
         chart3 = workbook.add_chart({'type': 'line'})
-        for col in [18]:
+        col_range = [28] if self.src_infill else [18]
+        for col in col_range:
             chart3.add_series({
                 'name': ['Source', 0, col],
                 'categories': ['Source', 1, 0, total_swaths, 0],
