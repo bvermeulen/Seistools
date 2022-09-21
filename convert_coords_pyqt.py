@@ -1,3 +1,7 @@
+'''
+    PyQt application for conversion of coordinates for Oman PSD93 project coordinate system (EPSG 3440)
+    @ 2022 howdimain; bruno.vermeulen@hotmail.com
+'''
 import sys
 from enum import Enum
 from pathlib import Path
