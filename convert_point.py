@@ -15,6 +15,9 @@ class Conversion(Enum):
     PSD93_UTM = 5
     UTM_PSD93 = 6
     DEC_DMS = 7
+    GRID_PSD93 = 8
+    PSD93_GRID = 9
+
 
 class DEGREE_FMT(Enum):
     DECIMAL_DEGREE = 1
@@ -36,10 +39,12 @@ def input_type_conversion(degree_format=DEGREE_FMT.DECIMAL_DEGREE):
             f'5: PSD93 -> UTM 40N\n'
             f'6: UTM 40N -> PSD93\n'
             f'7: Lat-Long {"decimal" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "DMS"} -> '
-            f'{"DMS" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "decimal"}'
+            f'{"DMS" if degree_format == DEGREE_FMT.DECIMAL_DEGREE else "decimal"}\n'
+            f'8: 22CO GRID -> PSD93\n'
+            f'9: PSD93 -> 22CO GRID\n'
         )
         print(prompt)
-        answer = input('Type 1..7 [enter f to change degree format; q to quit]: ')
+        answer = input('Type 1..9 [enter f to change degree format; q to quit]: ')
         if answer in ['q', 'Q', 'quit', 'Quit']:
             exit()
 
@@ -52,7 +57,7 @@ def input_type_conversion(degree_format=DEGREE_FMT.DECIMAL_DEGREE):
 
         try:
             val = int(answer)
-            if val in [1, 2, 3, 4, 5, 6, 7]:
+            if val in [1, 2, 3, 4, 5, 6, 7, 8, 9]:
                 valid = True
 
         except ValueError:
@@ -79,6 +84,12 @@ def input_type_conversion(degree_format=DEGREE_FMT.DECIMAL_DEGREE):
 
     elif val == 7:
         return Conversion.DEC_DMS, degree_format
+
+    elif val == 8:
+        return Conversion.GRID_PSD93, degree_format
+
+    elif val == 9:
+        return Conversion.PSD93_GRID, degree_format
 
     else:
         assert False, f'check the code, invalid value {val}'
@@ -221,8 +232,7 @@ def conversion_proj1_proj2(ct):
 
 
 def conversion_dec_dms(ct, dfmt):
-    if ct != Conversion.DEC_DMS:
-        assert False, f'incorrect conversion {ct}'
+    assert ct == Conversion.DEC_DMS, f'incorrect conversion {ct}'
 
     continue_input = True
     if dfmt == DEGREE_FMT.DECIMAL_DEGREE:
@@ -262,6 +272,33 @@ def conversion_dec_dms(ct, dfmt):
     return continue_input
 
 
+def conversion_22co_psd93(ct, dfmt):
+    assert ct in [Conversion.GRID_PSD93, Conversion.PSD93_GRID], f'incorrect conversion {ct}'
+
+    if ct == Conversion.GRID_PSD93:
+        line, station = input_val1_val2(f'line, station (receiver) [enter q for a new conversion]: ')
+        if line == -1 and station == -1: return False
+
+        easting, northing = ctools.grid22co_psd93(line, station)
+        print(
+            f'{"Easting":9} | {"Northing":11} (PSD93)\n'
+            f'{easting:9.1f} | {northing:11.1f}\n'
+            f'----------------------------------------------------'
+        )
+
+    else:
+        easting, northing = input_val1_val2(f'easting, northing [enter q for a new conversion]: ')
+        if easting == -1 and northing == -1: return False
+
+        line, station = ctools.psd93_grid22co(easting, northing)
+        print(
+            f'{"Line":8} | {"Station":8} (22CO receiver grid)\n'
+            f'{line:8.0f} | {station:8.0f}\n'
+            f'----------------------------------------------------'
+        )
+    return True
+
+
 def conversion_main():
     degree_format = DEGREE_FMT.DECIMAL_DEGREE
 
@@ -281,6 +318,9 @@ def conversion_main():
 
             elif conversion_type == Conversion.DEC_DMS:
                 continue_input = conversion_dec_dms(conversion_type, degree_format)
+
+            elif conversion_type in [Conversion.GRID_PSD93, Conversion.PSD93_GRID]:
+                continue_input = conversion_22co_psd93(conversion_type, degree_format)
 
             else:
                 continue_input = False

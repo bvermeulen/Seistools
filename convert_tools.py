@@ -18,12 +18,17 @@ class ConvertTools:
     psd93 = Proj(EPSG_PSD93)
     utm40n = Proj('epsg:32640')
 
-    @staticmethod
-    def convert_dms_to_dec_degree(longitude: str, latitude: str) -> tuple[float, float]:
 
+    @staticmethod
+    def strip_lon_lat(longitude: str, latitude: str) -> tuple[re.Match, re.Match]:
         lon = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([EWew])\s*$', longitude)
         lat = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([NSns])\s*$', latitude)
-        if lat and lon:
+        return lon, lat
+
+    def convert_dms_to_dec_degree(self, longitude: str, latitude: str) -> tuple[float, float]:
+
+        lon, lat = self.strip_lon_lat(longitude, latitude)
+        if lon and lat:
             lat_d = float(lat.group(1))
             lat_m = float(lat.group(2))
             lat_s = float(lat.group(3))
@@ -56,7 +61,7 @@ class ConvertTools:
             return -1, -1
 
     @staticmethod
-    def convert_dec_degree_to_dms(longitude: float, latitude: float) -> tuple[float, float]:
+    def convert_dec_degree_to_dms(longitude: float, latitude: float) -> tuple[str, str]:
         if not (-180 < latitude <= 180) or not (-180 < longitude <= 180):
             return '-', '-'
 
@@ -95,6 +100,7 @@ class ConvertTools:
 
             return lon, lat
 
+
     def utm40n_to_wgs84(self, easting: float, northing: float) -> tuple[float, float]:
         converted_point = Point(self.utm40n(easting, northing, inverse=True))
         return converted_point.x, converted_point.y
@@ -124,3 +130,21 @@ class ConvertTools:
         # wgs84 lon, lat to psd93
         converted_point = Point(self.psd93(converted_point.x, converted_point.y))
         return converted_point.x, converted_point.y
+
+    def grid22co_psd93(self, line, station):
+        # 22co grid to psd93 easting, northing
+        origin_x = (1000, 358_028.8)
+        origin_y = (1000, 2_277_156.3)
+        interval = 6.25
+        easting = (line - origin_x[0]) * interval + origin_x[1]
+        northing = (station - origin_y[0]) * interval + origin_y[1]
+        return easting, northing
+
+    def psd93_grid22co(self, easting, northing):
+        # psd93 easting, northing to 22co grid
+        origin_x = (1000, 358_028.8)
+        origin_y = (1000, 2_277_156.3)
+        inv_interval = 1 / 6.25
+        line = origin_x[0] + round((easting - origin_x[1]) * inv_interval / 32) * 32.0
+        station = origin_y[0] + round((northing - origin_y[1]) * inv_interval / 4) * 4.0
+        return line, station

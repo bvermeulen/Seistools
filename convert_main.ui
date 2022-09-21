@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>247</width>
+    <height>425</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Convert coordinates</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <widget class="QPushButton" name="pb3_wgs84_utm40">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>130</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>WGS84 -&gt; UTM 40N</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb2_psd93_wgs84">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>100</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PSD93 -&gt; WGS84</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb5_psd93_utm40">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>190</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PSD93 -&gt; UTM 40N</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb4_utm40_wgs84">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>160</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>UTM 40N -&gt; WGS84</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb8_grid_psd93">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>280</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>22CO grid -&gt; PSD93</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb6_utm40_psd93">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>220</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>UTM 40N -&gt; PSD93</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb9_psd93_grid">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>310</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>PSD93 -&gt; 22CO grid</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb1_wgs84_psd93">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>70</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>WGS84 -&gt; PSD93</string>
+    </property>
+    <property name="default">
+     <bool>false</bool>
+    </property>
+    <property name="flat">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb7_lon_lat">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>250</y>
+      <width>111</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Lat-Lon</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>10</y>
+      <width>211</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>10</pointsize>
+      <weight>75</weight>
+      <bold>true</bold>
+      <kerning>false</kerning>
+     </font>
+    </property>
+    <property name="mouseTracking">
+     <bool>true</bool>
+    </property>
+    <property name="lineWidth">
+     <number>1</number>
+    </property>
+    <property name="text">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Convert coordinates&lt;br&gt;(Oman PSD93)&lt;/span&gt;&lt;/body&gt;&lt;/head&gt;&lt;/html&gt;
+</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::AutoText</enum>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>247</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuExit">
+    <property name="tearOffEnabled">
+     <bool>false</bool>
+    </property>
+    <property name="title">
+     <string>Exit</string>
+    </property>
+    <addaction name="actionQuit"/>
+   </widget>
+   <widget class="QMenu" name="menuFormat">
+    <property name="title">
+     <string>Degrees</string>
+    </property>
+    <addaction name="actionDegrees"/>
+    <addaction name="actionDMS"/>
+   </widget>
+   <addaction name="menuExit"/>
+   <addaction name="menuFormat"/>
+  </widget>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionDegrees">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Degrees</string>
+   </property>
+  </action>
+  <action name="actionDMS">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>DMS</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>pb1_wgs84_psd93</tabstop>
+  <tabstop>pb2_psd93_wgs84</tabstop>
+  <tabstop>pb3_wgs84_utm40</tabstop>
+  <tabstop>pb4_utm40_wgs84</tabstop>
+  <tabstop>pb5_psd93_utm40</tabstop>
+  <tabstop>pb6_utm40_psd93</tabstop>
+  <tabstop>pb7_lon_lat</tabstop>
+  <tabstop>pb8_grid_psd93</tabstop>
+  <tabstop>pb9_psd93_grid</tabstop>
+ </tabstops>
+ <resources/>
+ <connections/>
+</ui>
