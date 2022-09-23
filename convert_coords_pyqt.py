@@ -4,7 +4,7 @@
 '''
 import sys
 from dataclasses import dataclass
-from abc import ABC, abstractmethod
+from abc import ABCMeta, abstractmethod
 from enum import Enum
 from pathlib import Path
 from PyQt5 import uic, QtWidgets
@@ -147,12 +147,12 @@ class MainWindow(QtWidgets.QMainWindow):
         sys.exit()
 
 
-class QtMixinMeta(type(QtWidgets.QDialog), ABC):
+class QtMixinMeta(type(QtWidgets.QDialog), ABCMeta):
     pass
 
 
 class DialogMeta(QtWidgets.QDialog, metaclass=QtMixinMeta):
-    def __init__(self, parent, conversion, title, input1, input2, output1, output2):
+    def __init__(self, parent, convert_choice, title, input1, input2, output1, output2):
         super().__init__(parent)
         uic.loadUi(Path(__file__).parent / getattr(UIInterface, (self.__class__.__name__)), self)
         self.TitleText.setText(title)
@@ -161,10 +161,10 @@ class DialogMeta(QtWidgets.QDialog, metaclass=QtMixinMeta):
         self.TextOutput_1.setText(output1)
         self.TextOutput_2.setText(output2)
         self.pb_exit.clicked.connect(self.action_exit)
-        self.pb_convert.clicked.connect(lambda x: self.action_convert(conversion))
+        self.pb_convert.clicked.connect(lambda x: self.action_convert(convert_choice))
 
     @abstractmethod
-    def action_convert(self, conversion):
+    def action_convert(self, convert_choice):
         pass
 
     def action_exit(self):
@@ -172,8 +172,8 @@ class DialogMeta(QtWidgets.QDialog, metaclass=QtMixinMeta):
 
 
 class DialogFloatFloat(DialogMeta):
-    def __init__(self, parent, conversion, title, input1, input2, output1, output2):
-        super().__init__(parent, conversion, title, input1, input2, output1, output2)
+    def __init__(self, parent, convert_choice, title, input1, input2, output1, output2):
+        super().__init__(parent, convert_choice, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
@@ -226,8 +226,8 @@ class DialogFloatFloat(DialogMeta):
 
 
 class DialogDMSFloat(DialogMeta):
-    def __init__(self, parent, conversion, title, input1, input2, output1, output2):
-        super().__init__(parent, conversion, title, input1, input2, output1, output2)
+    def __init__(self, parent, convert_choice, title, input1, input2, output1, output2):
+        super().__init__(parent, convert_choice, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
@@ -265,8 +265,8 @@ class DialogDMSFloat(DialogMeta):
 
 
 class DialogFloatDMS(DialogMeta):
-    def __init__(self, parent, conversion, title, input1, input2, output1, output2):
-        super().__init__(parent, conversion, title, input1, input2, output1, output2)
+    def __init__(self, parent, convert_choice, title, input1, input2, output1, output2):
+        super().__init__(parent, convert_choice, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
