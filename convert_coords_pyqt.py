@@ -3,10 +3,19 @@
     @ 2022 howdimain; bruno.vermeulen@hotmail.com
 '''
 import sys
+from dataclasses import dataclass
+from abc import ABC, abstractmethod
 from enum import Enum
 from pathlib import Path
 from PyQt5 import uic, QtWidgets
 from convert_tools import ConvertTools
+
+@dataclass
+class UIInterface:
+    MainWindow: str = 'convert_main.ui'
+    DialogFloatFloat: str = 'convert_dlg_float_float.ui'
+    DialogDMSFloat: str = 'convert_dlg_DMS_float.ui'
+    DialogFloatDMS: str = 'convert_dlg_float_DMS.ui'
 
 
 class ConvertChoice(Enum):
@@ -19,6 +28,7 @@ class ConvertChoice(Enum):
     lon_lat = 7
     grid_psd93 = 8
     psd93_grid = 9
+    test = 10
 
 
 class FormatChoice(Enum):
@@ -32,145 +42,103 @@ convert = ConvertTools()
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi(Path(__file__).parent / 'convert_main.ui', self)
+        uic.loadUi(Path(__file__).parent / getattr(UIInterface, __class__.__name__), self)
         self.actionQuit.triggered.connect(self.action_quit)
-        self.actionDegrees.triggered.connect(lambda x: self.action_format(FormatChoice.Degrees))
-        self.actionDMS.triggered.connect(lambda x: self.action_format(FormatChoice.DMS))
-        self.pb5_psd93_utm40.clicked.connect(lambda x: self.action_float_float(ConvertChoice.psd93_utm40))
-        self.pb6_utm40_psd93.clicked.connect(lambda x: self.action_float_float(ConvertChoice.utm40_psd93))
-        self.pb8_grid_psd93.clicked.connect(lambda x: self.action_float_float(ConvertChoice.grid_psd93))
-        self.pb9_psd93_grid.clicked.connect(lambda x: self.action_float_float(ConvertChoice.psd93_grid))
-        self.action_connect()
+        self.actionDegrees.triggered.connect(lambda x: self.select_format(FormatChoice.Degrees))
+        self.actionDMS.triggered.connect(lambda x: self.select_format(FormatChoice.DMS))
+        self.pb1_wgs84_psd93.clicked.connect(lambda x: self.select_convert(ConvertChoice.wgs84_psd93))
+        self.pb2_psd93_wgs84.clicked.connect(lambda x: self.select_convert(ConvertChoice.psd93_wgs84))
+        self.pb3_wgs84_utm40.clicked.connect(lambda x: self.select_convert(ConvertChoice.wgs84_utm40))
+        self.pb4_utm40_wgs84.clicked.connect(lambda x: self.select_convert(ConvertChoice.utm40_wgs84))
+        self.pb5_psd93_utm40.clicked.connect(lambda x: self.select_convert(ConvertChoice.psd93_utm40))
+        self.pb6_utm40_psd93.clicked.connect(lambda x: self.select_convert(ConvertChoice.utm40_psd93))
+        self.pb7_lon_lat.clicked.connect(lambda x: self.select_convert(ConvertChoice.lon_lat))
+        self.pb8_grid_psd93.clicked.connect(lambda x: self.select_convert(ConvertChoice.grid_psd93))
+        self.pb9_psd93_grid.clicked.connect(lambda x: self.select_convert(ConvertChoice.psd93_grid))
+        self.dlg_class_proj_proj = DialogFloatFloat
+        self.dlg_class_geog_proj = DialogFloatFloat
+        self.dlg_class_proj_geog = DialogFloatFloat
+        self.dlg_class_geog_geog = DialogFloatDMS
 
-    def action_format(self, format_choice):
+    def select_format(self, format_choice):
         match format_choice:
             case FormatChoice.Degrees:
                 self.actionDegrees.setChecked(True)
                 self.actionDMS.setChecked(False)
                 self.menuFormat.setTitle('Degrees')
+                self.dlg_class_proj_proj = DialogFloatFloat
+                self.dlg_class_geog_proj = DialogFloatFloat
+                self.dlg_class_proj_geog = DialogFloatFloat
+                self.dlg_class_geog_geog = DialogFloatDMS
 
             case FormatChoice.DMS:
                 self.actionDegrees.setChecked(False)
                 self.actionDMS.setChecked(True)
                 self.menuFormat.setTitle('DMS')
+                self.dlg_class_proj_proj = DialogFloatFloat
+                self.dlg_class_geog_proj = DialogDMSFloat
+                self.dlg_class_proj_geog = DialogFloatDMS
+                self.dlg_class_geog_geog = DialogDMSFloat
 
             case _:
-                assert False, "check format choice"
+                assert False, (
+                    f'check {format_choice} in {__class__.__name__} / '
+                    f'{__class__.select_format.__name__}'
+                )
 
-        self.action_connect()
-
-    def action_connect(self):
-        self.pb1_wgs84_psd93.disconnect()
-        self.pb2_psd93_wgs84.disconnect()
-        self.pb3_wgs84_utm40.disconnect()
-        self.pb4_utm40_wgs84.disconnect()
-        self.pb7_lon_lat.disconnect()
-
-        if self.actionDegrees.isChecked():
-            self.pb1_wgs84_psd93.clicked.connect(lambda x: self.action_float_float(ConvertChoice.wgs84_psd93))
-            self.pb2_psd93_wgs84.clicked.connect(lambda x: self.action_float_float(ConvertChoice.psd93_wgs84))
-            self.pb3_wgs84_utm40.clicked.connect(lambda x: self.action_float_float(ConvertChoice.wgs84_utm40))
-            self.pb4_utm40_wgs84.clicked.connect(lambda x: self.action_float_float(ConvertChoice.utm40_wgs84))
-            self.pb7_lon_lat.clicked.connect(lambda x: self.action_float_DMS(ConvertChoice.lon_lat))
-
-        elif self.actionDMS.isChecked():
-            self.pb1_wgs84_psd93.clicked.connect(lambda x: self.action_DMS_float(ConvertChoice.wgs84_psd93))
-            self.pb2_psd93_wgs84.clicked.connect(lambda x: self.action_float_DMS(ConvertChoice.psd93_wgs84))
-            self.pb3_wgs84_utm40.clicked.connect(lambda x: self.action_DMS_float(ConvertChoice.wgs84_utm40))
-            self.pb4_utm40_wgs84.clicked.connect(lambda x: self.action_float_DMS(ConvertChoice.utm40_wgs84))
-            self.pb7_lon_lat.clicked.connect(lambda x: self.action_DMS_float(ConvertChoice.lon_lat))
-
-        else:
-            assert False, "check Degrees/ DMS"
-
-    def action_float_float(self, convert_choice):
+    def select_convert(self, convert_choice):
         match convert_choice:
             case ConvertChoice.wgs84_psd93:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_geog_proj(
                     self, convert_choice, 'WGS84 to PSD93', 'Longitude', 'Latitude',
                     'Easting', 'Northing'
                 )
             case ConvertChoice.psd93_wgs84:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_geog(
                     self, convert_choice, 'PSD93 to WGS84', 'Easting', 'Northing',
                     'Longitude', 'Latitude'
                 )
             case ConvertChoice.wgs84_utm40:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_geog_proj(
                     self, convert_choice, 'WGS84 to UTM 40N', 'Longitude', 'Latitude',
                     'Easting', 'Northing'
                 )
             case ConvertChoice.utm40_wgs84:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_geog(
                     self, convert_choice, 'UTM 40N to WGS84', 'Easting', 'Northing',
                     'Longitude', 'Latitude'
                 )
             case ConvertChoice.psd93_utm40:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_proj(
                     self, convert_choice, 'PSD93 to UTM 40N', 'Easting', 'Northing',
                     'Easting', 'Northing'
                 )
             case ConvertChoice.utm40_psd93:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_proj(
                     self, convert_choice, 'UTM 40N to PSD93', 'Easting', 'Northing',
                     'Easting', 'Northing'
                 )
+            case ConvertChoice.lon_lat:
+                dlg = self.dlg_class_geog_geog(
+                    self, convert_choice, 'DMS to Degrees', 'Longitude', 'Latitude',
+                    'Longitude', 'Latitude'
+                )
+
             case ConvertChoice.grid_psd93:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_proj(
                     self, convert_choice, '22CO grid to PSD93', 'Line', 'Station',
                     'Easting', 'Northing'
                 )
             case ConvertChoice.psd93_grid:
-                dlg = DialogFloatFloat(
+                dlg = self.dlg_class_proj_proj(
                     self, convert_choice, 'PSD93 to 22CO grid', 'Easting', 'Northing',
                     'Line', 'Station'
                 )
             case _:
-                assert False, "Check action_float_float"
-
-        dlg.exec_()
-
-    def action_DMS_float(self, convert_choice):
-        match convert_choice:
-            case ConvertChoice.wgs84_psd93:
-                dlg = DialogDMSFloat(
-                    self, convert_choice, 'WGS84 to PSD93', 'Longitude', 'Latitude',
-                    'Easting', 'Northing'
+                assert False, (
+                    f'Check {convert_choice} in {__class__.__name__} / '
+                    f'{__class__.select_convert.__name__}'
                 )
-            case ConvertChoice.wgs84_utm40:
-                dlg = DialogDMSFloat(
-                    self, convert_choice, 'WGS84 to UTM 40N', 'Longitude', 'Latitude',
-                    'Easting', 'Northing'
-                )
-            case ConvertChoice.lon_lat:
-                dlg = DialogDMSFloat(
-                    self, convert_choice, 'DMS to Degrees', 'Longitude', 'Latitude',
-                    'Longitude', 'Latitude'
-                )
-            case _:
-                assert False, "Check action_DMS_float"
-
-        dlg.exec_()
-
-    def action_float_DMS(self, convert_choice):
-        match convert_choice:
-            case ConvertChoice.psd93_wgs84:
-                dlg = DialogFloatDMS(
-                    self, convert_choice, 'PSD93 to WGS84', 'Easting', 'Northing',
-                    'Longitude', 'Latitude'
-                )
-            case ConvertChoice.utm40_wgs84:
-                dlg = DialogFloatDMS(
-                    self, convert_choice, 'UTM 40N to WGS84', 'Easting', 'Northing',
-                    'Longitude', 'Latitude'
-                )
-            case ConvertChoice.lon_lat:
-                dlg = DialogFloatDMS(
-                    self, convert_choice, 'Degrees to DMS', 'Longitude', 'Latitude',
-                    'Longitude', 'Latitude'
-                )
-            case _:
-                assert False, "Check action_float_DMS"
 
         dlg.exec_()
 
@@ -179,10 +147,14 @@ class MainWindow(QtWidgets.QMainWindow):
         sys.exit()
 
 
-class DialogFloatFloat(QtWidgets.QDialog):
+class QtMixinMeta(type(QtWidgets.QDialog), ABC):
+    pass
+
+
+class DialogMeta(QtWidgets.QDialog, metaclass=QtMixinMeta):
     def __init__(self, parent, conversion, title, input1, input2, output1, output2):
         super().__init__(parent)
-        uic.loadUi(Path(__file__).parent / 'convert_dlg_float_float.ui', self)
+        uic.loadUi(Path(__file__).parent / getattr(UIInterface, (self.__class__.__name__)), self)
         self.TitleText.setText(title)
         self.TextInput_1.setText(input1)
         self.TextInput_2.setText(input2)
@@ -190,6 +162,18 @@ class DialogFloatFloat(QtWidgets.QDialog):
         self.TextOutput_2.setText(output2)
         self.pb_exit.clicked.connect(self.action_exit)
         self.pb_convert.clicked.connect(lambda x: self.action_convert(conversion))
+
+    @abstractmethod
+    def action_convert(self, conversion):
+        pass
+
+    def action_exit(self):
+        self.close()
+
+
+class DialogFloatFloat(DialogMeta):
+    def __init__(self, parent, conversion, title, input1, input2, output1, output2):
+        super().__init__(parent, conversion, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
@@ -235,27 +219,15 @@ class DialogFloatFloat(QtWidgets.QDialog):
                 f_fmt = '.0f'
 
             case _:
-                assert False, "Check DiaglogFloatFloat"
+                assert False, f'Check {convert_choice} in {__class__.__name__}'
 
         self.lineEditOutput_1.setText(f'{val1:{f_fmt}}')
         self.lineEditOutput_2.setText(f'{val2:{f_fmt}}')
 
-    def action_exit(self):
-        self.close()
 
-
-class DialogDMSFloat(QtWidgets.QDialog):
+class DialogDMSFloat(DialogMeta):
     def __init__(self, parent, conversion, title, input1, input2, output1, output2):
-        super().__init__(parent)
-        uic.loadUi(Path(__file__).parent / 'convert_dlg_DMS_float.ui', self)
-        self.TitleText.setText(title)
-        self.TextInput_1.setText(input1)
-        self.TextInput_2.setText(input2)
-        self.TextOutput_1.setText(output1)
-        self.TextOutput_2.setText(output2)
-        self.pb_exit.clicked.connect(self.action_exit)
-        self.pb_convert.clicked.connect(
-            lambda x: self.action_convert(conversion))
+        super().__init__(parent, conversion, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
@@ -286,27 +258,15 @@ class DialogDMSFloat(QtWidgets.QDialog):
                 f_fmt = '.6f'
 
             case _:
-                assert False, "Check class DialogDMSFloat"
+                assert False, f'Check {convert_choice} in {__class__.__name__}'
 
         self.lineEditOutput_1.setText(f'{val1:{f_fmt}}')
         self.lineEditOutput_2.setText(f'{val2:{f_fmt}}')
 
-    def action_exit(self):
-        self.close()
 
-
-class DialogFloatDMS(QtWidgets.QDialog):
+class DialogFloatDMS(DialogMeta):
     def __init__(self, parent, conversion, title, input1, input2, output1, output2):
-        super().__init__(parent)
-        uic.loadUi(Path(__file__).parent / 'convert_dlg_float_DMS.ui', self)
-        self.TitleText.setText(title)
-        self.TextInput_1.setText(input1)
-        self.TextInput_2.setText(input2)
-        self.TextOutput_1.setText(output1)
-        self.TextOutput_2.setText(output2)
-        self.pb_exit.clicked.connect(self.action_exit)
-        self.pb_convert.clicked.connect(
-            lambda x: self.action_convert(conversion))
+        super().__init__(parent, conversion, title, input1, input2, output1, output2)
 
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText('')
@@ -335,7 +295,7 @@ class DialogFloatDMS(QtWidgets.QDialog):
                 pass
 
             case _:
-                assert False, "Check class DialogFloatDMS"
+                assert False, f'Check {convert_choice} in {__class__.__name__}'
 
         val1, val2 = convert.convert_dec_degree_to_dms(val1, val2)
         lon, lat = convert.strip_lon_lat(val1, val2)
@@ -348,12 +308,6 @@ class DialogFloatDMS(QtWidgets.QDialog):
             self.lineEditOutput_6.setText(f'{float(lat.group(2)):.0f}')
             self.lineEditOutput_7.setText(f'{float(lat.group(3)):.2f}')
             self.lineEditOutput_8.setText(f'{lat.group(4)}')
-
-        else:
-            return
-
-    def action_exit(self):
-        self.close()
 
 
 def start_app():
