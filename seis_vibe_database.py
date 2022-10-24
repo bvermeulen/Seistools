@@ -1,7 +1,6 @@
 import datetime
 import numpy as np
 import pandas as pd
-from pandas.io import sql
 from shapely.geometry import Point
 import seis_utils
 from seis_settings import FLEETS, SWEEP_TIME, PAD_DOWN_TIME, DENSE_CRITERIUM, EPSG_PSD93

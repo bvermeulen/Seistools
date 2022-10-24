@@ -1,6 +1,7 @@
 ''' module for seistools database interaction using sqlite3
 '''
 from functools import wraps
+import pandas as pd
 import sqlite3
 from sqlalchemy import create_engine
 from seis_settings import DATABASE
@@ -57,3 +58,8 @@ class DbUtils:
         finally:
             if connection:
                 connection.close()
+
+    @classmethod
+    def db_table_to_df(cls, db_table: str) -> pd.DataFrame:
+        db_engine = cls.get_db_engine()
+        return pd.read_sql_query(f'select * from {db_table}', con=db_engine)

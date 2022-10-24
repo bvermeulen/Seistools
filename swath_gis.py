@@ -124,7 +124,12 @@ class Gis:
         for layer in layers:
             if layer is None or layer.empty:
                 continue
-            main_layer = overlay(main_layer, layer, how='difference')
+
+            try:
+                main_layer = overlay(main_layer, layer, how='difference')
+
+            except IndexError:
+                pass
 
         return main_layer
 

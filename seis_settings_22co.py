@@ -1,5 +1,6 @@
 ''' settings and data structures for vp app
 '''
+import dataclasses
 import datetime
 from dataclasses import dataclass
 from pathlib import Path
@@ -284,6 +285,14 @@ nuseis_plt_settings = {
         'tol_max': 10,
     },
 }
+
+@dataclass
+class SwathDefinition:
+    first_swath: int = 100
+    last_swath: int = 524
+    first_line: int = 970
+    line_spacing: int = 200
+    point_spacing: int = 25
 
 @dataclass
 class FilesNodeTable:
