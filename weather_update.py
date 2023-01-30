@@ -26,7 +26,7 @@ class Weather:
             if not filename.is_file() or filename.suffix.lower() != '.csv':
                 continue
 
-            weather_file = FilesWeatherTable(*[None]*2)
+            weather_file = FilesWeatherTable(*[None]*3)
 
             weather_file.file_name = filename.name
             weather_file.file_date = (
@@ -49,11 +49,11 @@ class Weather:
 
             weather_records = []
             for _, weather_row in weather_df.iterrows():
-                weather_record = WeatherTable(*[None]*8)
+                weather_record = WeatherTable(*[None]*9)
                 weather_record.file_id = file_id
                 weather_record.date_time = weather_row.date_time.to_pydatetime()
                 weather_record.wind_speed = weather_row.wind_speed
-                weather_record.gust = weather_row.gust
+                weather_record.wind_gust = weather_row.gust
                 weather_record.pulse_count = weather_row.pulse_count
                 weather_record.counter_value = weather_row.counter_value
                 weather_record.input_voltage = weather_row.input_voltage

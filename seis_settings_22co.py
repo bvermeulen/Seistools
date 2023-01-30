@@ -11,6 +11,7 @@ DATA_FILES_VAPS =     Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_nod
 DATA_FILES_QUANTUM =  Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data//quantum_nodes')
 DATA_FILES_NUSEIS =   Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data/nuseis_nodes')
 DATA_FILES_SPS =      Path('D:/OneDrive/Work/PDO/Central Oman 2022/12 QC/vib_node_data/sps_final')
+DATA_FILES_WEATHER =  Path('D:/OneDrive/Work/PDO/Central Oman 2022/1 Daily Reports/12 Wind Logs')
 RESULTS_FOLDER =      Path('D:/OneDrive/Work/PDO/Central Oman 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
 DATABASE =            Path('D:/OneDrive/Work/PDO/Central Oman 2022/6 Mapping/central_oman_db.sqlite3')
 
@@ -443,3 +444,21 @@ class SpsTable:
     dpg_filename: str
     time_break: datetime.datetime
     vibrator: int
+
+@dataclass
+class FilesWeatherTable:
+    id: int
+    file_name: str
+    file_date: datetime.datetime
+
+@dataclass
+class WeatherTable:
+    id: int
+    file_id: int
+    date_time: datetime.datetime
+    wind_speed: float
+    wind_gust: float
+    pulse_count: int
+    counter_value: int
+    input_voltage: float
+    temperature: float

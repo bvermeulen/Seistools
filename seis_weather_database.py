@@ -1,8 +1,6 @@
 import datetime
 import pandas as pd
-from shapely.geometry import Point
 import seis_utils
-from seis_settings import EPSG_PSD93
 from seis_database import DbUtils
 
 
@@ -49,7 +47,7 @@ class WeatherDb:
             f'file_id INTEGER REFERENCES {cls.table_weather_files}(id) ON DELETE CASCADE, '
             f'date_time TIMESTAMP, '
             f'wind_speed REAL, '
-            f'gust REAL, '
+            f'wind_gust REAL, '
             f'pulse_count INTEGER, '
             f'counter_value INTEGER, '
             f'input_voltage REAL, '
@@ -99,16 +97,18 @@ class WeatherDb:
 
         sql_insert_string = (
             f'INSERT INTO {cls.table_weather_data} ('
-            f'file_id, date_time, wind_speed, gust, pulse_count, '
+            f'file_id, date_time, wind_speed, wind_gust, pulse_count, '
             f'counter_value, input_voltage, temperature) '
             f'VALUES ({", ".join(["?"]*8)}); '
         )
+
         for weather_record in weather_records:
+
             cursor.execute(sql_insert_string, (
                 weather_record.file_id,
                 weather_record.date_time,
                 weather_record.wind_speed,
-                weather_record.gust,
+                weather_record.wind_gust,
                 weather_record.pulse_count,
                 weather_record.counter_value,
                 weather_record.input_voltage,
