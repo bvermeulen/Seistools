@@ -1,1 +1,1 @@
-seis_settings_22co.py
+seis_settings_22nb.py
