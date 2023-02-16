@@ -30,14 +30,14 @@ class OutputMixin:
             print(f'area sabkha: {area_sabkha}')
             print(f'area source sabkha: {total_src_sabkha_area}\n')
         except AttributeError:
-            pass
+            area_sabkha = 0
 
         try:
             area_dunes = sum(gis.dunes_gpd.geometry.area.to_list()) / 1e6
             print(f'area dunes: {area_dunes}')
             print(f'area source dunes: {total_src_dune_area}\n')
         except AttributeError:
-            pass
+            area_dunes = 0
 
         area_rcv_block = sum(gis.receiver_block_gpd.geometry.area.to_list()) / 1e6
         print(f'area receiver block: {area_rcv_block}')

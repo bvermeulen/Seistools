@@ -182,21 +182,36 @@ class SwathProdCalc(OutputMixin):
         return areas
 
     def convert_area_to_vps(self, areas) -> dict[int]:
-        density_flat = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
-        vp_theor = int(areas['area'] * density_flat)
-        vp_flat = int(areas['area_flat'] * density_flat)
-        vp_rough = int(areas['area_rough'] * density_flat)
-        vp_facilities = int(areas['area_facilities'] * density_flat)
-        vp_dunes_src = int(areas['area_dunes'] * 1000 / cfg.sls_sand * 1000 / cfg.sps_sand)
+        #TODO include skip percentages
+        source_density = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
+        vp_theor = int(areas['area'] * source_density)
+        vp_flat = int(
+            areas['area_flat'] * (1 - cfg.flat_skip_perc) * source_density
+        )
+        vp_rough = int(
+            areas['area_rough'] * (1 - cfg.rough_skip_perc) * source_density
+        )
+        vp_facilities = int(
+            areas['area_facilities'] * (1 - cfg.facilities_skip_perc) *
+            source_density
+        )
+        vp_dunes_src = int(
+            areas['area_dunes'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.sls_sand *
+            1000 / cfg.sps_sand
+        )
         vp_dunes_rcv = (
-            int(areas['area_dunes'] * 1000 / cfg.rls_sand * 1000 / cfg.sps_sand)
-            if cfg.source_on_receivers else 0.0
+            int(areas['area_dunes'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.rls_sand *
+            1000 / cfg.sps_sand) if cfg.source_on_receivers else 0.0
         )
         vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
-        vp_sabkha = int(areas['area_sabkha'] * density_flat)
+        vp_sabkha = int(
+            areas['area_sabkha'] * (1 - cfg.sabkha_skip_perc) * source_density
+        )
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dunes + vp_sabkha)
         vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dunes - vp_sabkha
-        km_access = areas['area_dunes'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+        km_access = (
+            areas['area_dunes'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+        )
         dozer_km_vp = vp_dunes * cfg.sps_sand / 1000 + km_access
         result_dict = {
             'theor': vp_theor, 'dunes_src': vp_dunes_src, 'dunes_rcv': vp_dunes_rcv,
@@ -204,11 +219,26 @@ class SwathProdCalc(OutputMixin):
         }
         if self.src_infill:
             density_infill = 1000 / cfg.sls_infill * 1000 / cfg.sps_infill
-            vp_flat_infill = int(areas['area_flat_infill'] * density_infill)
-            vp_rough_infill = int(areas['area_rough_infill'] * density_infill)
-            vp_facilities_infill = int(areas['area_facilities_infill'] * density_infill)
-            vp_dunes_infill = int(areas['area_dunes_infill'] * density_infill)
-            vp_sabkha_infill = int(areas['area_sabkha_infill'] * density_infill)
+            vp_flat_infill = int(
+                areas['area_flat_infill'] * (1 - cfg.flat_skip_perc) *
+                density_infill
+            )
+            vp_rough_infill = int(
+                areas['area_rough_infill'] * (1 - cfg.rough_skip_perc) *
+                density_infill
+            )
+            vp_facilities_infill = int(
+                areas['area_facilities_infill'] * (1 - cfg.facilities_skip_perc) *
+                density_infill
+            )
+            vp_dunes_infill = int(
+                areas['area_dunes_infill'] * (1 - cfg.dunes_skip_perc) *
+                density_infill
+            )
+            vp_sabkha_infill = int(
+                areas['area_sabkha_infill'] * (1 - cfg.sabkha_skip_perc) *
+                density_infill
+            )
             result_dict.update({
                 'flat_infill': vp_flat_infill, 'rough_infill': vp_rough_infill,
                 'facilities_infill': vp_facilities_infill,
