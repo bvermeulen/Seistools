@@ -118,6 +118,28 @@ def get_animation_dates():
 
 def get_year(day_of_year):
     #TODO fix this simple function
+    '''
+        returns year based on today's date
+        If todays month in [1,2,3,4,5,6]:
+            if day_of_year < 190: todays year
+            if day_of_year > 190: last year
+        If today month in [7,8,9,10,11,12]:
+            if day_of_year < 170: next year
+            if day_of_year > 170: todays year
+    '''
+    '''
+        get date_today
+        if date_today < mid_year:
+            if day_of_year < 180:
+                return year_today
+            else
+                return year_today - 1
+        else date_today > mid_year
+            if day_of_year < 180:
+                return year_today + 1
+            else:
+                return year_today
+    '''
     if day_of_year < 180:
         return 2023
 
