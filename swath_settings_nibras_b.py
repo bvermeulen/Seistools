@@ -17,6 +17,8 @@ class Config:
     sps_sand: float = 1
     rls_infill: float = 1
     rps_infill: float = 1
+    sls_infill: float = 1
+    sps_infill: float = 1
     access_spacing: float = 0
     project_azimuth: float = 0.0
     repeat_factor: int = 1
@@ -45,7 +47,7 @@ class Config:
     dunes_skip_perc: float = 0.02
     sabkha_skip_perc: float = 0.05
     hours_day: float = 24.0
-    prod_cap: dict[tuple, float] = field(default_factory= lambda: {(100, 1100): None})
+    prod_cap: dict[tuple, float|None] = field(default_factory= lambda: {(100, 1100): None})
     ctm_constant: float = field(init=False)
     lead_receiver: int = field(init=False)
     lead_dozer: int = field(init=False)

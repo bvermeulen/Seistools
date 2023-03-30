@@ -1,15 +1,15 @@
 ''' application to calculate swath statistics based on shape files
     set parameters in the module swath_settings.py
 
-    howdimain @2022
+    howdimain @2023
     bruno.vermeulen@hotmail.com
 '''
 from dataclasses import dataclass
 import datetime
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import warnings
+from typing import Literal, Any
 from swath_settings import Config
 from swath_gis import Gis
 from swath_output import OutputMixin
@@ -17,7 +17,7 @@ from swath_output import OutputMixin
 '''
 warnings.filterwarnings('ignore')
 cfg = Config()
-
+xy = tuple[float, float]
 
 @dataclass
 class Production:
@@ -39,12 +39,11 @@ class Production:
 
 class SwathProdCalc(OutputMixin):
 
-    def __init__(self):
+    def __init__(self) -> None:
 
         self.index = 0
-        self.total_swaths = None
-        self.fig, self.ax = plt.subplots(figsize=(6, 6))
-        self.gis = Gis(cfg, self.ax)
+        self.total_swaths = 0
+        self.gis = Gis(cfg)
 
         bounds = self.gis.get_bounds(self.gis.source_block_gpd)
         self.sw_origin = (bounds[0], bounds[1])
@@ -101,7 +100,7 @@ class SwathProdCalc(OutputMixin):
             self.total_swaths = int(input('Total number of swaths: '))
 
     @staticmethod
-    def get_envelop_swath_cornerpoint(swath_origin, swath_nr):
+    def get_envelop_swath_cornerpoint(swath_origin: xy, swath_nr: int) -> tuple[xy, xy, xy, xy]:
         ''' get the corner points of the envelope of the swath, i.e. length
             of swath > actual swath length, so any shape of swath will be captured
             when intersected with the actual block
@@ -132,15 +131,16 @@ class SwathProdCalc(OutputMixin):
 
         return sw_ll, sw_lr, sw_tr, sw_tl
 
-    def calc_src_stats(self, swath_nr):
+    def calc_src_stats(self, swath_nr: int) -> dict[str, float|int]:
         #pylint: disable=line-too-long
         swath_gpd = self.gis.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
             self.gis.source_block_gpd
         )
-        areas = {}
+        areas: dict[str, float|int] = {}
         areas['swath'] = swath_nr
-        areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
+
+        areas['area'] = self.gis.calc_area_and_plot(swath_gpd, None)
         rough_gpd = self.gis.intersection(swath_gpd, self.gis.rough_gpd)
         areas['area_rough'] = self.gis.calc_area_and_plot(rough_gpd, 'cyan')
         facilities_gpd = self.gis.intersection(swath_gpd, self.gis.facilities_gpd)
@@ -181,7 +181,7 @@ class SwathProdCalc(OutputMixin):
         )
         return areas
 
-    def convert_area_to_vps(self, areas) -> dict[int]:
+    def convert_area_to_vps(self, areas: dict) -> dict[str, float|int]:
         #TODO include skip percentages
         source_density = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
         vp_theor = int(areas['area'] * source_density)
@@ -213,7 +213,7 @@ class SwathProdCalc(OutputMixin):
             areas['area_dunes'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
         )
         dozer_km_vp = vp_dunes * cfg.sps_sand / 1000 + km_access
-        result_dict = {
+        result_dict: dict[str, float|int] = {
             'theor': vp_theor, 'dunes_src': vp_dunes_src, 'dunes_rcv': vp_dunes_rcv,
             'doz_km': dozer_km_vp,
         }
@@ -278,14 +278,14 @@ class SwathProdCalc(OutputMixin):
         })
         return result_dict
 
-    def calc_rcv_stats(self, swath_nr, src_dozer_km):
+    def calc_rcv_stats(self, swath_nr: int, src_dozer_km: float) -> dict:
         swath_gpd = self.gis.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
             self.gis.receiver_block_gpd
         )
-        areas = {}
+        areas: dict[str, float|int] = {}
         areas['swath'] = swath_nr
-        areas['area'] = sum(swath_gpd.geometry.area.to_list())/ 1e6
+        areas['area'] = self.gis.calc_area_and_plot(swath_gpd, None)
         areas['area_dunes'] = self.gis.calc_area_and_plot(
             self.gis.intersection(swath_gpd, self.gis.dunes_gpd), 'yellow'
         )
@@ -301,7 +301,7 @@ class SwathProdCalc(OutputMixin):
         )
         return areas
 
-    def convert_area_to_rcv(self, areas, dozer_km_src):
+    def convert_area_to_rcv(self, areas: dict, dozer_km_src: float) -> dict:
         density_flat = 1000 / cfg.rls_flat * 1000 / cfg.rps_flat
         rcv_theor = int(areas['area'] * density_flat)
         rcv_flat = int(areas['area_flat'] * density_flat)
@@ -324,25 +324,26 @@ class SwathProdCalc(OutputMixin):
         result_dict['density'] = result_dict['actual'] / areas['area'] if areas['area'] > 0 else np.nan
         return result_dict
 
-    def swath_range(self, swath_reverse=False):
+    def swath_range(self) -> range:
         ''' calculate ranges depending on swath order is reversed
         '''
-        if swath_reverse:
+        if cfg.swath_reverse:
             return range(self.total_swaths + cfg.swath_1 - 1, cfg.swath_1 - 1, -1)
 
-        return range(cfg.swath_1, self.total_swaths + cfg.swath_1)
+        else:
+            return range(cfg.swath_1, self.total_swaths + cfg.swath_1)
 
-    def swaths_stats(self, swath_reverse=False):
+    def swaths_stats(self) -> None:
         ''' loop over the swaths, calculate areas and produce
             the source and receiver stastics based on source & receiver densities
         '''
-        self.gis.plot_gpd(self.gis.receiver_block_gpd, color='blue')
-        self.gis.plot_gpd(self.gis.source_block_gpd, color='red')
+        _ = self.gis.calc_area_and_plot(self.gis.receiver_block_gpd, color='blue')
+        _ = self.gis.calc_area_and_plot(self.gis.source_block_gpd, color='red')
 
-        total_src_area, total_src_sabkha_area, total_src_dune_area = 0, 0, 0
-        total_rcv_area, total_rcv_dune_area = 0, 0
+        total_src_area, total_src_sabkha_area, total_src_dune_area = 0.0, 0.0, 0.0
+        total_rcv_area, total_rcv_dune_area = 0.0, 0.0
 
-        for swath_nr in self.swath_range(swath_reverse=swath_reverse):
+        for swath_nr in self.swath_range():
             areas_src = self.calc_src_stats(swath_nr)
 
             total_src_area += areas_src['area']
@@ -364,7 +365,7 @@ class SwathProdCalc(OutputMixin):
             total_rcv_dune_area
         )
 
-    def aggregate_prod_stats(self, prod_day, swaths, prod):
+    def aggregate_prod_stats(self, prod_day: float, swaths: list[int], prod: Production) -> None:
         ''' aggregate stats by production day
         '''
         try:
@@ -408,7 +409,7 @@ class SwathProdCalc(OutputMixin):
         results = self.add_nodes_totals(results)
         self.prod_stats = self.prod_stats.append(results, ignore_index=True)
 
-    def add_nodes_totals(self, results):
+    def add_nodes_totals(self, results: dict[str, Any]) -> dict[str, Any]:
         if results['swath_last'] is None or results['swath_first'] is None:
             return results
 
@@ -469,7 +470,7 @@ class SwathProdCalc(OutputMixin):
         return results
 
     @staticmethod
-    def init_production(production, vp_prod, layout, dozer_km):
+    def init_production(production: Production, vp_prod: np.ndarray, layout: np.ndarray, dozer_km: float) -> Production:
         production.doz_km = dozer_km
         production.prod = vp_prod[5]
         production.flat = vp_prod[0]
@@ -486,7 +487,7 @@ class SwathProdCalc(OutputMixin):
         return production
 
     @staticmethod
-    def sum_production(production, vp_prod, layout, dozer_km):
+    def sum_production(production: Production, vp_prod: np.ndarray, layout: np.ndarray, dozer_km: float) -> Production:
         production.doz_km += dozer_km
         production.prod += vp_prod[5]
         production.flat += vp_prod[0]
@@ -502,17 +503,15 @@ class SwathProdCalc(OutputMixin):
         production.pickup_infill += layout[5]
         return production
 
-    def calc_prod_stats(self, swath_reverse=False):
+    def calc_prod_stats(self) -> None:
         production = Production(*[0]*14)
 
-        def sign():
-            if swath_reverse:
-                return -1
-            return 1
+        def sign() -> Literal[-1, 1]:
+            return -1 if cfg.swath_reverse else 1
 
         # determine dozer and receiver lead required before start of production
         # on day zero
-        if swath_reverse:
+        if cfg.swath_reverse:
             start_swath = cfg.swath_1 + self.total_swaths
             sw_doz_range = [sw for sw in range(
                 start_swath, start_swath - cfg.lead_dozer, -1)]
@@ -551,7 +550,7 @@ class SwathProdCalc(OutputMixin):
         rcv_swath_front = sw_rcv_range[-1] + sign()
         rcv_swath_back = sw_rcv_range[-1] - sign() * cfg.active_lines
 
-        for swath in self.swath_range(swath_reverse=swath_reverse):
+        for swath in self.swath_range():
 
             # get vp production
             result_src = self.swath_src_stats[self.swath_src_stats['swath'] == swath]
@@ -572,7 +571,7 @@ class SwathProdCalc(OutputMixin):
             day_duration += sw_duration
 
             # get receiver production
-            layout = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_front]  #pylint: disable=line-too-long
+            layout = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_front]
             pickup = self.swath_rcv_stats[self.swath_rcv_stats['swath'] == rcv_swath_back]
             if self.rcv_infill:
                 layout_pickup = np.array([
@@ -630,13 +629,16 @@ class SwathProdCalc(OutputMixin):
 
         # TODO add final pickup
 
+    def plot_map(self) -> None:
+        self.gis.plot()
 
-def main():
+
+def main() -> None:
     swath_prod_calc = SwathProdCalc()
-    swath_prod_calc.swaths_stats(swath_reverse=cfg.swath_reverse)
-    swath_prod_calc.calc_prod_stats(swath_reverse=cfg.swath_reverse)
+    swath_prod_calc.swaths_stats()
+    swath_prod_calc.calc_prod_stats()
     swath_prod_calc.stats_to_excel(cfg)
-    plt.show()
+    swath_prod_calc.plot_map()
 
 
 if __name__ == '__main__':

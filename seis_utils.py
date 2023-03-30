@@ -117,15 +117,6 @@ def get_animation_dates():
 
 
 def get_year(day_of_year):
-    '''
-        returns year based on today's date
-        If todays month < 7:
-            if day_of_year < 190: todays year
-            if day_of_year >= 190: last year
-        If today month >= 7:
-            if day_of_year > 170: todays year
-            if day_of_year >= 170: next year
-    '''
     current_date = datetime.datetime.now()
     year = current_date.year
     month = current_date.month

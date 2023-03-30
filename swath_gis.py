@@ -1,13 +1,14 @@
-from inspect import Attribute
+import matplotlib.pyplot as plt
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
 
+FIG_SIZE = (6, 6)
 
 class Gis:
     # GIS geopandas methods
 
-    def __init__(self, cfg, ax):
+    def __init__(self, cfg):
         self.EPSG = cfg.EPSG
         self.shapefile_src = cfg.shapefile_src
         self.shapefile_rcv = cfg.shapefile_rcv
@@ -17,7 +18,7 @@ class Gis:
         self.shapefile_sabkha = cfg.shapefile_sabkha
         self.shapefile_rcv_infill = cfg.shapefile_rcv_infill
         self.shapefile_src_infill = cfg.shapefile_src_infill
-        self.ax = ax
+        _, self.ax = plt.subplots(figsize=FIG_SIZE)
         self.create_gp_dataframes()
 
     def create_gp_dataframes(self):
@@ -116,7 +117,7 @@ class Gis:
             crs=self.EPSG, geometry=GeoSeries(Polygon(cornerpoints)))
         return overlay(overlay_gpd, swath_gpd, how='intersection')
 
-    def plot_gpd(self, shape_gpd, color='black') -> None:
+    def plot_gpd(self, shape_gpd: GeoDataFrame, color:str='black') -> None:
         shape_gpd.plot(ax=self.ax, facecolor='none', edgecolor=color, linewidth=0.5)
 
     def difference(self, main_layer: GeoDataFrame, layers: list[GeoDataFrame]) -> GeoDataFrame:
@@ -144,7 +145,7 @@ class Gis:
 
         return layer2
 
-    def calc_area_and_plot(self, area_gpd: GeoDataFrame, color: str) -> float:
+    def calc_area_and_plot(self, area_gpd: GeoDataFrame, color: str|None) -> float:
         area = 0.0
         if area_gpd is not None:
             area = sum(area_gpd.geometry.area.to_list())/ 1e6
@@ -152,3 +153,7 @@ class Gis:
                 self.plot_gpd(area_gpd, color)
 
         return area
+
+    @staticmethod
+    def plot():
+        plt.show()
