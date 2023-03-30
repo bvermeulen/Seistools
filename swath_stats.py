@@ -278,7 +278,7 @@ class SwathProdCalc(OutputMixin):
         })
         return result_dict
 
-    def calc_rcv_stats(self, swath_nr: int, src_dozer_km: float) -> dict:
+    def calc_rcv_stats(self, swath_nr: int, src_dozer_km: float) -> dict[str, float|int]:
         swath_gpd = self.gis.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
             self.gis.receiver_block_gpd
@@ -301,7 +301,7 @@ class SwathProdCalc(OutputMixin):
         )
         return areas
 
-    def convert_area_to_rcv(self, areas: dict, dozer_km_src: float) -> dict:
+    def convert_area_to_rcv(self, areas: dict[str, float], dozer_km_src: float) -> dict[str, float]:
         density_flat = 1000 / cfg.rls_flat * 1000 / cfg.rps_flat
         rcv_theor = int(areas['area'] * density_flat)
         rcv_flat = int(areas['area_flat'] * density_flat)
