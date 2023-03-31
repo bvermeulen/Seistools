@@ -2,13 +2,15 @@ import matplotlib.pyplot as plt
 from shapely.geometry.polygon import Polygon
 import geopandas as gpd
 from geopandas import GeoDataFrame, GeoSeries, overlay
+from swath_settings import Config
 
 FIG_SIZE = (6, 6)
+xy = tuple[float, float]
 
 class Gis:
     # GIS geopandas methods
 
-    def __init__(self, cfg):
+    def __init__(self, cfg: Config) -> None:
         self.EPSG = cfg.EPSG
         self.shapefile_src = cfg.shapefile_src
         self.shapefile_rcv = cfg.shapefile_rcv
@@ -50,7 +52,7 @@ class Gis:
             )
             try:
                 self.dune_gpd = overlay(
-                    self.dune_gpd, self.facilties_gpd, how='difference')
+                    self.dune_gpd, self.facilities_gpd, how='difference')
 
             except AttributeError:
                 pass
@@ -76,7 +78,7 @@ class Gis:
 
             try:
                 self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.facilties_gpd, how='difference')
+                    self.sabkha_gpd, self.facilities_gpd, how='difference')
 
             except AttributeError:
                 pass
@@ -95,7 +97,7 @@ class Gis:
         self.src_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_src_infill) else None
 
 
-    def read_shapefile(self, file_name):
+    def read_shapefile(self, file_name: str) -> GeoDataFrame:
         ''' read a shape file and converts crs to UTM PSD93 Zone 40
             Arguments:
                 file_name: string, full name of the shapefile with the
@@ -108,11 +110,14 @@ class Gis:
         return shapefile_gpd[shapefile_gpd['geometry'].notnull()]
 
     @staticmethod
-    def get_bounds(area_gpd) -> list:
+    def get_bounds(area_gpd: GeoDataFrame) -> list:
         bounds = area_gpd.bounds.iloc[0].to_list()
         return bounds
 
-    def create_sw_gpd(self, cornerpoints, overlay_gpd):
+    def create_sw_gpd(
+                self, cornerpoints: tuple[xy, xy, xy, xy],
+                overlay_gpd: GeoDataFrame
+            ) -> GeoDataFrame:
         swath_gpd =  GeoDataFrame(
             crs=self.EPSG, geometry=GeoSeries(Polygon(cornerpoints)))
         return overlay(overlay_gpd, swath_gpd, how='intersection')
@@ -155,5 +160,5 @@ class Gis:
         return area
 
     @staticmethod
-    def plot():
+    def plot() -> None:
         plt.show()

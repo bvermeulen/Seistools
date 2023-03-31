@@ -58,14 +58,14 @@ class Config:
     project_base_folder: Path = Path('D:/OneDrive/Work/PDO/Nibras 2022/6 Mapping/4 shape files')
     shapefile_src: Path = field(init=False)
     shapefile_rcv: Path = field(init=False)
-    shapefile_dune: Path = field (init=False)
-    shapefile_rough: Path = field(init=False)
-    shapefile_facilities: Path = field(init=False)
-    shapefile_sabkha: Path = field(init=False)
-    shapefile_rcv_infill: Path = field(init=False)
-    shapefile_src_infill: Path = field(init=False)
+    shapefile_dune: Path|None = field (init=False)
+    shapefile_rough: Path|None = field(init=False)
+    shapefile_facilities: Path|None = field(init=False)
+    shapefile_sabkha: Path|None = field(init=False)
+    shapefile_rcv_infill: Path|None = field(init=False)
+    shapefile_src_infill: Path|None = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.ctm_constant = 3600 / (
             self.sweep_time + self.move_up_time) * self.hours_day * self.number_vibes
         self.lead_receiver = int(self.active_lines * self.repeat_factor / 2)

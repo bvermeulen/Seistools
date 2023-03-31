@@ -2,11 +2,14 @@ import time
 from dataclasses import asdict
 from pathlib import Path
 import pandas as pd
-
+from typing import Any
+from swath_gis import Gis
+from swath_settings import Config
 
 class OutputMixin:
+
     @staticmethod
-    def print_status(swath_nr, areas):
+    def print_status(swath_nr: int, areas: dict[str, Any]) -> None:
         ''' print a status line '''
         print(
             f'swath: {swath_nr}, '
@@ -18,28 +21,31 @@ class OutputMixin:
         )
 
     @staticmethod
-    def print_totals(gis, total_src_area, total_src_sabkha_area, total_src_dune_area,
-                     total_rcv_area, total_rcv_dune_area):
+    def print_totals(
+            gis: Gis, total_src_area: float, total_src_sabkha_area: float,
+            total_src_dune_area: float, total_rcv_area: float,
+            total_rcv_dune_area: float
+        ) -> None:
         # check if totals match the sum of the swathss
-        area_src_block = sum(gis.source_block_gpd.geometry.area.to_list()) / 1e6
+        area_src_block = gis.calc_area_and_plot(gis.source_block_gpd, None)
         print(f'\n\narea source block: {area_src_block}')
         print(f'area source block: {total_src_area}\n')
 
         try:
-            area_sabkha = sum(gis.sabkha_gpd.geometry.area.to_list()) / 1e6
+            area_sabkha = gis.calc_area_and_plot(gis.sabkha_gpd.geometry, None)
             print(f'area sabkha: {area_sabkha}')
             print(f'area source sabkha: {total_src_sabkha_area}\n')
         except AttributeError:
             area_sabkha = 0
 
         try:
-            area_dunes = sum(gis.dunes_gpd.geometry.area.to_list()) / 1e6
+            area_dunes = gis.calc_area_and_plot(gis.dunes_gpd.geometry, None)
             print(f'area dunes: {area_dunes}')
             print(f'area source dunes: {total_src_dune_area}\n')
         except AttributeError:
             area_dunes = 0
 
-        area_rcv_block = sum(gis.receiver_block_gpd.geometry.area.to_list()) / 1e6
+        area_rcv_block = gis.calc_area_and_plot(gis.receiver_block_gpd, None)
         print(f'area receiver block: {area_rcv_block}')
         print(f'area receiver block: {total_rcv_area}\n')
 
@@ -48,14 +54,22 @@ class OutputMixin:
             print(f'area dunes: {total_rcv_dune_area}')
 
     @staticmethod
-    def print_prod(sw1, sw2, sw_p1, sw_p2, sw_adv1, sw_adv2, print_status=False) -> None:
+    def print_prod(
+            sw1: int, sw2: int, sw_p1: int, sw_p2: int,
+            sw_adv1: int, sw_adv2: int, print_status: bool=False
+        ) -> None:
         if print_status:
             print(
                 f'prod: {sw1:4} - {sw2:4}: {sw_p1:4}: {sw_p2:4}; '
                 f'advance: {sw_adv1:4} - {sw_adv2:4}'
             )
 
-    def stats_to_excel(self, cfg):
+    def stats_to_excel(self, cfg: Config) -> None:
+        self.swath_src_stats: pd.DataFrame
+        self.swath_rcv_stats: pd.DataFrame
+        self.prod_stats: pd.DataFrame
+        self.src_infill: pd.DataFrame
+
         while True:
             try:
                 _ = open(cfg.excel_file, 'w+')
