@@ -195,6 +195,11 @@ class SpsDb:
         ''' get all line, point of the table_sps in a pandas df
         '''
         sql_string = (
+            f'DROP VIEW IF EXISTS line_points;'
+        )
+        cursor.execute(sql_string)
+
+        sql_string = (
             f'CREATE VIEW line_points (line, point) '
             f'AS SELECT line, point FROM {cls.table_sps} as r '
             f'INNER JOIN {cls.table_sps_files} as f ON f.id = r.file_id '
@@ -211,10 +216,5 @@ class SpsDb:
         lines = np.array(sps_df['line'].to_list()) * 10_000
         points = np.array(sps_df['point'].to_list())
         linepoints = np.add(lines, points)
-
-        sql_string = (
-            f'DROP VIEW IF EXISTS line_points;'
-        )
-        cursor.execute(sql_string)
 
         return linepoints
