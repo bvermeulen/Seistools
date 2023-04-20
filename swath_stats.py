@@ -1,4 +1,4 @@
-''' application to calculate swath statistics based on shape files
+''' Application to calculate swath statistics based on shape files
     set parameters in the module swath_settings.py
 
     howdimain @2023
@@ -38,23 +38,39 @@ class Production:
 
 
 class SwathProdCalc(OutputMixin):
-
+    ''' Methods to calculate swath production statistics
+    '''
     def __init__(self) -> None:
-
         self.index = 0
         self.total_swaths = 0
         self.gis = Gis(cfg)
 
-        bounds = self.gis.get_bounds(self.gis.source_block_gpd)
-        self.sw_origin = (bounds[0], bounds[1])
+        self.src_cs2 = (
+            True if self.gis.src_cs2_gpd is not None and
+            cfg.sls_cs2 > 0.01 and cfg.sps_cs2 > 0.01 else False
+        )
+        # if CS1 is not defined then use the source_block_gpd as CS1 with CS factor 1.0
+        if self.gis.src_cs1_gpd is not None and cfg.sls_cs1 > 0.01 and cfg.sps_cs2 > 0.01:
+            pass
+
+        else:
+            self.gis.src_cs1_gpd = self.gis.source_block_gpd
+            cfg.cs_cs1 = 1.0
+            cfg.sls_cs1 = cfg.sls_flat
+            cfg.sps_cs1 = cfg.sps_flat
+            if self.src_cs2:
+                assert False, 'You can not define CS2 if CS1 does not exist'
+
         self.src_infill = (
-            True if self.gis.src_infill_gpd is not None and not
-            (cfg.sls_infill < 0.01 or cfg.sps_infill < 0.01) else False
+            True if self.gis.src_infill_gpd is not None and
+            cfg.sls_infill > 0.01 and cfg.sps_infill > 0.01 else False
         )
         self.rcv_infill = (
-            True if self.gis.rcv_infill_gpd is not None and not
-            (cfg.rls_infill < 0.01 or cfg.rps_infill < 0.01) else False
+            True if self.gis.rcv_infill_gpd is not None and
+            cfg.rls_infill > 0.01 and cfg.rps_infill > 0.01 else False
         )
+        bounds = self.gis.get_bounds(self.gis.source_block_gpd)
+        self.sw_origin = (bounds[0], bounds[1])
 
         if not self.src_infill:
             self.swath_src_stats = pd.DataFrame(columns=[
@@ -62,7 +78,6 @@ class SwathProdCalc(OutputMixin):
                 'area_sabkha', 'theor', 'flat', 'rough', 'facilities', 'dunes', 'sabkha',
                 'skips', 'actual', 'dunes_src', 'dunes_rcv', 'doz_km', 'density', 'ctm'
             ])
-
         else:
             self.swath_src_stats = pd.DataFrame(columns=[
                 'swath', 'area', 'area_flat', 'area_flat_infill', 'area_rough', 'area_rough_infill',
@@ -132,113 +147,155 @@ class SwathProdCalc(OutputMixin):
         return sw_ll, sw_lr, sw_tr, sw_tl
 
     def calc_src_stats(self, swath_nr: int) -> dict[str, float|int]:
+        ''' Calculate areas for a swath for sources
+        '''
         #pylint: disable=line-too-long
         swath_gpd = self.gis.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
-            self.gis.source_block_gpd
+            self.gis.src_cs1_gpd
         )
         areas: dict[str, float|int] = {}
-        areas['swath'] = swath_nr
-
-        areas['area'] = self.gis.calc_area_and_plot(swath_gpd, None)
+        areas['area_cs1'] = self.gis.calc_area_and_plot(swath_gpd, None)
         rough_gpd = self.gis.intersection(swath_gpd, self.gis.rough_gpd)
-        areas['area_rough'] = self.gis.calc_area_and_plot(rough_gpd, 'cyan')
+        areas['rough_cs1'] = self.gis.calc_area_and_plot(rough_gpd, 'cyan')
         facilities_gpd = self.gis.intersection(swath_gpd, self.gis.facilities_gpd)
-        areas['area_facilities'] = self.gis.calc_area_and_plot(facilities_gpd, 'red')
+        areas['facilities_cs1'] = self.gis.calc_area_and_plot(facilities_gpd, 'red')
         dunes_gpd = self.gis.intersection(swath_gpd, self.gis.dunes_gpd)
-        areas['area_dunes'] = self.gis.calc_area_and_plot(dunes_gpd, 'yellow')
+        areas['dunes_cs1'] = self.gis.calc_area_and_plot(dunes_gpd, 'yellow')
         sabkha_gpd = self.gis.intersection(swath_gpd, self.gis.sabkha_gpd)
-        areas['area_sabkha'] = self.gis.calc_area_and_plot(sabkha_gpd, 'brown')
-        areas['area_flat'] = (
-            areas['area'] - areas['area_rough'] - areas['area_facilities'] -
-            areas['area_dunes'] - areas['area_sabkha']
+        areas['sabkha_cs1'] = self.gis.calc_area_and_plot(sabkha_gpd, 'brown')
+        areas['flat_cs1'] = (
+            areas['area_cs1'] - areas['rough_cs1'] - areas['facilities_cs1'] -
+            areas['dunes_cs1'] - areas['sabkha_cs1']
         )
+
+        #calculate CS2 if geometry is defined
+        if self.src_cs2:
+            swath_gpd = self.gis.create_sw_gpd(
+                self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
+                self.gis.src_cs2_gpd
+            )
+            src_cs2_swath_gpd = self.gis.intersection(swath_gpd, self.gis.src_cs2_gpd)
+            areas['area_cs2'] = self.gis.calc_area_and_plot(src_cs2_swath_gpd, None)
+            rough_cs2_gpd = self.gis.intersection(src_cs2_swath_gpd, self.gis.rough_gpd)
+            areas['rough_cs2'] = self.gis.calc_area_and_plot(rough_cs2_gpd, 'skyblue')
+            facilities_cs2_gpd = self.gis.intersection(src_cs2_swath_gpd, self.gis.facilities_gpd)
+            areas['facilities_cs2'] = self.gis.calc_area_and_plot(facilities_cs2_gpd, 'lightsalmon')
+            dunes_cs2_gpd = self.gis.intersection(src_cs2_swath_gpd, self.gis.dunes_gpd)
+            areas['dunes_cs2'] = self.gis.calc_area_and_plot(dunes_cs2_gpd, 'lightyellow')
+            sabkha_cs2_gpd = self.gis.intersection(src_cs2_swath_gpd, self.gis.sabkha_gpd)
+            areas['sabkha_cs2'] = self.gis.calc_area_and_plot(sabkha_cs2_gpd, 'sandybrown')
+            areas['flat_cs2'] = (
+                areas['area_cs2'] - areas['rough_cs2'] - areas['facilities_cs2'] - areas['dunes_cs2'] -
+                areas['sabkha_cs2']
+            )
+
         #calculate infill if geometry is defined
         if self.src_infill:
-            src_infill_swath_gpd = self.gis.intersection(swath_gpd, self.gis.src_infill_gpd)
-            rough_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.rough_gpd)
-            areas['area_rough_infill'] = self.gis.calc_area_and_plot(rough_infill_gpd, None)
-            facilities_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.facilities_gpd)
-            areas['area_facilities_infill'] = self.gis.calc_area_and_plot(facilities_infill_gpd, None)
-            dunes_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.dunes_gpd)
-            areas['area_dunes_infill'] = self.gis.calc_area_and_plot(dunes_infill_gpd, None)
-            dunes_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.dunes_gpd)
-            areas['area_dunes_infill'] = self.gis.calc_area_and_plot(dunes_infill_gpd, None)
-            sabkha_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.sabkha_gpd)
-            areas['area_sabkha_infill'] = self.gis.calc_area_and_plot(sabkha_infill_gpd, None)
-            flat_infill_gpd = self.gis.difference(
-                src_infill_swath_gpd, [
-                    rough_infill_gpd, facilities_infill_gpd,
-                    dunes_infill_gpd, sabkha_infill_gpd
-                ]
+            swath_gpd = self.gis.create_sw_gpd(
+                self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
+                self.gis.source_block_gpd
             )
-            areas['area_flat_infill'] = self.gis.calc_area_and_plot(flat_infill_gpd, None)
-
+            src_infill_swath_gpd = self.gis.intersection(self.gis.src_infill_gpd, swath_gpd)
+            area_infill = self.gis.calc_area_and_plot(src_infill_swath_gpd, None)
+            rough_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.rough_gpd)
+            areas['rough_infill'] = self.gis.calc_area_and_plot(rough_infill_gpd, None)
+            facilities_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.facilities_gpd)
+            areas['facilities_infill'] = self.gis.calc_area_and_plot(facilities_infill_gpd, None)
+            dunes_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.dunes_gpd)
+            areas['dunes_infill'] = self.gis.calc_area_and_plot(dunes_infill_gpd, None)
+            sabkha_infill_gpd = self.gis.intersection(src_infill_swath_gpd, self.gis.sabkha_gpd)
+            areas['sabkha_infill'] = self.gis.calc_area_and_plot(sabkha_infill_gpd, None)
+            areas['flat_infill'] = (
+                area_infill - areas['rough_infill'] - areas['facilities_infill'] -
+                areas['dunes_infill'] - areas['sabkha_infill']
+            )
         points = self.convert_area_to_vps(areas)
 
-        self.swath_src_stats = self.swath_src_stats.append(
-            {**areas, **points}, ignore_index=True
-        )
-        return areas
+        # calculate totals
+        area_totals: dict[str, float|int] = {}
+        area_totals['swath'] = swath_nr
+        if self.src_cs2:
+            area_totals['area'] = areas['area_cs1'] + areas['area_cs2']
+            area_totals['area_flat'] = areas['flat_cs1'] + areas['flat_cs2']
+            area_totals['area_rough'] = areas['rough_cs1'] + areas['rough_cs2']
+            area_totals['area_facilities'] = areas['facilities_cs1'] + areas['facilities_cs2']
+            area_totals['area_dunes'] = areas['dunes_cs1'] + areas['dunes_cs2']
+            area_totals['area_sabkha'] = areas['sabkha_cs1'] + areas['sabkha_cs2']
+
+        if self.src_infill:
+            area_totals['area_flat_infill'] = areas['flat_infill']
+            area_totals['area_rough_infill'] = areas['rough_infill']
+            area_totals['area_facilities_infill'] = areas['facilities_infill']
+            area_totals['area_dunes_infill'] = areas['dunes_infill']
+            area_totals['area_sabkha_infill'] = areas['sabkha_infill']
+
+        self.swath_src_stats = self.swath_src_stats.append({**area_totals, **points}, ignore_index=True)
+        return area_totals
 
     def convert_area_to_vps(self, areas: dict) -> dict[str, float|int]:
-        #TODO include skip percentages
-        source_density = 1000 / cfg.sls_flat * 1000 / cfg.sps_flat
-        vp_theor = int(areas['area'] * source_density)
-        vp_flat = int(
-            areas['area_flat'] * (1 - cfg.flat_skip_perc) * source_density
-        )
-        vp_rough = int(
-            areas['area_rough'] * (1 - cfg.rough_skip_perc) * source_density
-        )
+        ''' Convert areas to points
+        '''
+        # points for CS1 areas
+        dens_cs1 = cfg.cs_cs1 * 1000 / cfg.sls_cs1 * 1000 / cfg.sps_cs1
+        area = areas['area_cs1']
+        vp_theor = int(areas['area_cs1'] * dens_cs1)
+        vp_flat = int(areas['flat_cs1'] * (1 - cfg.flat_skip_perc) * dens_cs1)
+        vp_rough = int(areas['rough_cs1'] * (1 - cfg.rough_skip_perc) * dens_cs1)
         vp_facilities = int(
-            areas['area_facilities'] * (1 - cfg.facilities_skip_perc) *
-            source_density
+            areas['facilities_cs1'] * (1 - cfg.facilities_skip_perc) * dens_cs1
         )
-        vp_dunes_src = int(
-            areas['area_dunes'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.sls_sand *
-            1000 / cfg.sps_sand
+        vp_dunes_src = (
+            int(areas['dunes_cs1'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.sls_sand *
+            1000 / cfg.sps_sand) if cfg.sls_sand > 0.01 and cfg.sps_sand > 0.01 else 0
         )
         vp_dunes_rcv = (
-            int(areas['area_dunes'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.rls_sand *
-            1000 / cfg.sps_sand) if cfg.source_on_receivers else 0.0
+            int(areas['dunes_cs1'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.rls_sand *
+            1000 / cfg.sps_sand) if cfg.source_on_receivers else 0
         )
         vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
-        vp_sabkha = int(
-            areas['area_sabkha'] * (1 - cfg.sabkha_skip_perc) * source_density
-        )
+        vp_sabkha = int(areas['sabkha_cs1'] * (1 - cfg.sabkha_skip_perc) * dens_cs1)
+        km_access = areas['dunes_cs1'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+
+        # points for CS2 areas
+        if self.src_cs2:
+            dens_cs2 = cfg.cs_cs2 * 1000 / cfg.sls_cs2 * 1000 / cfg.sps_cs2
+            area += areas['area_cs2']
+            vp_theor += int(areas['area_cs2'] * dens_cs2)
+            vp_flat += int(areas['flat_cs2'] * (1 - cfg.flat_skip_perc) * dens_cs2)
+            vp_rough += int(areas['rough_cs2'] * (1 - cfg.rough_skip_perc) * dens_cs2)
+            vp_facilities += int(
+                areas['facilities_cs2'] * (1 - cfg.facilities_skip_perc) * dens_cs2
+            )
+            vp_dunes_src += (
+                int(areas['dunes_cs2'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.sls_sand *
+                1000 / cfg.sps_sand) if cfg.sls_sand > 0.01 and cfg.sps_sand > 0.01 else 0
+            )
+            vp_dunes_rcv += (
+                int(areas['dunes_cs2'] * (1 - cfg.dunes_skip_perc) * 1000 / cfg.rls_sand *
+                1000 / cfg.sps_sand) if cfg.source_on_receivers else 0
+            )
+            vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
+            vp_sabkha += int(areas['sabkha_cs2'] * (1 - cfg.sabkha_skip_perc) * dens_cs2)
+            km_access += areas['dunes_cs2'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dunes + vp_sabkha)
-        vp_skips = vp_theor - vp_flat - vp_rough - vp_facilities - vp_dunes - vp_sabkha
-        km_access = (
-            areas['area_dunes'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
-        )
+        vp_skips = int(vp_theor - vp_actual)
         dozer_km_vp = vp_dunes * cfg.sps_sand / 1000 + km_access
         result_dict: dict[str, float|int] = {
             'theor': vp_theor, 'dunes_src': vp_dunes_src, 'dunes_rcv': vp_dunes_rcv,
             'doz_km': dozer_km_vp,
         }
+
         if self.src_infill:
-            density_infill = 1000 / cfg.sls_infill * 1000 / cfg.sps_infill
-            vp_flat_infill = int(
-                areas['area_flat_infill'] * (1 - cfg.flat_skip_perc) *
-                density_infill
-            )
-            vp_rough_infill = int(
-                areas['area_rough_infill'] * (1 - cfg.rough_skip_perc) *
-                density_infill
-            )
+            dens_infill = cfg.cs_infill * 1000 / cfg.sls_infill * 1000 / cfg.sps_infill
+            vp_flat_infill = int(areas['flat_infill'] * (1 - cfg.flat_skip_perc) * dens_infill)
+            vp_rough_infill = int(areas['rough_infill'] * (1 - cfg.rough_skip_perc) * dens_infill)
             vp_facilities_infill = int(
-                areas['area_facilities_infill'] * (1 - cfg.facilities_skip_perc) *
-                density_infill
+                areas['facilities_infill'] * (1 - cfg.facilities_skip_perc) * dens_infill
             )
-            vp_dunes_infill = int(
-                areas['area_dunes_infill'] * (1 - cfg.dunes_skip_perc) *
-                density_infill
-            )
-            vp_sabkha_infill = int(
-                areas['area_sabkha_infill'] * (1 - cfg.sabkha_skip_perc) *
-                density_infill
-            )
+            vp_dunes_infill = int(areas['dunes_infill'] * (1 - cfg.dunes_skip_perc) * dens_infill)
+            vp_sabkha_infill = int(areas['sabkha_infill'] * (1 - cfg.sabkha_skip_perc) * dens_infill)
             result_dict.update({
                 'flat_infill': vp_flat_infill, 'rough_infill': vp_rough_infill,
                 'facilities_infill': vp_facilities_infill,
@@ -256,8 +313,8 @@ class SwathProdCalc(OutputMixin):
             vp_dunes += vp_dunes_infill
             vp_sabkha += vp_sabkha_infill
 
-        if areas['area'] > 0:
-            vp_density = vp_actual / areas['area']
+        if area > 0:
+            vp_density = vp_actual / area
             ctm = (
                 cfg.ctm_constant * (
                    vp_flat * cfg.flat_terrain +
@@ -279,6 +336,8 @@ class SwathProdCalc(OutputMixin):
         return result_dict
 
     def calc_rcv_stats(self, swath_nr: int, src_dozer_km: float) -> dict[str, float|int]:
+        ''' Calculate areas for a swath for receivers
+        '''
         swath_gpd = self.gis.create_sw_gpd(
             self.get_envelop_swath_cornerpoint(self.sw_origin, swath_nr),
             self.gis.receiver_block_gpd
@@ -302,6 +361,8 @@ class SwathProdCalc(OutputMixin):
         return areas
 
     def convert_area_to_rcv(self, areas: dict[str, float], dozer_km_src: float) -> dict[str, float]:
+        ''' Convert receiver areas to receiver points
+        '''
         density_flat = 1000 / cfg.rls_flat * 1000 / cfg.rps_flat
         rcv_theor = int(areas['area'] * density_flat)
         rcv_flat = int(areas['area_flat'] * density_flat)
@@ -365,6 +426,7 @@ class SwathProdCalc(OutputMixin):
             total_rcv_dune_area
         )
 
+    #TODO refactor production to a seperate module
     def aggregate_prod_stats(self, prod_day: float, swaths: list[int], prod: Production) -> None:
         ''' aggregate stats by production day
         '''
@@ -410,6 +472,8 @@ class SwathProdCalc(OutputMixin):
         self.prod_stats = self.prod_stats.append(results, ignore_index=True)
 
     def add_nodes_totals(self, results: dict[str, Any]) -> dict[str, Any]:
+        ''' Aggregate total number nodes
+        '''
         if results['swath_last'] is None or results['swath_first'] is None:
             return results
 
@@ -440,7 +504,6 @@ class SwathProdCalc(OutputMixin):
             sw_patch_1, sw_patch_2,
             sw_adv_1, sw_adv_2, print_status=True
         )
-
         n_flat = self.swath_rcv_stats[
             self.swath_rcv_stats['swath'].isin(sw_patch_range)]['flat'].sum()
         n_dunes = self.swath_rcv_stats[
@@ -461,7 +524,6 @@ class SwathProdCalc(OutputMixin):
                 self.swath_rcv_stats[
                     self.swath_rcv_stats['swath'].isin(sw_adv_range)]['dunes'].sum()
             )
-
         results['nodes_patch'] = n_flat + n_dunes
         results['nodes_infill'] = n_infill
         results['nodes_dune_advance'] = n_advance
@@ -504,6 +566,8 @@ class SwathProdCalc(OutputMixin):
         return production
 
     def calc_prod_stats(self) -> None:
+        ''' Calculate the daily production statistics
+        '''
         production = Production(*[0]*14)
 
         def sign() -> Literal[-1, 1]:

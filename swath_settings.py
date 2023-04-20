@@ -1,1 +1,1 @@
-swath_settings_nibras_b.py
+swath_settings_nibras_a.py

@@ -8,12 +8,14 @@ FIG_SIZE = (6, 6)
 xy = tuple[float, float]
 
 class Gis:
-    # GIS geopandas methods
-
+    ''' GIS geopandas methods for swath stastics
+    '''
     def __init__(self, cfg: Config) -> None:
         self.EPSG = cfg.EPSG
         self.shapefile_src = cfg.shapefile_src
         self.shapefile_rcv = cfg.shapefile_rcv
+        self.shapefile_cs1 = cfg.shapefile_cs1
+        self.shapefile_cs2 = cfg.shapefile_cs2
         self.shapefile_rough = cfg.shapefile_rough
         self.shapefile_facilities = cfg.shapefile_facilities
         self.shapefile_dune = cfg.shapefile_dune
@@ -24,42 +26,47 @@ class Gis:
         self.create_gp_dataframes()
 
     def create_gp_dataframes(self):
+        ''' create geopandas dataframes by reading the shapefiles
+            terrain types will be ordered: facilities, rough, dunes, sabkha
+        '''
         # create the geopandas data frames
-        self.source_block_gpd = self.read_shapefile(self.shapefile_src)
         self.receiver_block_gpd = self.read_shapefile(self.shapefile_rcv)
+        self.rcv_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_rcv_infill) else None
+        self.source_block_gpd = self.read_shapefile(self.shapefile_src)
+        self.src_cs1_gpd = self.read_shapefile(sf) if (sf := self.shapefile_cs1) else None
+        self.src_cs2_gpd = self.read_shapefile(sf) if (sf := self.shapefile_cs2) else None
+        self.src_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_src_infill) else None
+
+        self.facilities_gpd = (
+            self.read_shapefile(self.shapefile_facilities) if self.shapefile_facilities else None
+        )
 
         if self.shapefile_rough:
             self.rough_gpd = self.read_shapefile(self.shapefile_rough)
 
-        else:
-            self.rough_gpd = None
-
-        if self.shapefile_facilities:
-            self.facilities_gpd = self.read_shapefile(self.shapefile_facilities)
-
             try:
-                self.facilities_gpd = overlay(
-                    self.facilities_gpd, self.rough_gpd, how='difference'
+                self.rough_gpd = overlay(
+                    self.rough_gpd, self.facilities_gpd, how='difference'
                 )
             except AttributeError:
                 pass
 
         else:
-            self.facilities_gpd = None
+            self.rough_gpd = None
 
         if self.shapefile_dune:
             self.dunes_gpd = self.read_shapefile(self.shapefile_dune
             )
             try:
                 self.dune_gpd = overlay(
-                    self.dune_gpd, self.facilities_gpd, how='difference')
+                    self.dune_gpd, self.rough_gpd, how='difference')
 
             except AttributeError:
                 pass
 
             try:
                 self.dune_gpd = overlay(
-                    self.dune_gpd, self.rough_gpd, how='difference')
+                    self.dune_gpd, self.facilities_gpd, how='difference')
             except AttributeError:
                 pass
 
@@ -78,24 +85,20 @@ class Gis:
 
             try:
                 self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.facilities_gpd, how='difference')
+                    self.sabkha_gpd, self.rough_gpd, how='difference')
 
             except AttributeError:
                 pass
 
             try:
                 self.sabkha_gpd = overlay(
-                    self.sabkha_gpd, self.rough_gpd, how='difference')
+                    self.sabkha_gpd, self.facilities_gpd, how='difference')
 
             except AttributeError:
                 pass
 
         else:
             self.sabkha_gpd = None
-
-        self.rcv_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_rcv_infill) else None
-        self.src_infill_gpd = self.read_shapefile(sf) if (sf := self.shapefile_src_infill) else None
-
 
     def read_shapefile(self, file_name: str) -> GeoDataFrame:
         ''' read a shape file and converts crs to UTM PSD93 Zone 40
@@ -143,12 +146,10 @@ class Gis:
         # to avoid duplicate layer warning
         layer1 = layer1.rename(columns={'LAYER':'LAYERi'})
         try:
-            layer2 = overlay(layer1, layer2, how='intersection')
+            return overlay(layer1, layer2, how='intersection')
 
         except (AttributeError, IndexError, KeyError):
-            layer2 = None
-
-        return layer2
+            return
 
     def calc_area_and_plot(self, area_gpd: GeoDataFrame, color: str|None) -> float:
         area = 0.0

@@ -1,6 +1,6 @@
 ''' this module checks the vps that are sent to processing and stored in the database
     with the sps design vps
-    input: sps planned sources file (csv)
+    input: planned sources file (csv)
     output: sps source with a column add with count how many times the vp has been
         acquired
     pre-condition:
@@ -27,7 +27,10 @@ class Src:
         with open(planned_vp_file, mode='rt') as csv_input:
             planned_vps = csv.reader(csv_input)
 
-            csv_output_file = Path(''.join([planned_vp_file.stem, '_count', planned_vp_file.suffix]))
+            csv_output_file = (
+                planned_vp_file.parent /
+                Path(''.join([planned_vp_file.stem, '_count', planned_vp_file.suffix]))
+            )
             with open(csv_output_file, 'w', newline='') as csv_output:
                 csv_write = csv.writer(csv_output, delimiter=',')
 

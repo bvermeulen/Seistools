@@ -1,4 +1,4 @@
-''' project settings Nibras for block B
+''' project settings Nibras for block A
 '''
 import datetime
 from dataclasses import dataclass, field
@@ -37,7 +37,7 @@ class Config:
     nodes_assigned: int = 30_000
     nodes_spare: int = 500
     nodes_sand_advance_days: float = 1
-    swath_reverse: bool = False
+    swath_reverse: bool = True
     source_on_receivers: bool = False
     rl_dozed: bool = False
     access_dozed: bool = False
@@ -50,8 +50,8 @@ class Config:
     dunes_terrain: float = 0.60
     sabkha_terrain: float = 0.60
     flat_skip_perc: float = 0.0
-    rough_skip_perc: float = 0.05
-    facilities_skip_perc: float = 0.2
+    rough_skip_perc: float = 0.02
+    facilities_skip_perc: float = 0.271
     dunes_skip_perc: float = 0.02
     sabkha_skip_perc: float = 0.10
     hours_day: float = 24.0
@@ -59,9 +59,9 @@ class Config:
     ctm_constant: float = field(init=False)
     lead_receiver: int = field(init=False)
     lead_dozer: int = field(init=False)
-    excel_file: str = './swath_nibras_b.xlsx'
-    title_chart: str = 'Nibras - Block B'
-    start_date: datetime.date = datetime.date(2023, 3, 1)
+    excel_file: str = './swath_nibras_a.xlsx'
+    title_chart: str = 'Nibras - Block A'
+    start_date: datetime.date = datetime.date(2022, 12, 21)
     EPSG: int = 3440  # PSD93_UTM40
     project_base_folder: Path = Path('D:/OneDrive/Work/PDO/Nibras 2022/6 Mapping/4 shape files')
     shapefile_src: Path = field(init=False)
@@ -81,24 +81,24 @@ class Config:
         self.lead_receiver = int(self.active_lines * self.repeat_factor / 2)
         self.lead_dozer = self.lead_receiver + int(self.dozer_buffer / self.rls_flat)
         self.shapefile_rcv = (
-            self.project_base_folder / 'boundaries/nibras_block_b_rcv.shp'
+            self.project_base_folder / 'boundaries/nibras_block_a_rcv.shp'
         )
         self.shapefile_src = (
-            self.project_base_folder / 'boundaries/nibras_block_b_src.shp'
+            self.project_base_folder / 'boundaries/nibras_block_a_src.shp'
         )
         self.shapefile_cs1 = (
-            self.project_base_folder / 'boundaries/block_b_75.shp'
+            self.project_base_folder / 'boundaries/block_a_75.shp'
         )
         self.shapefile_cs2 = (
-            self.project_base_folder / 'boundaries/block_b_50.shp'
+            self.project_base_folder / 'boundaries/block_a_50.shp'
         )
         self.shapefile_rcv_infill = None
         self.shapefile_src_infill = None
         self.shapefile_rough = (
-            self.project_base_folder / 'terrain/rough_b.shp'
+            self.project_base_folder / 'terrain/rough_a.shp'
         )
         self.shapefile_facilities = (
-            self.project_base_folder / 'terrain/facilities_b.shp'
+            self.project_base_folder / 'terrain/facilities_a.shp'
         )
         self.shapefile_dune = None
         self.shapefile_sabkha = None
