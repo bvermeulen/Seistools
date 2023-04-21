@@ -236,51 +236,56 @@ class SwathProdCalc(OutputMixin):
     def convert_area_to_vps(self, areas: dict) -> dict[str, float|int]:
         ''' Convert areas to points
         '''
-        def calc_density(line_spacing, point_spacing, cs_factor):
+        def calc_density(line_spacing: float, point_spacing: float, cs_factor: float) -> float:
             density = (
                 cs_factor * 1000 / line_spacing * 1000 / point_spacing if
                 line_spacing > 0.01 and point_spacing > 0.01 else 0
             )
             return density
 
+        def calc_vps(area: float, dens: float, skip: float) -> int:
+            return int(area * dens * (1 - skip))
+
         # points for CS1 areas
         dens_cs1 = calc_density(cfg.sls_cs1, cfg.sps_cs1, cfg.cs_cs1)
         area = areas['area_cs1']
-        vp_theor = int(areas['area_cs1'] * dens_cs1)
-        vp_flat = int(areas['flat_cs1'] * (1 - cfg.flat_skip_perc) * dens_cs1)
-        vp_rough = int(areas['rough_cs1'] * (1 - cfg.rough_skip_perc) * dens_cs1)
-        vp_facilities = int(
-            areas['facilities_cs1'] * (1 - cfg.facilities_skip_perc) * dens_cs1
-        )
+        vp_theor = calc_vps(areas['area_cs1'], dens_cs1, 0.0)
+        vp_flat = calc_vps(areas['flat_cs1'], dens_cs1, cfg.flat_skip_perc)
+        vp_rough = calc_vps(areas['rough_cs1'], dens_cs1, cfg.rough_skip_perc)
+        vp_facilities = calc_vps(areas['facilities_cs1'], dens_cs1, cfg.facilities_skip_perc)
         dens_dunes_src = calc_density(cfg.sls_sand, cfg.sps_sand, cfg.cs_sand)
-        vp_dunes_src = int(areas['dunes_cs1'] * (1 - cfg.dunes_skip_perc) * dens_dunes_src)
+        vp_dunes_src = calc_vps(areas['dunes_cs1'], dens_dunes_src, cfg.dunes_skip_perc)
         dens_dunes_rcv = calc_density(cfg.rls_sand, cfg.rps_sand, cfg.cs_sand)
         vp_dunes_rcv = (
-            int(areas['dunes_cs1'] * (1 - cfg.dunes_skip_perc) * dens_dunes_rcv) if
+            calc_vps(areas['dunes_cs1'], dens_dunes_rcv, cfg.dunes_skip_perc) if
             cfg.source_on_receivers else 0
         )
         vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
-        vp_sabkha = int(areas['sabkha_cs1'] * (1 - cfg.sabkha_skip_perc) * dens_cs1)
-        km_access = areas['dunes_cs1'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+        vp_sabkha = calc_vps(areas['sabkha_cs1'], dens_cs1, cfg.sabkha_skip_perc)
+        km_access = (
+            areas['dunes_cs1'] * 1000 / cfg.access_spacing if cfg.access_dozed and
+            cfg.access_spacing > 0.0 else 0.0
+        )
 
         # points for CS2 areas
         if self.src_cs2:
             dens_cs2 = calc_density(cfg.sls_cs2, cfg.sps_cs2, cfg.cs_cs2)
             area += areas['area_cs2']
-            vp_theor += int(areas['area_cs2'] * dens_cs2)
-            vp_flat += int(areas['flat_cs2'] * (1 - cfg.flat_skip_perc) * dens_cs2)
-            vp_rough += int(areas['rough_cs2'] * (1 - cfg.rough_skip_perc) * dens_cs2)
-            vp_facilities += int(
-                areas['facilities_cs2'] * (1 - cfg.facilities_skip_perc) * dens_cs2
-            )
-            vp_dunes_src += int(areas['dunes_cs2'] * (1 - cfg.dunes_skip_perc) * dens_dunes_src)
+            vp_theor += calc_vps(areas['area_cs2'], dens_cs2, 0.0)
+            vp_flat += calc_vps(areas['flat_cs2'], dens_cs2, cfg.flat_skip_perc)
+            vp_rough += calc_vps(areas['rough_cs2'], dens_cs2, cfg.rough_skip_perc)
+            vp_facilities += calc_vps(areas['facilities_cs2'], dens_cs2, cfg.facilities_skip_perc)
+            vp_dunes_src += calc_vps(areas['dunes_cs2'], dens_dunes_src, cfg.dunes_skip_perc)
             vp_dunes_rcv += (
-                int(areas['dunes_cs2'] * (1 - cfg.dunes_skip_perc) * dens_dunes_rcv) if
+                calc_vps(areas['dunes_cs2'], dens_dunes_rcv, cfg.dunes_skip_perc) if
                 cfg.source_on_receivers else 0
             )
-            vp_dunes = int(vp_dunes_src + vp_dunes_rcv)
-            vp_sabkha += int(areas['sabkha_cs2'] * (1 - cfg.sabkha_skip_perc) * dens_cs2)
-            km_access += areas['dunes_cs2'] * 1000 / cfg.access_spacing if cfg.access_dozed else 0.0
+            vp_dunes = vp_dunes_src + vp_dunes_rcv
+            vp_sabkha += calc_vps(areas['sabkha_cs2'], dens_cs2, cfg.sabkha_skip_perc)
+            km_access += (
+                areas['dunes_cs2'] * 1000 / cfg.access_spacing if cfg.access_dozed and
+                cfg.access_spacing else 0.0
+            )
 
         vp_actual = int(vp_flat + vp_rough + vp_facilities + vp_dunes + vp_sabkha)
         vp_skips = int(vp_theor - vp_actual)
@@ -292,18 +297,17 @@ class SwathProdCalc(OutputMixin):
 
         if self.src_infill:
             dens_infill = calc_density(cfg.sls_infill, cfg.sps_infill, cfg.cs_infill)
-            vp_flat_infill = int(areas['flat_infill'] * (1 - cfg.flat_skip_perc) * dens_infill)
-            vp_rough_infill = int(areas['rough_infill'] * (1 - cfg.rough_skip_perc) * dens_infill)
-            vp_facilities_infill = int(
-                areas['facilities_infill'] * (1 - cfg.facilities_skip_perc) * dens_infill
-            )
-            vp_dunes_infill_src = int(areas['dunes_infill'] * (1 - cfg.dunes_skip_perc) * dens_dunes_src)
+            vp_flat_infill = calc_vps(areas['flat_infill'], dens_infill, cfg.flat_skip_perc)
+            vp_rough_infill = calc_vps(areas['rough_infill'], dens_infill, cfg.rough_skip_perc)
+            vp_facilities_infill = calc_vps(areas['facilities_infill'], dens_infill, cfg.facilities_skip_perc)
+            vp_dunes_infill_src = calc_vps(areas['dunes_infill'], dens_dunes_src, cfg.dunes_skip_perc)
             vp_dunes_infill_rcv = (
-                int(areas['dunes_infill'] * (1 - cfg.dunes_skip_perc) * dens_dunes_rcv) if
+                calc_vps(areas['dunes_infill'], dens_dunes_rcv, cfg.dunes_skip_perc) if
                 cfg.source_on_receivers else 0
             )
-            vp_dunes_infill = int(vp_dunes_infill_src + vp_dunes_infill_rcv)
-            vp_sabkha_infill = int(areas['sabkha_infill'] * (1 - cfg.sabkha_skip_perc) * dens_infill)
+            vp_dunes_infill = vp_dunes_infill_src + vp_dunes_infill_rcv
+            vp_sabkha_infill = calc_vps(areas['sabkha_infill'], dens_infill, cfg.sabkha_skip_perc)
+
             result_dict.update({
                 'flat_infill': vp_flat_infill, 'rough_infill': vp_rough_infill,
                 'facilities_infill': vp_facilities_infill,
