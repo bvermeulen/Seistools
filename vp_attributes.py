@@ -45,6 +45,7 @@ class VpAttributes:
                 self.total_records = 0
                 ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
                 ax1[i_plt] = self.plot_density(ax1[i_plt], key, plt_setting)
+                # ax1[i_plt] = self.plot_histogram(ax1[i_plt], key, plt_setting)
 
         # add total vp's as extra label in the legend
         ax0[0].plot([], [], ' ', label=f'Ttl ({self.total_records:,})')
@@ -103,19 +104,23 @@ class VpAttributes:
         )
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
-
         plt_tol_lines = True
+
         for vib in range(1, FLEETS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df['vibrator'] == vib][key].to_list()
             )
             if vib_data.size > 0:
+
+                max_hist = np.histogram(
+                    vib_data, bins=100,  range=(setting['min'], setting['max']),
+                    density=False)[0].max()
                 try:
                     vib_density_data = stats.gaussian_kde(vib_data)
-                    axis.plot(
-                        x_values, setting['interval'] * vib_density_data(x_values),
-                        label=vib
-                    )
+                    dens_vals = vib_density_data(x_values)
+                    scale_factor = max_hist / dens_vals.max()
+                    axis.plot(x_values, scale_factor * dens_vals, label=vib)
+
                 except np.linalg.LinAlgError:
                     vib_data = [dirac_function(x) for x in range(len(x_values))]
                     axis.plot(x_values, vib_data, label=vib)
