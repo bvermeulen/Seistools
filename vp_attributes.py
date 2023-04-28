@@ -110,20 +110,30 @@ class VpAttributes:
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df['vibrator'] == vib][key].to_list()
             )
-            if vib_data.size > 0:
+            if (vib_count := vib_data.size) > 0:
+                # # for test purpose
+                # if vib !=6:
+                #     continue
+                # axis.hist(
+                #     vib_data, bins=100,  range=(setting['min'], setting['max']),
+                #     density=False)
 
-                max_hist = np.histogram(
-                    vib_data, bins=100,  range=(setting['min'], setting['max']),
-                    density=False)[0].max()
                 try:
-                    vib_density_data = stats.gaussian_kde(vib_data)
-                    dens_vals = vib_density_data(x_values)
-                    scale_factor = max_hist / dens_vals.max()
-                    axis.plot(x_values, scale_factor * dens_vals, label=vib)
+                    # density_kernel = stats.gaussian_kde(vib_data, bw_method=0.5)
+                    density_vals = stats.gaussian_kde(vib_data, bw_method=0.5).evaluate(x_values)
+                    density_vals /= density_vals.sum()
+                    scale_factor = vib_count / setting['interval']
+
+                    # no idea why I have to do this ...
+                    if key in ('avg_phase'):
+                        scale_factor *= setting['interval']
+
+                    # print(f'{vib:3} - {key:10}, scale factor {scale_factor:0.2f}')
+                    axis.plot(x_values, scale_factor * density_vals, label=vib)
 
                 except np.linalg.LinAlgError:
                     vib_data = [dirac_function(x) for x in range(len(x_values))]
-                    axis.plot(x_values, vib_data, label=vib)
+                    axis.plot(x_values, scale_factor * vib_data, label=vib)
 
                 if plt_tol_lines:
                     if setting['tol_min'] is not None:
