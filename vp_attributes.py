@@ -111,24 +111,14 @@ class VpAttributes:
                 self.vp_records_df[self.vp_records_df['vibrator'] == vib][key].to_list()
             )
             if (vib_count := vib_data.size) > 0:
-                # # for test purpose
-                # if vib !=6:
-                #     continue
-                # axis.hist(
-                #     vib_data, bins=100,  range=(setting['min'], setting['max']),
-                #     density=False)
-
                 try:
-                    # density_kernel = stats.gaussian_kde(vib_data, bw_method=0.5)
                     density_vals = stats.gaussian_kde(vib_data, bw_method=0.5).evaluate(x_values)
                     density_vals /= density_vals.sum()
                     scale_factor = vib_count / setting['interval']
-
-                    # no idea why I have to do this ...
-                    if key in ('avg_phase'):
+                    # unable to explain why below is necessary but it seems to work
+                    if key in ['avg_phase']:
                         scale_factor *= setting['interval']
 
-                    # print(f'{vib:3} - {key:10}, scale factor {scale_factor:0.2f}')
                     axis.plot(x_values, scale_factor * density_vals, label=vib)
 
                 except np.linalg.LinAlgError:
