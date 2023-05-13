@@ -24,7 +24,7 @@ from seis_settings import (
     FLEETS, DATABASE_TABLE, TOL_COLOR, RESULTS_FOLDER, vp_plt_settings,
 )
 
-seconds_per_day = 24 * 3600
+SECONDS_PER_DAY = 24 * 3600
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 register_matplotlib_converters()
 
@@ -34,13 +34,9 @@ class VpActive:
     def __init__(self, production_date):
         ''' initialise the hashtable '''
         self.production_date = production_date
-        self.vps_by_second = {second: [] for second in range(seconds_per_day)}
-
-        self.vps_by_interval_df = pd.DataFrame(
-            columns=['time'] +
-            [f'V{i:02}' for i in range(1, FLEETS + 1)] +
-            ['total', 'vps_hour', 'num_vibs']
-        )
+        self.vps_by_second = {second: [] for second in range(SECONDS_PER_DAY)}
+        self.vps_by_interval_list = []
+        self.vps_by_interval_df = None
 
     def select_data(self, database_table, interval):
         self.vp_records_df = VpDb().get_vp_data_by_date(
@@ -48,7 +44,6 @@ class VpActive:
 
         self.populate_vps_by_second()
         self.aggregate_vps_by_interval(interval)
-
 
     def populate_vps_by_second(self):
         progress_message = seis_utils.progress_message_generator(
@@ -80,32 +75,26 @@ class VpActive:
 
         count_vps = {f'V{vib:02}': vps for vib, vps in Counter(vib_list).items()}
         total = sum(val for _, val in count_vps.items())
-        self.vps_by_interval_df = self.vps_by_interval_df.append(
+        self.vps_by_interval_list.append(
             {
                 **{'time': _date},
                 **count_vps,
                 **{'total': total},
                 **{'vps_hour': total * 3600 / interval},
                 **{'num_vibs': len(set(vib_list))},
-            },
-            ignore_index=True
+            }
         )
         return None
 
-    def aggregate_vps_by_interval(self, interval):
+    def aggregate_vps_by_interval(self, interval: int):
         ''' aggregate number of vps by interval
-            argument:
-                interval: integer seconds interval
-            returns:
-                seconds: list with start second of intervals
-                vps_in_interval: list with number of vps in interval
-                vibs_in_interval: list of number of vibs operational in interval
+            interval: integer seconds interval
         '''
         progress_message = seis_utils.progress_message_generator(
             f'aggreate VPs for {self.production_date.strftime("%d-%b-%Y")}')
         self.total_vps = 0
         second = 0
-        while second < seconds_per_day:
+        while second < SECONDS_PER_DAY:
             # TODO improve loop, probably over vps_by_second and check if in interval
 
             # calculate vps in interval and normalise by hour and
@@ -118,13 +107,18 @@ class VpActive:
                     pass
 
             self.add_vps_interval(interval, second, vibs_list)
-
             self.total_vps += len(vibs_list)
             second += interval
             next(progress_message)
 
-        self.add_vps_interval(interval, seconds_per_day, [])
-
+        self.add_vps_interval(interval, SECONDS_PER_DAY, [])
+        self.vps_by_interval_df = pd.DataFrame(
+            self.vps_by_interval_list,
+            columns=(
+                ['time'] + [f'V{i:02}' for i in range(1, FLEETS + 1)] +
+                ['total', 'vps_hour', 'num_vibs']
+            )
+        )
         print(f'\rtotal vps: {self.total_vps}                                        ')
 
     def plot_vps_by_interval(self, interval):
@@ -166,7 +160,7 @@ class VpActive:
             TOL_COLOR if nv < vp_plt_settings['vib_activity']['vibs_target']
             else 'green' for nv in vibs
         ]
-        width = interval / seconds_per_day
+        width = interval / SECONDS_PER_DAY
         ax2.bar(times, vibs, color=colors, width=width, align='edge', zorder=3)
 
         fig.tight_layout()
