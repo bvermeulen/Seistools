@@ -11,7 +11,7 @@ import seis_utils
 from seis_vibe_database import VpDb
 from seis_settings import (
     DATA_FILES_VAPS, DATA_FILES_VP, PROGRESS_SKIPS, LINK_VP_TO_VAPS, GMT_OFFSET,
-    FilesVpTable, VpTable, FilesVapsTable, VapsTable,
+    FilesVpTable, VpTable, FilesVapsTable, VapsTable
 )
 
 # ignore warning velocity =  dist / time in method update_vo_distance
@@ -281,6 +281,7 @@ class Vp:
 
 
 if __name__ == '__main__':
+    seis_utils.check_expiry_date()
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()

@@ -15,6 +15,7 @@ DATA_FILES_WEATHER =  Path('D:/OneDrive/Work/PDO/Nibras 2022/1 Daily Reports/12 
 RESULTS_FOLDER =      Path('D:/OneDrive/Work/PDO/Nibras 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
 DATABASE =            Path('D:/OneDrive/Work/PDO/Nibras 2022/6 Mapping/nibras_db.sqlite3')
 
+EXPIRY_DATE = datetime.date(2023, 8, 31)
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = 'VAPS'
 PROGRESS_SKIPS = 750

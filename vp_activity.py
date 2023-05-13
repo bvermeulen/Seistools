@@ -7,8 +7,6 @@
     Copyright: 2021
 
 '''
-#TODO implement productivity per vibe plot: see: https://stackoverflow.com/questions/20057260/how-to-remove-gaps-between-subplots-in-matplotlib
-
 import sys
 import datetime
 from collections import Counter
@@ -125,7 +123,7 @@ class VpActive:
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
-            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)'
+            f'{self.production_date.strftime("%d-%b-%Y")}'   # ({self.total_vps} VPs)'
         )
         time_format = mdates.DateFormatter('%H:%M')
         times = self.vps_by_interval_df['time'].to_numpy()

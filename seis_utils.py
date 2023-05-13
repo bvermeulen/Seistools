@@ -1,6 +1,7 @@
 ''' utility functions for vp application
 '''
 import warnings
+import sys
 import datetime
 import numpy as np
 import pandas as pd
@@ -13,7 +14,7 @@ from PIL import Image
 import contextily as ctx
 from seis_settings import (
     AREA_EASTING_MIN, AREA_EASTING_MAX, AREA_NORTHING_MIN, AREA_NORHING_MAX,
-    MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE,
+    MapTypes, EPSG_UTM_40N, EPSG_OSM, URL_STAMEN, MAP_FILE, EXPIRY_DATE
 )
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -26,7 +27,6 @@ def set_progress_bar(max_value, filename, skip_factor):
         max=int(1 / skip_factor * max_value),
         suffix='%(percent)d%%'
     )
-
 
 
 def progress_message_generator(message):
@@ -58,6 +58,16 @@ def get_line():
 
         except ValueError:
             pass
+
+
+def check_expiry_date():
+    date_today = datetime.date.today()
+    if date_today > EXPIRY_DATE:
+        input(f'error, your license has expired on {EXPIRY_DATE.strftime("%d %b %Y")}')
+        sys.exit()
+
+    elif date_today + datetime.timedelta(days=15) > EXPIRY_DATE:
+        print(f'warning, your license will expire on {EXPIRY_DATE.strftime("%d %b %Y")}')
 
 
 def get_production_date(question='date (YYMMDD) [q - quit]: '):
