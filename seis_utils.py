@@ -5,6 +5,7 @@ import sys
 import datetime
 import numpy as np
 import pandas as pd
+from ntplib import NTPClient
 from progress.bar import Bar
 from  osgeo import gdal
 from geopandas import GeoDataFrame, GeoSeries
@@ -61,7 +62,9 @@ def get_line():
 
 
 def check_expiry_date():
-    date_today = datetime.date.today()
+    client = NTPClient()
+    response = client.request('europe.pool.ntp.org', version=3)
+    date_today = datetime.datetime.fromtimestamp(response.tx_time).date()
     if date_today > EXPIRY_DATE:
         input(f'error, your license has expired on {EXPIRY_DATE.strftime("%d %b %Y")}')
         sys.exit()
