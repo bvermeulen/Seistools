@@ -91,12 +91,6 @@ class VpAttributes:
         '''  method to plot the attribute density function. If no density plot can be
              made then plot unity density
         '''
-        def dirac_function(x):
-            if x == 0:
-                return 1
-            else:
-                return 0
-
         x_values = np.arange(
             setting['min'],
             setting['max'],
@@ -110,11 +104,11 @@ class VpAttributes:
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df['vibrator'] == vib][key].to_list()
             )
-            if (vib_count := vib_data.size) > 0:
+            if (vp_count := vib_data.size) > 0:
                 try:
                     density_vals = stats.gaussian_kde(vib_data, bw_method=0.5).evaluate(x_values)
                     density_vals /= density_vals.sum()
-                    scale_factor = vib_count / setting['interval']
+                    scale_factor = vp_count / setting['interval']
                     # unable to explain why below is necessary but it seems to work
                     if key in ['avg_phase']:
                         scale_factor *= setting['interval']
@@ -122,8 +116,13 @@ class VpAttributes:
                     axis.plot(x_values, scale_factor * density_vals, label=vib)
 
                 except np.linalg.LinAlgError:
-                    vib_data = [dirac_function(x) for x in range(len(x_values))]
-                    axis.plot(x_values, scale_factor * vib_data, label=vib)
+                    # KDE fails is all elements in the vib_data array have the same value
+                    # In this case run below fallback
+                    density_vals = np.zeros(x_values.size)
+                    for i, val in enumerate(x_values):
+                        if abs(val - vib_data[0]) < 0.5 * setting['interval']:
+                            density_vals[i] = 1.0
+                    axis.plot(x_values, vp_count * density_vals, label=vib)
 
                 if plt_tol_lines:
                     if setting['tol_min'] is not None:
