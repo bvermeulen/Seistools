@@ -117,11 +117,12 @@ class VpAttributes:
                     # KDE fails is all elements in the vib_data array have the same value
                     # In this case run below fallback
                     density_vals = np.zeros(x_values.size)
+                    scale_factor = vp_count
                     for i, val in enumerate(x_values):
                         if abs(val - vib_data[0]) < 0.5 * setting['interval']:
                             density_vals[i] = 1.0
 
-                axis.plot(x_values, vp_count * density_vals, label=vib)
+                axis.plot(x_values, scale_factor * density_vals, label=vib)
 
                 if plt_tol_lines:
                     if setting['tol_min'] is not None:
