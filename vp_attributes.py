@@ -116,11 +116,11 @@ class VpAttributes:
                 except np.linalg.LinAlgError:
                     # KDE fails is all elements in the vib_data array have the same value
                     # In this case run below fallback
-                    density_vals = np.zeros(x_values.size)
+                    half_intval = 0.5 * setting['interval']
+                    val = vib_data.mean()
+                    density_vals = np.where(
+                        (x_values > val - half_intval) & (x_values < val + half_intval), 1, 0)
                     scale_factor = vp_count
-                    for i, val in enumerate(x_values):
-                        if abs(val - vib_data[0]) < 0.5 * setting['interval']:
-                            density_vals[i] = 1.0
 
                 axis.plot(x_values, scale_factor * density_vals, label=vib)
 
