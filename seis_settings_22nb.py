@@ -6,14 +6,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from enum import IntEnum
 
-DATA_FILES_VP =       Path('D:/OneDrive/Work/PDO/Lekhwair 3D/VP data/VP_RECORD')
-DATA_FILES_VAPS =     Path('D:/OneDrive/Work/PDO/Nibras 2022/12 QC/vib_node_data/vaps')
-DATA_FILES_QUANTUM =  Path('D:/OneDrive/Work/PDO/Nibras 2022/12 QC/vib_node_data//quantum_nodes')
-DATA_FILES_NUSEIS =   Path('D:/OneDrive/Work/PDO/Nibras 2022/12 QC/vib_node_data/nuseis_nodes')
-DATA_FILES_SPS =      Path('D:/OneDrive/Work/PDO/Nibras 2022/12 QC/vib_node_data/sps_final')
-DATA_FILES_WEATHER =  Path('D:/OneDrive/Work/PDO/Nibras 2022/1 Daily Reports/12 Wind Logs')
-RESULTS_FOLDER =      Path('D:/OneDrive/Work/PDO/Nibras 2022/5 Financials/4 Less Vibs Penalty/Daily vibe activity')
-DATABASE =            Path('D:/OneDrive/Work/PDO/Nibras 2022/6 Mapping/nibras_db.sqlite3')
+PROJECT_PATH =        Path('D:/OneDrive/Work/PDO/Nibras 2022/')
+DATA_FILES_VP =       None
+DATA_FILES_VAPS =     PROJECT_PATH / '12 QC/vib_node_data/vaps'
+DATA_FILES_QUANTUM =  PROJECT_PATH / '12 QC/vib_node_data//quantum_nodes'
+DATA_FILES_NUSEIS =   PROJECT_PATH / '12 QC/vib_node_data/nuseis_nodes'
+DATA_FILES_SPS =      PROJECT_PATH / '12 QC/vib_node_data/sps_final'
+DATA_FILES_WEATHER =  PROJECT_PATH / '1 Daily Reports/12 Wind Logs'
+RESULTS_FOLDER =      PROJECT_PATH / '5 Financials/4 Less Vibs Penalty/Daily vibe activity'
+DATABASE =            PROJECT_PATH / '6 Mapping/nibras_db.sqlite3'
 
 EXPIRY_DATE = datetime.date(2023, 8, 31)
 LINK_VP_TO_VAPS = False
