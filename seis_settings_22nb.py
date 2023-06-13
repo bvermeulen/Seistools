@@ -77,8 +77,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 61,
+        'tol_min': 61,
+        'tol_max': None,
     },
     'peak_phase': {
         'title_attribute': 'Peak Phase',
@@ -110,8 +110,8 @@ vp_plt_settings = {
         'min': 0,
         'max': 100,
         'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 85,
+        'tol_min': 85,
+        'tol_max': None,
     },
     'elevation': {
         'title_attribute': 'Elevation',

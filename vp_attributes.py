@@ -1,7 +1,7 @@
 ''' display vibe attributes
     author: Bruno Vermeulen
     email: bvermeulen@hotmail.com
-    Copyright: 2021
+    Copyright: 2023
 '''
 import numpy as np
 from scipy import stats
@@ -17,6 +17,8 @@ plt.rc('xtick', labelsize=SMALL_SIZE)
 plt.rc('ytick', labelsize=SMALL_SIZE)
 plt.rc('axes', labelsize=SMALL_SIZE)
 FIGSIZE = (14, 9)
+FIGSIZE_HISTOGRAM = (8, 20)
+DPI_HISTOGRAM = 90
 
 
 class VpAttributes:
@@ -39,13 +41,19 @@ class VpAttributes:
             ) = plt.subplots(nrows=3, ncols=4, figsize=FIGSIZE)
         fig.suptitle(f'Vib attributes for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')  #pylint: disable=line-too-long
 
-        for i_plt, (key, plt_setting) in enumerate(vp_plt_settings.items()):
-            if key in ['avg_phase', 'peak_phase', 'avg_dist',
-                       'peak_dist', 'avg_force', 'peak_force']:
-                self.total_records = 0
-                ax0[i_plt] = self.plot_attribute(ax0[i_plt], key, plt_setting)
-                ax1[i_plt] = self.plot_density(ax1[i_plt], key, plt_setting)
-                # ax1[i_plt] = self.plot_histogram(ax1[i_plt], key, plt_setting)
+        for (key, plt_setting) in vp_plt_settings.items():
+            match key:
+                case 'avg_phase': ax_index = 0
+                case 'peak_phase': ax_index = 3
+                case 'avg_dist': ax_index = 1
+                case 'peak_dist': ax_index = 4
+                case 'avg_force': ax_index = 2
+                case 'peak_force': ax_index = 5
+                case other: continue
+            self.total_records = 0
+            ax0[ax_index] = self.plot_attribute(ax0[ax_index], key, plt_setting)
+            ax1[ax_index] = self.plot_density_combined(ax1[ax_index], key, plt_setting)
+            # ax1[ax_index] = self.plot_histograms_combined(ax1[ax_index], key, plt_setting)
 
         # add total vp's as extra label in the legend
         ax0[0].plot([], [], ' ', label=f'Ttl ({self.total_records:,})')
@@ -54,8 +62,31 @@ class VpAttributes:
             handles, labels, loc='upper right', frameon=True,
             fontsize='small', framealpha=1, markerscale=40)
         fig.tight_layout()
-
         plt.show()
+        plt.close()
+
+    def plot_histogram_data(self):
+        fig, ax = plt.subplots(
+            nrows=FLEETS, ncols=6, figsize=FIGSIZE_HISTOGRAM, dpi=DPI_HISTOGRAM,
+            gridspec_kw={'hspace':0.15, 'wspace':0.25}
+        )
+        fig.suptitle(f'Vib attributes for: {self.production_date.strftime("%d %b %Y")}', fontweight='bold')  #pylint: disable=line-too-long
+
+        for (key, plt_setting) in vp_plt_settings.items():
+            match key:
+                case 'avg_phase': ax_index = 0
+                case 'peak_phase': ax_index = 1
+                case 'avg_dist': ax_index = 2
+                case 'peak_dist': ax_index = 3
+                case 'avg_force': ax_index = 4
+                case 'peak_force': ax_index = 5
+                case other: continue
+
+            ax[:, ax_index] = self.plot_histograms(ax[:, ax_index], key, plt_setting)
+
+        # fig.tight_layout()
+        plt.show()
+        plt.close()
 
     def plot_attribute(self, axis, key, setting):
         axis.set_title(setting['title_attribute'])
@@ -87,9 +118,8 @@ class VpAttributes:
 
         return axis
 
-    def plot_density(self, axis, key, setting):
-        '''  method to plot the attribute density function. If no density plot can be
-             made then plot unity density
+    def plot_density_combined(self, axis, key, setting):
+        '''  method to plot the attribute density function combined in one axis.
         '''
         x_values = np.arange(
             setting['min'],
@@ -134,8 +164,8 @@ class VpAttributes:
 
         return axis
 
-    def plot_histogram(self, axis, key, setting):
-        '''  method to plot the attribute histogram.
+    def plot_histograms_combined(self, axis, key, setting):
+        '''  method to plot the attribute histograms combined in one axis
         '''
         axis.set_title(setting['title_density'])
         axis.set_ylabel(setting['y-axis_label_density'])
@@ -161,6 +191,48 @@ class VpAttributes:
 
         return axis
 
+    def plot_histograms(self, axis, key, setting):
+        '''  method to plot the attribute histogram in a single axis per vibrator
+        '''
+        plt_tol_lines = True
+        for vib in range(1, FLEETS + 1):
+            vib_data = np.array(
+                self.vp_records_df[self.vp_records_df['vibrator'] == vib][key].to_list()
+            )
+
+            if vib_data.size > 0:
+                if key in ['avg_phase', 'peak_phase', 'avg_dist', 'peak_dist']:
+                    data_in_spec = vib_data[vib_data <= setting['tol_max']]
+                    data_out_spec = vib_data[vib_data > setting['tol_max']]
+
+                elif key in ['avg_force', 'peak_force']:
+                    data_in_spec = vib_data[vib_data >= setting['tol_min']]
+                    data_out_spec = vib_data[vib_data < setting['tol_min']]
+
+                axis[vib-1].hist([data_in_spec, data_out_spec],
+                    histtype='stepfilled', bins=25, color=['green', 'red'],
+                    range=(setting['min'], setting['max']), label=vib+1
+                )
+            if plt_tol_lines:
+                if setting['tol_min'] is not None:
+                    axis[vib-1].axvline(setting['tol_min'], color=TOL_COLOR, linewidth=1.0)
+
+                if setting['tol_max'] is not None:
+                    axis[vib-1].axvline(setting['tol_max'], color=TOL_COLOR, linewidth=1.0)
+
+            axis[vib-1].set_xlim(left=setting['min'], right=setting['max'])
+            if vib != FLEETS:
+                axis[vib-1].set_xticklabels([])
+                axis[vib-1].set_xticks([])
+
+            axis[vib-1].set_yticks([])
+            axis[vib-1].set_yticklabels([])
+            if key == 'avg_phase':
+                axis[vib-1].set_ylabel(f'V{vib}', fontsize=8)
+
+        axis[0].set_title(key, fontsize=8)
+        return axis
+
 
 if __name__ == "__main__":
 
@@ -172,3 +244,5 @@ if __name__ == "__main__":
         vp_attr = VpAttributes(DATABASE_TABLE, production_date)
         vp_attr.select_data()
         vp_attr.plot_vp_data()
+        vp_attr.plot_histogram_data()
+

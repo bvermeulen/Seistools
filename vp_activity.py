@@ -173,7 +173,6 @@ class VpActive:
             f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)'
         )
         time_format = mdates.DateFormatter('%H:%M')
-
         times = self.vps_by_interval_df['time'].to_numpy()
         ax[0].set_title(f'VPs per hour - interval {interval / 60:.0f} minutes')
         for vib in range(1, FLEETS + 1):
