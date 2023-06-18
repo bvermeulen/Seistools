@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1324</width>
+    <width>1351</width>
     <height>952</height>
    </rect>
   </property>
@@ -19,8 +19,8 @@
      <rect>
       <x>1180</x>
       <y>10</y>
-      <width>141</width>
-      <height>241</height>
+      <width>161</width>
+      <height>181</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="ControlArea"/>
@@ -73,7 +73,7 @@
       <x>1180</x>
       <y>20</y>
       <width>139</width>
-      <height>231</height>
+      <height>171</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -86,7 +86,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>60</y>
+       <y>50</y>
        <width>111</width>
        <height>16</height>
       </rect>
@@ -99,7 +99,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>80</y>
+       <y>70</y>
        <width>121</width>
        <height>16</height>
       </rect>
@@ -112,7 +112,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>150</y>
+       <y>140</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -125,7 +125,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>150</y>
+       <y>140</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -138,7 +138,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>100</y>
+       <y>90</y>
        <width>121</width>
        <height>20</height>
       </rect>
@@ -151,7 +151,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>120</y>
+       <y>110</y>
        <width>131</width>
        <height>20</height>
       </rect>
@@ -169,6 +169,11 @@
        <height>22</height>
       </rect>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>10</pointsize>
+      </font>
+     </property>
      <property name="calendarPopup">
       <bool>true</bool>
      </property>
@@ -177,10 +182,10 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>1179</x>
-      <y>260</y>
-      <width>141</width>
-      <height>80</height>
+      <x>1180</x>
+      <y>200</y>
+      <width>161</width>
+      <height>181</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -192,30 +197,45 @@
        <property name="frameShadow">
         <enum>QFrame::Raised</enum>
        </property>
-       <widget class="QLineEdit" name="DateLineEdit">
+       <widget class="QLabel" name="StatusHeaderLabel">
         <property name="geometry">
          <rect>
-          <x>0</x>
+          <x>10</x>
           <y>0</y>
-          <width>113</width>
-          <height>22</height>
+          <width>141</width>
+          <height>16</height>
          </rect>
         </property>
-        <property name="readOnly">
-         <bool>true</bool>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <weight>75</weight>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Status</string>
         </property>
        </widget>
-       <widget class="QLineEdit" name="StatusLineEdit">
+       <widget class="QLabel" name="StatusLabel">
         <property name="geometry">
          <rect>
-          <x>0</x>
-          <y>30</y>
-          <width>113</width>
-          <height>22</height>
+          <x>10</x>
+          <y>20</y>
+          <width>141</width>
+          <height>141</height>
          </rect>
         </property>
-        <property name="readOnly">
-         <bool>true</bool>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>TextLabel</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
         </property>
        </widget>
       </widget>
@@ -228,7 +248,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1324</width>
+     <width>1351</width>
      <height>26</height>
     </rect>
    </property>
