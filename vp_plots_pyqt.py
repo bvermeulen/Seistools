@@ -1,10 +1,12 @@
 """ PyQt shell for vp_attributes
 """
+# TODO add vib acitivity, save figures, select database
 import sys
-from pathlib import Path
+import time
 import datetime
 import warnings
-from vp_attributes import VpAttributes
+from pathlib import Path
+from vp_plots_module import DbUtils, VpAttributes, VpActivity
 from PyQt5 import uic, QtWidgets
 from PyQt5.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
@@ -13,10 +15,9 @@ from seis_utils import status_message_generator
 
 matplotlib.use("Qt5Agg")
 warnings.filterwarnings("ignore", category=UserWarning)
-right_arrow_symbol = "\u25B6"
-left_arrow_symbol = "\u25C0"
-dialogue_rel_position = (700, 150)
-date_widget_size = (400, 250)
+RIGHT_ARROW_SYMBOL = "\u25B6"
+LEFT_ARROW_SYMBOL = "\u25C0"
+TIMER_DELAY = 1000
 
 
 class MplCanvas(FigureCanvas):
@@ -25,21 +26,30 @@ class MplCanvas(FigureCanvas):
 
 
 class VpAttrWorker(QObject):
-    finished = pyqtSignal(object, object)
+    finished = pyqtSignal(dict)
     progress = pyqtSignal(str)
 
     @pyqtSlot(object, object)
-    def run(self, vp_attr, production_date):
+    def run(self, project, production_date):
+        db_utils = DbUtils(database=project) if project else DbUtils()
+        figure_dict = {}
         self.progress.emit("Wait")
-        vp_attr.production_date = production_date
         self.progress.emit("Load")
-        vp_attr.select_data()
+        vp_df = db_utils.get_vp_data_by_date(production_date)
+        vp_plot_attributes = VpAttributes(vp_df, production_date)
+        vp_plot_activity = VpActivity(vp_df, production_date)
         self.progress.emit("VpAttr")
-        fig_vp_data = vp_attr.plot_vp_data()
+        figure_dict["VpAttr"] = vp_plot_attributes.plot_vp_data()
         self.progress.emit("VpHist")
-        fig_hist_data = vp_attr.plot_histogram_data()
+        figure_dict["VpHist"] = vp_plot_attributes.plot_histogram_data()
+        self.progress.emit("ActAll")
+        figure_dict["ActAll"] = vp_plot_activity.plot_vps_by_interval()
+        time.sleep(1.0)
+        self.progress.emit("ActEach")
+        figure_dict["ActEach"] = vp_plot_activity.plot_vps_by_vibe()
+        time.sleep(1.0)
         self.progress.emit("Done")
-        self.finished.emit(fig_vp_data, fig_hist_data)
+        self.finished.emit(figure_dict)
 
 
 class PyqtViewControl(QtWidgets.QMainWindow):
@@ -47,25 +57,27 @@ class PyqtViewControl(QtWidgets.QMainWindow):
 
     request_vp_attributes = pyqtSignal(object, object)
 
-    def __init__(self, vp_attributes, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi(Path(__file__).parent / "vp_attributes.ui", self)
+        uic.loadUi(Path(__file__).parent / "vp_plots.ui", self)
 
-        self.vp_attr = vp_attributes
         self.actionQuit.triggered.connect(self.quit)
         self.DateEdit.dateChanged.connect(self.select_date)
         self.RB_VpData.clicked.connect(self.show_vp_data)
         self.RB_Histograms.clicked.connect(self.show_hist)
-        self.PB_Next.setText(right_arrow_symbol)
-        self.PB_Prev.setText(left_arrow_symbol)
+        self.RB_Activity_All.clicked.connect(self.show_activity_all)
+        self.RB_Activity_Each.clicked.connect(self.show_activity_each)
+        self.PB_Next.setText(RIGHT_ARROW_SYMBOL)
+        self.PB_Prev.setText(LEFT_ARROW_SYMBOL)
         self.PB_Next.clicked.connect(self.next_date)
         self.PB_Prev.clicked.connect(self.previous_date)
         self.production_date = None
         self.canvas_vp_data = None
         self.canvas_vp_hist = None
-        self.canvas_widget_data = None
-        self.canvas_widget_hist = None
+        self.canvas_dict = {}
+        self.figure_dict = {}
         self.progress_key = None
+        self.project = None
         self.RB_VpData.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
         self.StatusLabel.setText("")
@@ -93,7 +105,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.get_progress_key)
         self.request_vp_attributes.connect(self.worker.run)
-        self.request_vp_attributes.emit(self.vp_attr, self.production_date)
+        self.request_vp_attributes.emit(self.project, self.production_date)
         self.enable_disable_buttons(enabled=False)
         self.thread.start()
         self.progress_key = "Wait"
@@ -101,7 +113,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         next(self.progress_generator)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_progress_message)
-        self.timer.start(1000)
+        self.timer.start(TIMER_DELAY)
 
     def get_progress_key(self, key):
         self.progress_key = key
@@ -110,13 +122,20 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         status_message = self.progress_generator.send(self.progress_key)
         self.StatusLabel.setText(status_message)
 
-    def update_canvas_data(self, fig_vp_data, fig_hist_data):
-        self.FormVpDataLayout.removeWidget(self.canvas_widget_data)
-        self.FormVpHistLayout.removeWidget(self.canvas_widget_hist)
-        self.canvas_widget_data = MplCanvas(fig_vp_data)
-        self.canvas_widget_hist = MplCanvas(fig_hist_data)
-        self.FormVpDataLayout.addWidget(self.canvas_widget_data)
-        self.FormVpHistLayout.addWidget(self.canvas_widget_hist)
+    def update_canvas_data(self, figure_dict):
+        self.figure_dict = figure_dict
+        self.FormVpDataLayout.removeWidget(self.canvas_dict.get("VpAttr"))
+        self.FormVpHistLayout.removeWidget(self.canvas_dict.get("VpHist"))
+        self.FormVpActAllLayout.removeWidget(self.canvas_dict.get("ActAll"))
+        self.FormVpActEachLayout.removeWidget(self.canvas_dict.get("ActEach"))
+        self.canvas_dict["VpAttr"] = MplCanvas(self.figure_dict.get("VpAttr"))
+        self.canvas_dict["VpHist"] = MplCanvas(self.figure_dict.get("VpHist"))
+        self.canvas_dict["ActAll"] = MplCanvas(self.figure_dict.get("ActAll"))
+        self.canvas_dict["ActEach"] = MplCanvas(self.figure_dict.get("ActEach"))
+        self.FormVpDataLayout.addWidget(self.canvas_dict.get("VpAttr"))
+        self.FormVpHistLayout.addWidget(self.canvas_dict.get("VpHist"))
+        self.FormVpActAllLayout.addWidget(self.canvas_dict.get("ActAll"))
+        self.FormVpActEachLayout.addWidget(self.canvas_dict.get("ActEach"))
         self.enable_disable_buttons(enabled=True)
         self.update_progress_message()
         self.timer.stop()
@@ -164,14 +183,23 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             return
         self.stackedWidget.setCurrentIndex(1)
 
+    def show_activity_all(self):
+        if not self.production_date:
+            return
+        self.stackedWidget.setCurrentIndex(2)
+
+    def show_activity_each(self):
+        if not self.production_date:
+            return
+        self.stackedWidget.setCurrentIndex(3)
+
     def quit(self):
         sys.exit()
 
 
 def start_app():
     app = QtWidgets.QApplication([])
-    vp_attributes = VpAttributes()
-    view_control = PyqtViewControl(vp_attributes)
+    view_control = PyqtViewControl()
     view_control.show()
     app.exec()
 

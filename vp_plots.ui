@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>VP Attributes</string>
+   <string>VP Plots</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="horizontalLayoutWidget_2">
@@ -38,7 +38,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -64,6 +64,32 @@
        </rect>
       </property>
       <layout class="QFormLayout" name="FormVpHistLayout"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_3">
+     <widget class="QWidget" name="formLayoutWidget_3">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1161</width>
+        <height>871</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="FormVpActAllLayout"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_4">
+     <widget class="QWidget" name="formLayoutWidget_4">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1161</width>
+        <height>871</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="FormVpActEachLayout"/>
      </widget>
     </widget>
    </widget>
@@ -134,7 +160,7 @@
       <string>Prev</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_activity_all">
+    <widget class="QRadioButton" name="RB_Activity_All">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -147,7 +173,7 @@
       <string>Vib activity (all)</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_activity_each">
+    <widget class="QRadioButton" name="RB_Activity_Each">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -270,8 +296,8 @@
  <tabstops>
   <tabstop>RB_VpData</tabstop>
   <tabstop>RB_Histograms</tabstop>
-  <tabstop>RB_activity_all</tabstop>
-  <tabstop>RB_activity_each</tabstop>
+  <tabstop>RB_Activity_All</tabstop>
+  <tabstop>RB_Activity_Each</tabstop>
   <tabstop>PB_Prev</tabstop>
   <tabstop>PB_Next</tabstop>
  </tabstops>

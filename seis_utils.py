@@ -54,7 +54,7 @@ def status_message_generator(key):
         "Wait": "Please wait ...",
         "Load": "Load data",
         "VpAttr": "VP attributes",
-        "VpHist": "VP histrograms",
+        "VpHist": "VP histograms",
         "ActAll": "Activity all",
         "ActEach": "Activity each",
         "Done": "Done",

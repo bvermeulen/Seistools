@@ -5,10 +5,6 @@
 """
 import numpy as np
 from scipy import stats
-import matplotlib
-
-matplotlib.use("Qt5Agg")
-
 import matplotlib.pyplot as plt
 import seis_utils
 from seis_vibe_database import VpDb
