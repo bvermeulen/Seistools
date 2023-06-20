@@ -58,6 +58,7 @@ def status_message_generator(key):
         "ActAll": "Activity all",
         "ActEach": "Activity each",
         "Done": "Done",
+        "Error": "Error getting data",
     }
     current_key = None
     progress_dots = "."
@@ -77,7 +78,7 @@ def status_message_generator(key):
                 count = (count + 1) % MODULUS
 
         else:
-            if key not in ["Wait", "Done"]:
+            if key not in ["Wait", "Done", "Error"]:
                 if current_key not in ["Wait", "Done"]:
                     status_message = "\n".join(status_message.split("\n")[:-1])
                     status_message = "\n".join(
@@ -108,6 +109,9 @@ def status_message_generator(key):
                     ]
                 )
                 status_message = "\n".join(status_message.split("\n")[1:])
+
+            elif key == "Error":
+                status_message = status_lines[key]
 
             else:
                 assert False, f"Key {key} is invalid"

@@ -1,24 +1,24 @@
-''' settings and data structures for vp app
-'''
+""" settings and data structures for vp app
+"""
 import dataclasses
 import datetime
 from dataclasses import dataclass
 from pathlib import Path
 from enum import IntEnum
 
-PROJECT_PATH =        Path('D:/OneDrive/Work/PDO/Nibras 2022/')
-DATA_FILES_VP =       None
-DATA_FILES_VAPS =     PROJECT_PATH / '12 QC/vib_node_data/vaps'
-DATA_FILES_QUANTUM =  PROJECT_PATH / '12 QC/vib_node_data//quantum_nodes'
-DATA_FILES_NUSEIS =   PROJECT_PATH / '12 QC/vib_node_data/nuseis_nodes'
-DATA_FILES_SPS =      PROJECT_PATH / '12 QC/vib_node_data/sps_final'
-DATA_FILES_WEATHER =  PROJECT_PATH / '1 Daily Reports/12 Wind Logs'
-RESULTS_FOLDER =      PROJECT_PATH / '5 Financials/4 Less Vibs Penalty/Daily vibe activity'
-DATABASE =            PROJECT_PATH / '6 Mapping/nibras_db.sqlite3'
+PROJECT_PATH = Path("D:/OneDrive/Work/PDO/Nibras 2022/")
+DATA_FILES_VP = None
+DATA_FILES_VAPS = PROJECT_PATH / "12 QC/vib_node_data/vaps"
+DATA_FILES_QUANTUM = PROJECT_PATH / "12 QC/vib_node_data//quantum_nodes"
+DATA_FILES_NUSEIS = PROJECT_PATH / "12 QC/vib_node_data/nuseis_nodes"
+DATA_FILES_SPS = PROJECT_PATH / "12 QC/vib_node_data/sps_final"
+DATA_FILES_WEATHER = PROJECT_PATH / "1 Daily Reports/12 Wind Logs"
+RESULTS_FOLDER = PROJECT_PATH / "5 Financials/4 Less Vibs Penalty/Daily vibe activity"
+DATABASE = PROJECT_PATH / "6 Mapping/nibras_db.sqlite3"
 
 EXPIRY_DATE = datetime.date(2023, 8, 31)
 LINK_VP_TO_VAPS = False
-DATABASE_TABLE = 'VAPS'
+DATABASE_TABLE = "VAPS"
 PROGRESS_SKIPS = 750
 GMT_OFFSET = datetime.timedelta(hours=+4)
 DENSE_CRITERIUM = 15  # if distance < DENSE_CRITERIUM then dense_flag is true
@@ -28,266 +28,269 @@ PAD_DOWN_TIME = 2.5
 FLEETS = 15
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
-TOL_COLOR = 'red'
+TOL_COLOR = "red"
 AREA_EASTING_MIN = 610_000
 AREA_EASTING_MAX = 760_000
 AREA_NORTHING_MIN = 2_345_000
 AREA_NORHING_MAX = 2_455_000
 
-URL_STAMEN = 'http://tile.stamen.com/terrain/{z}/{x}/{y}.png'
-MAP_FILE = r'BackgroundMap/3D_31256.jpg'
+URL_STAMEN = "http://tile.stamen.com/terrain/{z}/{x}/{y}.png"
+MAP_FILE = r"BackgroundMap/3D_31256.jpg"
 EPSG_UTM_40N = 32640
 EPSG_WGS84 = 4326
 EPSG_OSM = 3857
 EPSG_PSD93 = 3440
+
 
 class MapTypes(IntEnum):
     local = 0
     osm = 1
     no_background = 3
 
+
 vp_plt_settings = {
-    'avg_phase': {
-        'title_attribute': 'Average Phase',
-        'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Average Phase Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 15,
-        'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 4,
+    "avg_phase": {
+        "title_attribute": "Average Phase",
+        "y-axis_label_attribute": "Degrees",
+        "title_density": "Average Phase Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 15,
+        "interval": 0.1,
+        "tol_min": None,
+        "tol_max": 4,
     },
-    'avg_dist': {
-        'title_attribute': 'Average Distortion',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Average Distortion Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 80,
-        'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 25,
+    "avg_dist": {
+        "title_attribute": "Average Distortion",
+        "y-axis_label_attribute": "Percentage",
+        "title_density": "Average Distortion Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 80,
+        "interval": 0.1,
+        "tol_min": None,
+        "tol_max": 25,
     },
-    'avg_force': {
-        'title_attribute': 'Average Force',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Average Force Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'interval': 0.1,
-        'tol_min': 61,
-        'tol_max': None,
+    "avg_force": {
+        "title_attribute": "Average Force",
+        "y-axis_label_attribute": "Percentage",
+        "title_density": "Average Force Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 100,
+        "interval": 0.1,
+        "tol_min": 61,
+        "tol_max": None,
     },
-    'peak_phase': {
-        'title_attribute': 'Peak Phase',
-        'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Peak Phase Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 30,
-        'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 8,
+    "peak_phase": {
+        "title_attribute": "Peak Phase",
+        "y-axis_label_attribute": "Degrees",
+        "title_density": "Peak Phase Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 30,
+        "interval": 0.1,
+        "tol_min": None,
+        "tol_max": 8,
     },
-    'peak_dist': {
-        'title_attribute': 'Peak Distortion',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Peak Distortion Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'interval': 0.1,
-        'tol_min': None,
-        'tol_max': 35,
+    "peak_dist": {
+        "title_attribute": "Peak Distortion",
+        "y-axis_label_attribute": "Percentage",
+        "title_density": "Peak Distortion Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 100,
+        "interval": 0.1,
+        "tol_min": None,
+        "tol_max": 35,
     },
-    'peak_force': {
-        'title_attribute': 'Peak Force',
-        'y-axis_label_attribute': 'Percentage',
-        'title_density': 'Peak Force Density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'interval': 0.1,
-        'tol_min': 85,
-        'tol_max': None,
+    "peak_force": {
+        "title_attribute": "Peak Force",
+        "y-axis_label_attribute": "Percentage",
+        "title_density": "Peak Force Density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 100,
+        "interval": 0.1,
+        "tol_min": 85,
+        "tol_max": None,
     },
-    'elevation': {
-        'title_attribute': 'Elevation',
-        'y-axis_label_attribute': 'meters',
-        'title_density': 'Elevation density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 200,
-        'interval': 1,
+    "elevation": {
+        "title_attribute": "Elevation",
+        "y-axis_label_attribute": "meters",
+        "title_density": "Elevation density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 200,
+        "interval": 1,
     },
-    'avg_stiffness': {
-        'title_attribute': 'Stiffness',
-        'y-axis_label_attribute': 'Level',
-        'title_density': 'Stiffness density',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 50,
-        'interval': 1,
+    "avg_stiffness": {
+        "title_attribute": "Stiffness",
+        "y-axis_label_attribute": "Level",
+        "title_density": "Stiffness density",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 50,
+        "interval": 1,
     },
-    'avg_viscosity': {
-        'title_attribute': 'Viscosity',
-        'y-axis_label_attribute': 'Level',
-        'title_density': 'Viscosity density',
-        'y-axis_label_density': '',
-        'min': 15,
-        'max': 25,
-        'interval': 1,
+    "avg_viscosity": {
+        "title_attribute": "Viscosity",
+        "y-axis_label_attribute": "Level",
+        "title_density": "Viscosity density",
+        "y-axis_label_density": "",
+        "min": 15,
+        "max": 25,
+        "interval": 1,
     },
-    'none': {
-        'title_attribute': '',
-        'y-axis_label_attribute': '',
-        'title_density': '',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 0,
-        'interval': 0,
+    "none": {
+        "title_attribute": "",
+        "y-axis_label_attribute": "",
+        "title_density": "",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 0,
+        "interval": 0,
     },
-    'vib_activity': {
-        'fig_title': 'Vibrator activity: ',
-        'max_vp_hour': 1800,
-        'tick_intval_vp_hour': 100,
-        'vp_hour_target': 900,
-        'max_vibs': 15,
-        'tick_intval_vibs': 1,
-        'vibs_target': 0,
+    "vib_activity": {
+        "fig_title": "Vibrator activity: ",
+        "max_vp_hour": 1800,
+        "tick_intval_vp_hour": 100,
+        "vp_hour_target": 900,
+        "max_vibs": 15,
+        "tick_intval_vibs": 1,
+        "vibs_target": 0,
     },
 }
 node_plt_settings = {
-    'frequency': {
-        'title_attribute': 'Natural Frequency',
-        'y-axis_label_attribute': 'Hz',
-        'title_density': 'Natural Frequency',
-        'y-axis_label_density': '',
-        'min': 3,
-        'max': 7,
-        'interval': 0.01,
-        'tol_min': 4.6,
-        'tol_max': 5.4,
+    "frequency": {
+        "title_attribute": "Natural Frequency",
+        "y-axis_label_attribute": "Hz",
+        "title_density": "Natural Frequency",
+        "y-axis_label_density": "",
+        "min": 3,
+        "max": 7,
+        "interval": 0.01,
+        "tol_min": 4.6,
+        "tol_max": 5.4,
     },
-    'damping': {
-        'title_attribute': 'Damping',
-        'y-axis_label_attribute': '%',
-        'title_density': 'Damping',
-        'y-axis_label_density': '',
-        'min': 0.50,
-        'max': 0.70,
-        'interval': 0.01,
-        'tol_min': 0.552,
-        'tol_max': 0.648,
+    "damping": {
+        "title_attribute": "Damping",
+        "y-axis_label_attribute": "%",
+        "title_density": "Damping",
+        "y-axis_label_density": "",
+        "min": 0.50,
+        "max": 0.70,
+        "interval": 0.01,
+        "tol_min": 0.552,
+        "tol_max": 0.648,
     },
-    'sensitivity': {
-        'title_attribute': 'Sensitivity',
-        'y-axis_label_attribute': 'V / (m/s)',
-        'title_density': 'Sensitivity',
-        'y-axis_label_density': '',
-        'min': 70,
-        'max': 90,
-        'interval': 0.1,
-        'tol_min': 74.4,
-        'tol_max': 85.6,
+    "sensitivity": {
+        "title_attribute": "Sensitivity",
+        "y-axis_label_attribute": "V / (m/s)",
+        "title_density": "Sensitivity",
+        "y-axis_label_density": "",
+        "min": 70,
+        "max": 90,
+        "interval": 0.1,
+        "tol_min": 74.4,
+        "tol_max": 85.6,
     },
-    'resistance': {
-        'title_attribute': 'Resistance',
-        'y-axis_label_attribute': 'Ohm',
-        'title_density': 'Resistance',
-        'y-axis_label_density': '',
-        'min': 1700,
-        'max': 2000,
-        'interval': 0.5,
-        'tol_min': 1702,
-        'tol_max': 1998,
+    "resistance": {
+        "title_attribute": "Resistance",
+        "y-axis_label_attribute": "Ohm",
+        "title_density": "Resistance",
+        "y-axis_label_density": "",
+        "min": 1700,
+        "max": 2000,
+        "interval": 0.5,
+        "tol_min": 1702,
+        "tol_max": 1998,
     },
-    'thd': {
-        'title_attribute': 'Distortion',
-        'y-axis_label_attribute': '%',
-        'title_density': 'Distortion',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 0.15,
-        'interval': 0.005,
-        'tol_min': None,
-        'tol_max': 0.1,
+    "thd": {
+        "title_attribute": "Distortion",
+        "y-axis_label_attribute": "%",
+        "title_density": "Distortion",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 0.15,
+        "interval": 0.005,
+        "tol_min": None,
+        "tol_max": 0.1,
     },
-    'noise': {
-        'title_attribute': 'Noise',
-        'y-axis_label_attribute': 'microVolt',
-        'title_density': 'Noise',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'interval': 1,
-        'tol_min': None,
-        'tol_max': None,
+    "noise": {
+        "title_attribute": "Noise",
+        "y-axis_label_attribute": "microVolt",
+        "title_density": "Noise",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 100,
+        "interval": 1,
+        "tol_min": None,
+        "tol_max": None,
     },
-    'tilt': {
-        'title_attribute': 'Tilt',
-        'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Tilt',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 15,
-        'interval': 0.05,
-        'tol_min': None,
-        'tol_max': 10,
+    "tilt": {
+        "title_attribute": "Tilt",
+        "y-axis_label_attribute": "Degrees",
+        "title_density": "Tilt",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 15,
+        "interval": 0.05,
+        "tol_min": None,
+        "tol_max": 10,
     },
 }
 nuseis_plt_settings = {
-    'resistance': {
-        'title_attribute': 'Resistance',
-        'y-axis_label_attribute': 'Ohm',
-        'title_density': 'Resistance',
-        'y-axis_label_density': '',
-        'min': 1700,
-        'max': 2000,
-        'bins': 50,
-        'interval': 0.5,
-        'tol_min': 1739,
-        'tol_max': 1961,
+    "resistance": {
+        "title_attribute": "Resistance",
+        "y-axis_label_attribute": "Ohm",
+        "title_density": "Resistance",
+        "y-axis_label_density": "",
+        "min": 1700,
+        "max": 2000,
+        "bins": 50,
+        "interval": 0.5,
+        "tol_min": 1739,
+        "tol_max": 1961,
     },
-    'thd': {
-        'title_attribute': 'Distortion',
-        'y-axis_label_attribute': '%',
-        'title_density': 'Distortion',
-        'y-axis_label_density': '',
-        'min': 119,
-        'max': 122,
-        'bins': 28,
-        'interval': 0.01,
-        'tol_min': None,
-        'tol_max': 121,
+    "thd": {
+        "title_attribute": "Distortion",
+        "y-axis_label_attribute": "%",
+        "title_density": "Distortion",
+        "y-axis_label_density": "",
+        "min": 119,
+        "max": 122,
+        "bins": 28,
+        "interval": 0.01,
+        "tol_min": None,
+        "tol_max": 121,
     },
-    'noise': {
-        'title_attribute': 'Noise',
-        'y-axis_label_attribute': 'microVolt',
-        'title_density': 'Noise',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 100,
-        'bins': 50,
-        'interval': 1,
-        'tol_min': None,
-        'tol_max': None,
+    "noise": {
+        "title_attribute": "Noise",
+        "y-axis_label_attribute": "microVolt",
+        "title_density": "Noise",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 100,
+        "bins": 50,
+        "interval": 1,
+        "tol_min": None,
+        "tol_max": None,
     },
-    'tilt': {
-        'title_attribute': 'Tilt',
-        'y-axis_label_attribute': 'Degrees',
-        'title_density': 'Tilt',
-        'y-axis_label_density': '',
-        'min': 0,
-        'max': 20,
-        'bins': 20,
-        'interval': 0.05,
-        'tol_min': None,
-        'tol_max': 10,
+    "tilt": {
+        "title_attribute": "Tilt",
+        "y-axis_label_attribute": "Degrees",
+        "title_density": "Tilt",
+        "y-axis_label_density": "",
+        "min": 0,
+        "max": 20,
+        "bins": 20,
+        "interval": 0.05,
+        "tol_min": None,
+        "tol_max": 10,
     },
 }
+
 
 @dataclass
 class SwathDefinition:
@@ -297,10 +300,12 @@ class SwathDefinition:
     line_spacing: int = 200
     point_spacing: int = 25
 
+
 @dataclass
 class FilesNodeTable:
     file_name: str
     file_date: datetime.datetime
+
 
 @dataclass
 class QuantumTable:
@@ -331,6 +336,7 @@ class QuantumTable:
     gps_time: int
     ext_geophone: bool
 
+
 @dataclass
 class NuseisTable:
     line: int
@@ -347,6 +353,7 @@ class NuseisTable:
     time_deployment: datetime.datetime
     time_lastscan: datetime.datetime
 
+
 @dataclass
 class RcvrTable:
     line: int
@@ -356,11 +363,13 @@ class RcvrTable:
     northing: float
     elevation: float
 
+
 @dataclass
 class FilesVpTable:
     id: int
     file_name: str
     file_date: datetime.datetime
+
 
 @dataclass
 class VpTable:
@@ -389,11 +398,13 @@ class VpTable:
     velocity: float
     dense_flag: bool
 
+
 @dataclass
 class FilesVapsTable:
     id: int
     file_name: str
     file_date: datetime.datetime
+
 
 @dataclass
 class VapsTable:
@@ -424,12 +435,14 @@ class VapsTable:
     velocity: float
     dense_flag: bool
 
+
 @dataclass
 class FilesSpsTable:
     id: int
     file_name: str
     file_date: datetime.datetime
     block_name: str
+
 
 @dataclass
 class SpsTable:
@@ -447,11 +460,13 @@ class SpsTable:
     time_break: datetime.datetime
     vibrator: int
 
+
 @dataclass
 class FilesWeatherTable:
     id: int
     file_name: str
     file_date: datetime.datetime
+
 
 @dataclass
 class WeatherTable:

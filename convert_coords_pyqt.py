@@ -5,7 +5,7 @@
 import sys
 from enum import Enum
 from pathlib import Path
-from PyQt5 import uic, QtWidgets
+from PyQt6 import uic, QtWidgets
 from convert_tools import ConvertTools
 
 
@@ -128,7 +128,7 @@ class MainWindow(QtWidgets.QMainWindow):
             case _:
                 assert False, "Check action_float_float"
 
-        dlg.exec_()
+        dlg.exec()
 
     def action_DMS_float(self, convert_choice):
         match convert_choice:
@@ -150,7 +150,7 @@ class MainWindow(QtWidgets.QMainWindow):
             case _:
                 assert False, "Check action_DMS_float"
 
-        dlg.exec_()
+        dlg.exec()
 
     def action_float_DMS(self, convert_choice):
         match convert_choice:
@@ -172,7 +172,7 @@ class MainWindow(QtWidgets.QMainWindow):
             case _:
                 assert False, "Check action_float_DMS"
 
-        dlg.exec_()
+        dlg.exec()
 
     def action_quit(self):
         self.close()
@@ -360,7 +360,7 @@ def start_app():
     app = QtWidgets.QApplication([])
     main_window = MainWindow()
     main_window.show()
-    app.exec_()
+    app.exec()
 
 
 if __name__ == '__main__':

@@ -4,11 +4,12 @@
 import sys
 import time
 import datetime
+from functools import partial
 import warnings
 from pathlib import Path
 from vp_plots_module import DbUtils, VpAttributes, VpActivity
-from PyQt5 import uic, QtWidgets
-from PyQt5.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
+from PyQt6 import uic, QtWidgets
+from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
@@ -17,7 +18,7 @@ matplotlib.use("Qt5Agg")
 warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25B6"
 LEFT_ARROW_SYMBOL = "\u25C0"
-TIMER_DELAY = 1000
+TIMER_DELAY = 750
 
 
 class MplCanvas(FigureCanvas):
@@ -28,14 +29,21 @@ class MplCanvas(FigureCanvas):
 class VpAttrWorker(QObject):
     finished = pyqtSignal(dict)
     progress = pyqtSignal(str)
+    database = pyqtSignal(str)
 
     @pyqtSlot(object, object)
     def run(self, project, production_date):
         db_utils = DbUtils(database=project) if project else DbUtils()
+        self.database.emit(db_utils.database_name)
         figure_dict = {}
         self.progress.emit("Wait")
         self.progress.emit("Load")
         vp_df = db_utils.get_vp_data_by_date(production_date)
+        if vp_df.empty:
+            self.progress.emit("Error")
+            self.finished.emit(figure_dict)
+            return
+
         vp_plot_attributes = VpAttributes(vp_df, production_date)
         vp_plot_activity = VpActivity(vp_df, production_date)
         self.progress.emit("VpAttr")
@@ -60,37 +68,60 @@ class PyqtViewControl(QtWidgets.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         uic.loadUi(Path(__file__).parent / "vp_plots.ui", self)
-
-        self.actionQuit.triggered.connect(self.quit)
+        self.plot_dict = {
+            "VpAttr": {
+                "index": 0,
+                "canvas": None,
+                "rb": self.RB_VpType_01,
+                "layout": self.FormLayoutVpType_01,
+                "fig": {},
+            },
+            "VpHist": {
+                "index": 1,
+                "canvas": None,
+                "rb": self.RB_VpType_02,
+                "layout": self.FormLayoutVpType_02,
+                "fig": {},
+            },
+            "ActAll": {
+                "index": 2,
+                "canvas": None,
+                "rb": self.RB_VpType_03,
+                "layout": self.FormLayoutVpType_03,
+                "fig": {},
+            },
+            "ActEach": {
+                "index": 3,
+                "canvas": None,
+                "rb": self.RB_VpType_04,
+                "layout": self.FormLayoutVpType_04,
+                "fig": {},
+            },
+        }
+        self.ActionQuit.triggered.connect(self.quit)
+        self.ActionDefaultDatabase.triggered.connect(partial(self.select_database, default=True))
+        self.ActionSelectDatabase.triggered.connect(partial(self.select_database, default=False))
         self.DateEdit.dateChanged.connect(self.select_date)
-        self.RB_VpData.clicked.connect(self.show_vp_data)
-        self.RB_Histograms.clicked.connect(self.show_hist)
-        self.RB_Activity_All.clicked.connect(self.show_activity_all)
-        self.RB_Activity_Each.clicked.connect(self.show_activity_each)
+        for value in self.plot_dict.values():
+            value["rb"].clicked.connect(partial(self.show_plot, value["index"]))
         self.PB_Next.setText(RIGHT_ARROW_SYMBOL)
         self.PB_Prev.setText(LEFT_ARROW_SYMBOL)
         self.PB_Next.clicked.connect(self.next_date)
         self.PB_Prev.clicked.connect(self.previous_date)
-        self.production_date = None
-        self.canvas_vp_data = None
-        self.canvas_vp_hist = None
-        self.canvas_dict = {}
         self.figure_dict = {}
+        self.production_date = None
         self.progress_key = None
         self.project = None
-        self.RB_VpData.setChecked(True)
+        self.database_name = None
+        self.RB_VpType_01.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
+        self.StatusDatabaseLabel.setText("")
         self.StatusLabel.setText("")
         # set the initial date to tomorrow, so date is changed when selecting
         # today
         self.DateEdit.setDate(
             (datetime.datetime.now() + datetime.timedelta(days=1)).date()
         )
-
-    def enable_disable_buttons(self, enabled=False):
-        self.DateEdit.setEnabled(enabled)
-        self.PB_Next.setEnabled(enabled)
-        self.PB_Prev.setEnabled(enabled)
 
     def run_plot_thread(self):
         if not self.production_date:
@@ -104,6 +135,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.worker.finished.connect(self.worker.deleteLater)
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.get_progress_key)
+        self.worker.database.connect(self.get_database_name)
         self.request_vp_attributes.connect(self.worker.run)
         self.request_vp_attributes.emit(self.project, self.production_date)
         self.enable_disable_buttons(enabled=False)
@@ -115,37 +147,44 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.timer.timeout.connect(self.update_progress_message)
         self.timer.start(TIMER_DELAY)
 
+    def update_canvas_data(self, figure_dict):
+        self.enable_disable_buttons(enabled=True)
+        self.update_progress_message()
+        self.timer.stop()
+
+        if not figure_dict:
+            return
+
+        for key, value in self.plot_dict.items():
+            value["fig"] = figure_dict.get(key)
+            if value["canvas"]:
+                value["layout"].removeWidget(value["canvas"])
+
+            value["canvas"] = MplCanvas(value["fig"])
+            value["layout"].addWidget(value["canvas"])
+
+    def enable_disable_buttons(self, enabled=False):
+        self.DateEdit.setEnabled(enabled)
+        self.PB_Next.setEnabled(enabled)
+        self.PB_Prev.setEnabled(enabled)
+
     def get_progress_key(self, key):
         self.progress_key = key
+
+    def get_database_name(self, name):
+        self.database_name = name
+        self.StatusDatabaseLabel.setText(self.database_name)
 
     def update_progress_message(self):
         status_message = self.progress_generator.send(self.progress_key)
         self.StatusLabel.setText(status_message)
 
-    def update_canvas_data(self, figure_dict):
-        self.figure_dict = figure_dict
-        self.FormVpDataLayout.removeWidget(self.canvas_dict.get("VpAttr"))
-        self.FormVpHistLayout.removeWidget(self.canvas_dict.get("VpHist"))
-        self.FormVpActAllLayout.removeWidget(self.canvas_dict.get("ActAll"))
-        self.FormVpActEachLayout.removeWidget(self.canvas_dict.get("ActEach"))
-        self.canvas_dict["VpAttr"] = MplCanvas(self.figure_dict.get("VpAttr"))
-        self.canvas_dict["VpHist"] = MplCanvas(self.figure_dict.get("VpHist"))
-        self.canvas_dict["ActAll"] = MplCanvas(self.figure_dict.get("ActAll"))
-        self.canvas_dict["ActEach"] = MplCanvas(self.figure_dict.get("ActEach"))
-        self.FormVpDataLayout.addWidget(self.canvas_dict.get("VpAttr"))
-        self.FormVpHistLayout.addWidget(self.canvas_dict.get("VpHist"))
-        self.FormVpActAllLayout.addWidget(self.canvas_dict.get("ActAll"))
-        self.FormVpActEachLayout.addWidget(self.canvas_dict.get("ActEach"))
-        self.enable_disable_buttons(enabled=True)
-        self.update_progress_message()
-        self.timer.stop()
-
     def select_plot(self):
-        if self.RB_VpData.isChecked():
-            self.show_vp_data()
-
-        elif self.RB_Histograms.isChecked():
-            self.show_hist()
+        for val in self.plot_dict.values():
+            if val["rb"].isChecked():
+                plot_type_index = val["index"]
+                break
+        self.show_plot(plot_type_index)
 
     def select_date(self):
         new_date = self.DateEdit.date().toPyDate()
@@ -173,25 +212,23 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             self.production_date += datetime.timedelta(days=1)
             self.DateEdit.setDate(QDate(self.production_date))
 
-    def show_vp_data(self):
+    def show_plot(self, plot_index: int):
         if not self.production_date:
             return
-        self.stackedWidget.setCurrentIndex(0)
+        self.stackedWidget.setCurrentIndex(plot_index)
 
-    def show_hist(self):
-        if not self.production_date:
-            return
-        self.stackedWidget.setCurrentIndex(1)
+    def select_database(self, default=True):
+        if default:
+            self.project = None
 
-    def show_activity_all(self):
-        if not self.production_date:
-            return
-        self.stackedWidget.setCurrentIndex(2)
-
-    def show_activity_each(self):
-        if not self.production_date:
-            return
-        self.stackedWidget.setCurrentIndex(3)
+        else:
+            database = QtWidgets.QFileDialog.getOpenFileName(
+                self,
+                "Open file",
+                "d:\\OneDrive\\Work\\PDO\\",
+                "SQLite files (*.sqlite3 *.sqlite);; All (*.*)",
+            )
+            self.project = Path(database[0])
 
     def quit(self):
         sys.exit()

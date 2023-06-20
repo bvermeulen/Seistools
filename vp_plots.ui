@@ -38,7 +38,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>3</number>
+     <number>2</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -50,7 +50,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormVpDataLayout"/>
+      <layout class="QFormLayout" name="FormLayoutVpType_01"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_2">
@@ -63,7 +63,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormVpHistLayout"/>
+      <layout class="QFormLayout" name="FormLayoutVpType_02"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_3">
@@ -76,7 +76,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormVpActAllLayout"/>
+      <layout class="QFormLayout" name="FormLayoutVpType_03"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_4">
@@ -89,7 +89,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormVpActEachLayout"/>
+      <layout class="QFormLayout" name="FormLayoutVpType_04"/>
      </widget>
     </widget>
    </widget>
@@ -108,7 +108,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QRadioButton" name="RB_VpData">
+    <widget class="QRadioButton" name="RB_VpType_01">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -121,7 +121,7 @@
       <string>VP attributes</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_Histograms">
+    <widget class="QRadioButton" name="RB_VpType_02">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -160,7 +160,7 @@
       <string>Prev</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_Activity_All">
+    <widget class="QRadioButton" name="RB_VpType_03">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -173,7 +173,7 @@
       <string>Vib activity (all)</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_Activity_Each">
+    <widget class="QRadioButton" name="RB_VpType_04">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -235,7 +235,6 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -247,9 +246,9 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>20</y>
+          <y>40</y>
           <width>141</width>
-          <height>141</height>
+          <height>121</height>
          </rect>
         </property>
         <property name="font">
@@ -264,6 +263,25 @@
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
         </property>
        </widget>
+       <widget class="QLabel" name="StatusDatabaseLabel">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>141</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <bold>true</bold>
+         </font>
+        </property>
+        <property name="text">
+         <string>Database</string>
+        </property>
+       </widget>
       </widget>
      </item>
     </layout>
@@ -275,29 +293,47 @@
      <x>0</x>
      <y>0</y>
      <width>1351</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionQuit"/>
+    <addaction name="ActionDefaultDatabase"/>
+    <addaction name="ActionSelectDatabase"/>
+    <addaction name="separator"/>
+    <addaction name="ActionQuit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionQuit">
+  <action name="ActionQuit">
    <property name="text">
     <string>Quit</string>
    </property>
   </action>
+  <action name="ActionSelectDatabase">
+   <property name="text">
+    <string>Select database</string>
+   </property>
+  </action>
+  <action name="ActionSelectDatabase_2">
+   <property name="text">
+    <string>Select database</string>
+   </property>
+  </action>
+  <action name="ActionDefaultDatabase">
+   <property name="text">
+    <string>Default database</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
-  <tabstop>RB_VpData</tabstop>
-  <tabstop>RB_Histograms</tabstop>
-  <tabstop>RB_Activity_All</tabstop>
-  <tabstop>RB_Activity_Each</tabstop>
+  <tabstop>RB_VpType_01</tabstop>
+  <tabstop>RB_VpType_02</tabstop>
+  <tabstop>RB_VpType_03</tabstop>
+  <tabstop>RB_VpType_04</tabstop>
   <tabstop>PB_Prev</tabstop>
   <tabstop>PB_Next</tabstop>
  </tabstops>

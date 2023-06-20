@@ -8,8 +8,6 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from scipy import stats
-from functools import wraps
-import sqlite3
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -37,41 +35,23 @@ class DbUtils:
         self.database = database
         self.vp_table = "vaps_records"
 
-    def connect(self, func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            result = None
-            try:
-                connection = sqlite3.connect(self.database)
-                connection.enable_load_extension(True)
-                connection.execute('SELECT load_extension("mod_spatialite")')
-                cursor = connection.cursor()
-                result = func(*args, cursor, **kwargs)
-                connection.commit()
-
-            except sqlite3.Error as error:
-                print(f"error while connect to sqlite {self.database}: " f"{error}")
-
-            finally:
-                if connection:
-                    cursor.close()
-                    connection.close()
-
-            return result
-
-        return wrapper
-
-    def get_db_engine(self):
-        return create_engine(f"sqlite:///{self.database}")
-
     def get_vp_data_by_date(self, production_date):
         """retrieve vp data by date"""
-        engine = self.get_db_engine()
-        sql_string = (
-            f"SELECT * FROM {self.vp_table} WHERE "
-            f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\';'
-        )
-        return pd.read_sql_query(sql_string, con=engine)
+        engine = create_engine(f"sqlite:///{self.database}")
+        try:
+            sql_string = (
+                f"SELECT * FROM {self.vp_table} WHERE "
+                f'DATE(time_break) = \'{production_date.strftime("%Y-%m-%d")}\';'
+            )
+            return pd.read_sql_query(sql_string, con=engine)
+
+        except Exception as e:
+            print(f"Error: {e} for {engine}")
+            return pd.DataFrame()
+
+    @property
+    def database_name(self):
+        return self.database.name
 
 
 class VpAttributes:
@@ -383,7 +363,7 @@ class VpActivity:
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
             f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
-            fontweight="bold"
+            fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
         times = self.vps_by_interval_df["time"].to_numpy()
@@ -437,7 +417,7 @@ class VpActivity:
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
             f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
-            fontweight="bold"
+            fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
         times = self.vps_by_interval_df["time"].to_numpy()
@@ -456,7 +436,7 @@ class VpActivity:
                 * 3600
                 / interval
             )
-            ax[vib-1].step(times, vps, where="post", linewidth=0.9, zorder=3)
+            ax[vib - 1].step(times, vps, where="post", linewidth=0.9, zorder=3)
 
         plt.close()
         return fig

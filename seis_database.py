@@ -1,5 +1,5 @@
-''' module for seistools database interaction using sqlite3
-'''
+""" module for seistools database interaction using sqlite3
+"""
 from functools import wraps
 import pandas as pd
 import sqlite3
@@ -8,8 +8,8 @@ from seis_settings import DATABASE
 
 
 class DbUtils:
-    '''  utility methods for database
-    '''
+    """utility methods for database"""
+
     database = DATABASE
 
     @classmethod
@@ -26,8 +26,7 @@ class DbUtils:
                 connection.commit()
 
             except sqlite3.Error as error:
-                print(f'error while connect to sqlite {cls.database}: '
-                      f'{error}')
+                print(f"Error while connect to sqlite {cls.database}: {error}")
 
             finally:
                 if connection:
@@ -40,7 +39,7 @@ class DbUtils:
 
     @classmethod
     def get_db_engine(cls):
-        return create_engine(f'sqlite:///{cls.database}')
+        return create_engine(f"sqlite:///{cls.database}")
 
     @classmethod
     def create_database(cls):
@@ -49,11 +48,10 @@ class DbUtils:
             connection = sqlite3.connect(cls.database)
             connection.enable_load_extension(True)
             connection.execute('SELECT load_extension("mod_spatialite")')
-            connection.execute('SELECT InitSpatialMetaData(1);')
+            connection.execute("SELECT InitSpatialMetaData(1);")
 
         except sqlite3.Error as error:
-            print(f'error while connect to sqlite {cls.database}: '
-                  f'{error}')
+            print(f"error while connect to sqlite {cls.database}: " f"{error}")
 
         finally:
             if connection:
@@ -62,4 +60,4 @@ class DbUtils:
     @classmethod
     def db_table_to_df(cls, db_table: str) -> pd.DataFrame:
         db_engine = cls.get_db_engine()
-        return pd.read_sql_query(f'select * from {db_table}', con=db_engine)
+        return pd.read_sql_query(f"select * from {db_table}", con=db_engine)
