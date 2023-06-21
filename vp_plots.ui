@@ -275,7 +275,8 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
-          <bold>true</bold>
+          <italic>false</italic>
+          <bold>false</bold>
          </font>
         </property>
         <property name="text">
@@ -305,7 +306,20 @@
     <addaction name="separator"/>
     <addaction name="ActionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuSave_plots">
+    <property name="title">
+     <string>Save plots</string>
+    </property>
+    <addaction name="ActionDestinationFolder"/>
+    <addaction name="separator"/>
+    <addaction name="ActionSaveAll"/>
+    <addaction name="ActionSaveVpType_01"/>
+    <addaction name="ActionSaveVpType_02"/>
+    <addaction name="ActionSaveVpType_03"/>
+    <addaction name="ActionSaveVpType_04"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuSave_plots"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="ActionQuit">
@@ -318,14 +332,39 @@
     <string>Select database</string>
    </property>
   </action>
-  <action name="ActionSelectDatabase_2">
-   <property name="text">
-    <string>Select database</string>
-   </property>
-  </action>
   <action name="ActionDefaultDatabase">
    <property name="text">
     <string>Default database</string>
+   </property>
+  </action>
+  <action name="ActionSaveAll">
+   <property name="text">
+    <string>All</string>
+   </property>
+  </action>
+  <action name="ActionSaveVpType_01">
+   <property name="text">
+    <string>VP attributes</string>
+   </property>
+  </action>
+  <action name="ActionSaveVpType_02">
+   <property name="text">
+    <string>VP histograms</string>
+   </property>
+  </action>
+  <action name="ActionSaveVpType_03">
+   <property name="text">
+    <string>Vib activity (all)</string>
+   </property>
+  </action>
+  <action name="ActionSaveVpType_04">
+   <property name="text">
+    <string>Vib activity (each)</string>
+   </property>
+  </action>
+  <action name="ActionDestinationFolder">
+   <property name="text">
+    <string>Destination folder</string>
    </property>
   </action>
  </widget>

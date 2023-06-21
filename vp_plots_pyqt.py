@@ -14,7 +14,7 @@ import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
 
-matplotlib.use("Qt5Agg")
+matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25B6"
 LEFT_ARROW_SYMBOL = "\u25C0"
@@ -70,40 +70,56 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         uic.loadUi(Path(__file__).parent / "vp_plots.ui", self)
         self.plot_dict = {
             "VpAttr": {
-                "index": 0,
+                "index": 1,
                 "canvas": None,
                 "rb": self.RB_VpType_01,
                 "layout": self.FormLayoutVpType_01,
+                "save": self.ActionSaveVpType_01,
+                "file_name": "vp_attributes",
                 "fig": {},
             },
             "VpHist": {
-                "index": 1,
+                "index": 2,
                 "canvas": None,
                 "rb": self.RB_VpType_02,
                 "layout": self.FormLayoutVpType_02,
+                "save": self.ActionSaveVpType_02,
+                "file_name": "vp_histograms",
                 "fig": {},
             },
             "ActAll": {
-                "index": 2,
+                "index": 3,
                 "canvas": None,
                 "rb": self.RB_VpType_03,
                 "layout": self.FormLayoutVpType_03,
+                "save": self.ActionSaveVpType_03,
+                "file_name": "vp_activity_all",
                 "fig": {},
             },
             "ActEach": {
-                "index": 3,
+                "index": 4,
                 "canvas": None,
                 "rb": self.RB_VpType_04,
                 "layout": self.FormLayoutVpType_04,
+                "save": self.ActionSaveVpType_04,
+                "file_name": "vp_activity_each",
                 "fig": {},
             },
         }
         self.ActionQuit.triggered.connect(self.quit)
-        self.ActionDefaultDatabase.triggered.connect(partial(self.select_database, default=True))
-        self.ActionSelectDatabase.triggered.connect(partial(self.select_database, default=False))
+        self.ActionDefaultDatabase.triggered.connect(
+            partial(self.select_database, default=True)
+        )
+        self.ActionSelectDatabase.triggered.connect(
+            partial(self.select_database, default=False)
+        )
+        self.ActionDestinationFolder.triggered.connect(self.select_destination_folder)
+        self.ActionSaveAll.triggered.connect(partial(self.save_plot, "All"))
         self.DateEdit.dateChanged.connect(self.select_date)
-        for value in self.plot_dict.values():
-            value["rb"].clicked.connect(partial(self.show_plot, value["index"]))
+        for key, value in self.plot_dict.items():
+            value["rb"].clicked.connect(partial(self.show_plot, value["index"] - 1))
+            value["save"].triggered.connect(partial(self.save_plot, key))
+
         self.PB_Next.setText(RIGHT_ARROW_SYMBOL)
         self.PB_Prev.setText(LEFT_ARROW_SYMBOL)
         self.PB_Next.clicked.connect(self.next_date)
@@ -113,6 +129,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.progress_key = None
         self.project = None
         self.database_name = None
+        self.destination_folder = Path(sys.path[0])
         self.RB_VpType_01.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
         self.StatusDatabaseLabel.setText("")
@@ -182,7 +199,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
     def select_plot(self):
         for val in self.plot_dict.values():
             if val["rb"].isChecked():
-                plot_type_index = val["index"]
+                plot_type_index = val["index"] - 1
                 break
         self.show_plot(plot_type_index)
 
@@ -229,6 +246,25 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "SQLite files (*.sqlite3 *.sqlite);; All (*.*)",
             )
             self.project = Path(database[0])
+
+    def select_destination_folder(self):
+        destination_folder = QtWidgets.QFileDialog.getExistingDirectory(
+            self, "Select destination folder"
+        )
+        if destination_folder:
+            self.destination_folder = Path(destination_folder)
+
+    def save_plot(self, plot_key):
+        base_file_name = "".join([self.production_date.strftime("%y%m%d"), "_"])
+        for key, value in self.plot_dict.items():
+            if not value["fig"]:
+                break
+
+            file_name = self.destination_folder / "".join(
+                [base_file_name, value.get("file_name"), ".png"]
+            )
+            if plot_key == "All" or key == "plot_key":
+                value["fig"].savefig(file_name)
 
     def quit(self):
         sys.exit()
