@@ -1,4 +1,6 @@
 """ PyQt shell for vp_attributes
+    author: Bruno Vermeulen
+    email: bvermeulen@hotmail.com
     © 2023 howdimain
     admin@howdiweb.nl
 """
@@ -21,6 +23,7 @@ RIGHT_ARROW_SYMBOL = "\u25B6"
 LEFT_ARROW_SYMBOL = "\u25C0"
 TIMER_DELAY = 750
 destination_folder_description = "Saved plots are stored in: "
+base_database = Path("D:\\OneDrive\\Work\\PDO\\")
 
 
 class MplCanvas(FigureCanvas):
@@ -247,7 +250,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             database = QtWidgets.QFileDialog.getOpenFileName(
                 self,
                 "Open file",
-                "d:\\OneDrive\\Work\\PDO\\",
+                str(base_database),
                 "SQLite files (*.sqlite3 *.sqlite);; All (*.*)",
             )
             self.project = Path(database[0])

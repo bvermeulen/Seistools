@@ -242,7 +242,7 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
-          <italic>true</italic>
+          <italic>false</italic>
           <bold>true</bold>
          </font>
         </property>

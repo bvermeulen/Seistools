@@ -1,7 +1,8 @@
-""" display vibe attributes and activity
+""" module to provide plot for vibe attributes and activity
     author: Bruno Vermeulen
     email: bvermeulen@hotmail.com
-    Copyright: 2023
+    © 2023 howdimain
+    admin@howdiweb.nl
 """
 import datetime
 from collections import Counter
