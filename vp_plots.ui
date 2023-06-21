@@ -6,9 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1351</width>
-    <height>952</height>
+    <width>1350</width>
+    <height>950</height>
    </rect>
+  </property>
+  <property name="font">
+   <font>
+    <pointsize>9</pointsize>
+    <italic>false</italic>
+   </font>
   </property>
   <property name="windowTitle">
    <string>VP Plots</string>
@@ -38,7 +44,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>2</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -46,8 +52,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1160</width>
+        <height>870</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_01"/>
@@ -59,8 +65,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1160</width>
+        <height>870</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_02"/>
@@ -72,8 +78,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1160</width>
+        <height>870</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_03"/>
@@ -85,8 +91,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1160</width>
+        <height>870</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_04"/>
@@ -198,6 +204,7 @@
      <property name="font">
       <font>
        <pointsize>10</pointsize>
+       <italic>false</italic>
       </font>
      </property>
      <property name="calendarPopup">
@@ -211,7 +218,7 @@
       <x>1180</x>
       <y>200</y>
       <width>161</width>
-      <height>181</height>
+      <height>201</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -235,6 +242,7 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <italic>true</italic>
           <bold>true</bold>
          </font>
         </property>
@@ -254,6 +262,7 @@
         <property name="font">
          <font>
           <pointsize>10</pointsize>
+          <italic>false</italic>
          </font>
         </property>
         <property name="text">
@@ -287,13 +296,33 @@
      </item>
     </layout>
    </widget>
+   <widget class="QLabel" name="StatusDestinationLabel">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>890</y>
+      <width>621</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>8</pointsize>
+      <italic>true</italic>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Destination folder</string>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1351</width>
+     <width>1350</width>
      <height>22</height>
     </rect>
    </property>

@@ -23,8 +23,8 @@ SMALL_SIZE = 8
 plt.rc("xtick", labelsize=SMALL_SIZE)
 plt.rc("ytick", labelsize=SMALL_SIZE)
 plt.rc("axes", labelsize=SMALL_SIZE)
-FIGSIZE = (14, 9)
-FIGSIZE_HISTOGRAM = (12, 20)
+FIGSIZE = (11.6, 8.7)
+FIGSIZE_ACTIVITY_ALL = (11.6, 6.0)
 DPI_HISTOGRAM = 90
 SECONDS_PER_DAY = 24 * 3600
 INTERVAL = 900
@@ -111,7 +111,7 @@ class VpAttributes:
         plt.close()
         return fig
 
-    def plot_histogram_data(self, figsize=FIGSIZE_HISTOGRAM, dpi=DPI_HISTOGRAM):
+    def plot_histogram_data(self, figsize=FIGSIZE, dpi=DPI_HISTOGRAM):
         gs_kw = {"hspace": 0.15, "wspace": 0.20}
         fig, ax = plt.subplots(
             nrows=FLEETS,
@@ -359,7 +359,7 @@ class VpActivity:
         )
 
     def plot_vps_by_interval(self, interval: int = INTERVAL):
-        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=(12, 6))
+        fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=FIGSIZE_ACTIVITY_ALL)
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
             f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
@@ -412,7 +412,7 @@ class VpActivity:
     def plot_vps_by_vibe(self, interval: int = INTERVAL):
         ax = [None for _ in range(FLEETS)]
         fig, ax = plt.subplots(
-            nrows=FLEETS, ncols=1, figsize=(7, 12), gridspec_kw={"hspace": 0.10}
+            nrows=FLEETS, ncols=1, figsize=FIGSIZE, gridspec_kw={"hspace": 0.10}
         )
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '

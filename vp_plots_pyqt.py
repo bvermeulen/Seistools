@@ -1,6 +1,7 @@
 """ PyQt shell for vp_attributes
+    © 2023 howdimain
+    admin@howdiweb.nl
 """
-# TODO add vib acitivity, save figures, select database
 import sys
 import time
 import datetime
@@ -19,6 +20,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25B6"
 LEFT_ARROW_SYMBOL = "\u25C0"
 TIMER_DELAY = 750
+destination_folder_description = "Saved plots are stored in: "
 
 
 class MplCanvas(FigureCanvas):
@@ -133,6 +135,9 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.RB_VpType_01.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
         self.StatusDatabaseLabel.setText("")
+        self.StatusDestinationLabel.setText(
+            "".join([destination_folder_description, str(self.destination_folder)])
+        )
         self.StatusLabel.setText("")
         # set the initial date to tomorrow, so date is changed when selecting
         # today
@@ -253,6 +258,9 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         )
         if destination_folder:
             self.destination_folder = Path(destination_folder)
+        self.StatusDestinationLabel.setText(
+            "".join([destination_folder_description, str(self.destination_folder)])
+        )
 
     def save_plot(self, plot_key):
         base_file_name = "".join([self.production_date.strftime("%y%m%d"), "_"])
@@ -263,7 +271,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             file_name = self.destination_folder / "".join(
                 [base_file_name, value.get("file_name"), ".png"]
             )
-            if plot_key == "All" or key == "plot_key":
+            if plot_key == "All" or key == plot_key:
                 value["fig"].savefig(file_name)
 
     def quit(self):
