@@ -297,9 +297,7 @@ class VpActivity:
                 "time_break"
             ]
             if not vib_data.empty:
-                vib_data = pd.to_datetime(
-                    vib_data, format="%Y-%m-%d %H:%M:%S.%f"
-                ).to_list()
+                vib_data = pd.to_datetime(vib_data, format="ISO8601").to_list()
 
             else:
                 vib_data = []

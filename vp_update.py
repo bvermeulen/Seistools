@@ -1,17 +1,24 @@
-''' module to update vaps and vp record files in the database
+""" module to update vaps and vp record files in the database
     author: Bruno Vermeulen
     email: bvermeulen@hotmail.com
     Copyright: 2021
 
-'''
+"""
 import warnings
 import datetime
 import numpy as np
 import seis_utils
 from seis_vibe_database import VpDb
 from seis_settings import (
-    DATA_FILES_VAPS, DATA_FILES_VP, PROGRESS_SKIPS, LINK_VP_TO_VAPS, GMT_OFFSET,
-    FilesVpTable, VpTable, FilesVapsTable, VapsTable
+    DATA_FILES_VAPS,
+    DATA_FILES_VP,
+    PROGRESS_SKIPS,
+    LINK_VP_TO_VAPS,
+    GMT_OFFSET,
+    FilesVpTable,
+    VpTable,
+    FilesVapsTable,
+    VapsTable,
 )
 
 # ignore warning velocity =  dist / time in method update_vo_distance
@@ -20,21 +27,23 @@ HEADER_ROWS = 71
 
 
 class Vaps:
-
     vaps_base_folder = DATA_FILES_VAPS
     vp_db = VpDb()
 
     @classmethod
     def read_vaps(cls):
-        for filename in cls.vaps_base_folder.glob('*.*'):
-            if not filename.is_file() or filename.suffix.lower() not in ['.vaps', '.txt']:
+        for filename in cls.vaps_base_folder.glob("*.*"):
+            if not filename.is_file() or filename.suffix.lower() not in [
+                ".vaps",
+                ".txt",
+            ]:
                 continue
 
-            vaps_file = FilesVapsTable(*[None]*3)
+            vaps_file = FilesVapsTable(*[None] * 3)
 
             vaps_file.file_name = filename.name
-            vaps_file.file_date = (
-                datetime.datetime.fromtimestamp(filename.stat().st_mtime)
+            vaps_file.file_date = datetime.datetime.fromtimestamp(
+                filename.stat().st_mtime
             )
             file_id = cls.vp_db.update_vaps_file(vaps_file)
 
@@ -44,46 +53,46 @@ class Vaps:
             vaps_records = []
             vaps_signatures = np.array([])
             count = 0
-            with open(filename, mode='rt') as vaps:
-
+            with open(filename, mode="rt") as vaps:
                 vaps_lines = vaps.readlines()
                 progress_bar = seis_utils.set_progress_bar(
                     len(vaps_lines) - HEADER_ROWS, vaps_file.file_name, PROGRESS_SKIPS
                 )
                 for vaps_line in vaps_lines:
-                    if vaps_line[0] != 'A':
+                    if vaps_line[0] != "A":
                         continue
 
                     vaps_record = cls.parse_vaps_line(vaps_line, file_id)
                     vaps_records, vaps_signatures = cls.update_vp_records(
-                        vaps_records, vaps_signatures, vaps_record)
+                        vaps_records, vaps_signatures, vaps_record
+                    )
 
                     if count % PROGRESS_SKIPS == 0:
                         progress_bar.next()
                     count += 1
 
-                print(f'\n{count - len(vaps_records)} '
-                      f'duplicates have been deleted ...', end='')
+                print(
+                    f"\n{count - len(vaps_records)} "
+                    f"duplicates have been deleted ...",
+                    end="",
+                )
 
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
                     cls.vp_db.update_vp_distance(
-                        'VAPS', vaps_records[0].time_break.date()
+                        "VAPS", vaps_records[0].time_break.date()
                     )
                 progress_bar.finish()
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
-        vaps_record = VapsTable(*[None]*26)
+        vaps_record = VapsTable(*[None] * 26)
 
         try:
-            # create time break date
-            doy = int(vaps_line[117:120])
-            year = seis_utils.get_year(doy)
-
-            time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
-                str(year) + f'{doy:03}', '%Y%j').strftime('%d-%m-%y') + ' ' +  \
-                    vaps_line[120:126] + '.' + vaps_line[144:147], '%d-%m-%y %H%M%S.%f'))
+            time_break = datetime.datetime.fromtimestamp(
+                int(vaps_line[134:147]) * 0.001
+            )
+            time_break += GMT_OFFSET
 
             vaps_record.line = int(float(vaps_line[1:17]))
             vaps_record.station = int(float(vaps_line[17:25]))
@@ -109,31 +118,31 @@ class Vaps:
             vaps_record.file_id = file_id
 
         except ValueError:
-            vaps_record = VapsTable(*[None]*26)
+            vaps_record = VapsTable(*[None] * 26)
 
         return vaps_record
 
     @staticmethod
     def update_vp_records(vp_records, record_signatures, vp_record):
-        ''' function to add vp_record to the list vp_records. For each record it makes a 10
-            digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
-            of the indexes of duplicates
-            arguments:
-                vp_records: list of vp_records
-                record_signatures: np array of record signatures
-                duplicates: np array of duplicae indexes
-                vp_record: vp attributes of type VpRecord
-            return:
-                vp_records: list of vp_records of type VpRecord
-                record_signatures: np array of record signatures of type string
-                duplicates: np array of indexes of type int
-        '''
+        """function to add vp_record to the list vp_records. For each record it makes a 10
+        digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
+        of the indexes of duplicates
+        arguments:
+            vp_records: list of vp_records
+            record_signatures: np array of record signatures
+            duplicates: np array of duplicae indexes
+            vp_record: vp attributes of type VpRecord
+        return:
+            vp_records: list of vp_records of type VpRecord
+            record_signatures: np array of record signatures of type string
+            duplicates: np array of indexes of type int
+        """
         if not vp_record.line:
             return vp_records, record_signatures
 
         # search duplicate records and remove
         line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
-        record_signature = f'{line:04}' + f'{station:04}' + f'{vib:02}'
+        record_signature = f"{line:04}" + f"{station:04}" + f"{vib:02}"
 
         # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
         # gets removed on first instance
@@ -141,7 +150,7 @@ class Vaps:
 
         # bug fix: if duplicate: returns False if first and only element of the array has a
         # a value of 0!! Therefore test on numpy size the array.
-        if  duplicate.size != 0:
+        if duplicate.size != 0:
             vp_records.pop(duplicate[0])
             record_signatures = np.delete(record_signatures, duplicate)
 
@@ -158,15 +167,15 @@ class Vp:
 
     @classmethod
     def read_vp(cls):
-        for filename in cls.vp_base_folder.glob('*.*'):
-            if not filename.is_file() or filename.suffix.lower != '.txt':
+        for filename in cls.vp_base_folder.glob("*.*"):
+            if not filename.is_file() or filename.suffix.lower != ".txt":
                 continue
 
-            vp_file = FilesVpTable(*[None]*3)
+            vp_file = FilesVpTable(*[None] * 3)
 
             vp_file.file_name = filename.name
-            vp_file.file_date = (
-                datetime.datetime.fromtimestamp(filename.stat().st_mtime)
+            vp_file.file_date = datetime.datetime.fromtimestamp(
+                filename.stat().st_mtime
             )
             file_id = cls.vp_db.update_vp_file(vp_file)
 
@@ -176,43 +185,49 @@ class Vp:
             vp_records = []
             vp_signatures = np.array([])
             count = 0
-            with open(filename, mode='rt') as vp:
-
+            with open(filename, mode="rt") as vp:
                 vp_lines = vp.readlines()
                 progress_bar = seis_utils.set_progress_bar(
                     len(vp_lines) - HEADER_ROWS, vp_file.file_name, PROGRESS_SKIPS
                 )
                 for vp_line in vp_lines:
-                    if vp_line[0:9].strip() == 'Line':
+                    if vp_line[0:9].strip() == "Line":
                         continue
 
                     vp_record = cls.parse_vp_line(vp_line, file_id)
                     vp_records, vp_signatures = cls.update_vp_records(
-                        vp_records, vp_signatures, vp_record)
+                        vp_records, vp_signatures, vp_record
+                    )
 
                     if count % PROGRESS_SKIPS == 0:
                         progress_bar.next()
                     count += 1
 
-                print(f'\n{count - len(vp_records)} '
-                      f'duplicates have been deleted ...', end='')
+                print(
+                    f"\n{count - len(vp_records)} " f"duplicates have been deleted ...",
+                    end="",
+                )
 
                 if vp_records:
                     cls.vp_db.update_vp(vp_records, link_vaps=LINK_VP_TO_VAPS)
-                    cls.vp_db.update_vp_distance(
-                        'VP', vp_records[0].time_break.date()
-                    )
+                    cls.vp_db.update_vp_distance("VP", vp_records[0].time_break.date())
                 progress_bar.finish()
 
     @staticmethod
     def parse_vp_line(vp_line, file_id):
-        vp_record = VpTable(*[None]*24)
+        vp_record = VpTable(*[None] * 24)
 
         try:
             # create time break date and adjust to local time
-            time_break = (datetime.datetime.strptime(datetime.datetime.strptime(
-                vp_line[32:51], '%Y-%m-%d %H:%M:%S').strftime('%d-%m-%y %H:%M:%S') +  \
-                    '.' + vp_line[52:55] + '000', '%d-%m-%y %H:%M:%S.%f'))
+            time_break = datetime.datetime.strptime(
+                datetime.datetime.strptime(
+                    vp_line[32:51], "%Y-%m-%d %H:%M:%S"
+                ).strftime("%d-%m-%y %H:%M:%S")
+                + "."
+                + vp_line[52:55]
+                + "000",
+                "%d-%m-%y %H:%M:%S.%f",
+            )
 
             time_break += GMT_OFFSET
 
@@ -237,31 +252,31 @@ class Vp:
             vp_record.file_id = file_id
 
         except ValueError:
-            vp_record = VpTable(*[None]*24)
+            vp_record = VpTable(*[None] * 24)
 
         return vp_record
 
     @staticmethod
     def update_vp_records(vp_records, record_signatures, vp_record):
-        ''' function to add vp_record to the list vp_records. For each record it makes a 10
-            digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
-            of the indexes of duplicates
-            arguments:
-                vp_records: list of vp_records
-                record_signatures: np array of record signatures
-                duplicates: np array of duplicae indexes
-                vp_record: vp attributes of type VpRecord
-            return:
-                vp_records: list of vp_records of type VpRecord
-                record_signatures: np array of record signatures of type string
-                duplicates: np array of indexes of type int
-        '''
+        """function to add vp_record to the list vp_records. For each record it makes a 10
+        digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
+        of the indexes of duplicates
+        arguments:
+            vp_records: list of vp_records
+            record_signatures: np array of record signatures
+            duplicates: np array of duplicae indexes
+            vp_record: vp attributes of type VpRecord
+        return:
+            vp_records: list of vp_records of type VpRecord
+            record_signatures: np array of record signatures of type string
+            duplicates: np array of indexes of type int
+        """
         if not vp_record.line:
             return vp_records, record_signatures
 
         # search duplicate records and remove
         line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
-        record_signature = f'{line:04}' + f'{station:04}' + f'{vib:02}'
+        record_signature = f"{line:04}" + f"{station:04}" + f"{vib:02}"
 
         # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
         # gets removed on first instance
@@ -269,7 +284,7 @@ class Vp:
 
         # bug fix: if duplicate: returns False if first and only element of the array has a
         # a value of 0!! Therefore test on numpy size the array.
-        if  duplicate.size != 0:
+        if duplicate.size != 0:
             vp_records.pop(duplicate[0])
             record_signatures = np.delete(record_signatures, duplicate)
 
@@ -280,7 +295,7 @@ class Vp:
         return vp_records, record_signatures
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     seis_utils.check_expiry_date()
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
