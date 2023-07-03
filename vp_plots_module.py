@@ -248,6 +248,7 @@ class VpAttributes:
                 axis[vib - 1].hist(
                     [data_in_spec, data_out_spec],
                     histtype="stepfilled",
+                    align="right",
                     bins=25,
                     color=["green", "red"],
                     range=(setting["min"], setting["max"]),
@@ -261,7 +262,7 @@ class VpAttributes:
 
                 if setting["tol_max"] is not None:
                     axis[vib - 1].axvline(
-                        setting["tol_max"], color=TOL_COLOR, linewidth=1.0
+                        setting["tol_max"] + 1, color=TOL_COLOR, linewidth=1.0
                     )
 
             axis[vib - 1].set_xlim(left=setting["min"], right=setting["max"])

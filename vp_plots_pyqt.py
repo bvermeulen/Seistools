@@ -142,11 +142,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             "".join([destination_folder_description, str(self.destination_folder)])
         )
         self.StatusLabel.setText("")
-        # set the initial date to tomorrow, so date is changed when selecting
-        # today
-        self.DateEdit.setDate(
-            (datetime.datetime.now() + datetime.timedelta(days=1)).date()
-        )
+        self.DateEdit.setDate(datetime.datetime.now().date())
 
     def run_plot_thread(self):
         if not self.production_date:
@@ -213,9 +209,6 @@ class PyqtViewControl(QtWidgets.QMainWindow):
 
     def select_date(self):
         new_date = self.DateEdit.date().toPyDate()
-        # initial DateEdit date is set to tomorrow and self.production_date as None
-        # below check avoids starting the long thread making plots immediately at the
-        # start of the application
         if not self.production_date:
             self.production_date = new_date
             return
