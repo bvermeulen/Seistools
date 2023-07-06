@@ -265,7 +265,7 @@ class VpAttributes:
             if plt_tol_lines:
                 if setting["tol_min"] is not None:
                     axis[vib - 1].axvline(
-                        setting["tol_min"], color=TOL_COLOR, linewidth=1.0
+                        setting["tol_min"] + 1, color=TOL_COLOR, linewidth=1.0
                     )
 
                 if setting["tol_max"] is not None:
