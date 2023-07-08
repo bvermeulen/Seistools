@@ -91,7 +91,7 @@ def check_design_sps(sps_design_file, block_name):
     write_message("source_design", f"'{sps_design_file}'")
     try:
         sps_design_df = pd.read_csv(
-            sps_design_file, delimiter=r"\s+", usecols=[1, 2, 3]
+            sps_design_file, delimiter=r"\s+", usecols=[1, 2, 3], header=None
         )
         if sps_design_df.empty:
             write_message("error", f"unable to read '{sps_design_file}'")
