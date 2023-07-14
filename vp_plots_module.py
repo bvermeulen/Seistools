@@ -12,6 +12,7 @@ from scipy import stats
 from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.ticker as mtick
 from seis_settings import (
     FLEETS,
     DATABASE,
@@ -20,15 +21,20 @@ from seis_settings import (
     vp_plt_settings,
 )
 
-SMALL_SIZE = 8
-plt.rc("xtick", labelsize=SMALL_SIZE)
-plt.rc("ytick", labelsize=SMALL_SIZE)
-plt.rc("axes", labelsize=SMALL_SIZE)
+FONTSIZE_6 = 6
+FONTSIZE_8 = 8
+plt.rc("xtick", labelsize=FONTSIZE_8)
+plt.rc("ytick", labelsize=FONTSIZE_8)
+plt.rc("axes", labelsize=FONTSIZE_8)
 FIGSIZE = (11.6, 8.7)
 FIGSIZE_ACTIVITY_ALL = (11.6, 6.0)
+FIGSIZE_ERRORS = (12, 6)
 DPI_HISTOGRAM = 90
+DPI_ERROR = 90
 SECONDS_PER_DAY = 24 * 3600
 INTERVAL = 900
+max_tol_keys = ["avg_phase", "peak_phase", "avg_dist", "peak_dist"]
+min_tol_keys = ["avg_force", "peak_force"]
 
 
 class DbUtils:
@@ -60,7 +66,6 @@ class VpAttributes:
 
     def __init__(self, vp_records_df, production_date):
         self.production_date = production_date
-        self.dpi = 100
         self.vp_records_df = vp_records_df
         self.total_vps = self.vp_records_df.shape[0]
 
@@ -109,41 +114,6 @@ class VpAttributes:
             markerscale=40,
         )
         fig.tight_layout()
-        plt.close()
-        return fig
-
-    def plot_histogram_data(self, figsize=FIGSIZE, dpi=DPI_HISTOGRAM):
-        gs_kw = {"hspace": 0.15, "wspace": 0.20}
-        fig, ax = plt.subplots(
-            nrows=FLEETS,
-            ncols=6,
-            figsize=figsize,
-            dpi=dpi,
-            gridspec_kw=gs_kw,
-        )
-        fig.suptitle(
-            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
-            fontweight="bold",
-        )
-        for key, plt_setting in vp_plt_settings.items():
-            match key:
-                case "avg_phase":
-                    ax_index = 0
-                case "peak_phase":
-                    ax_index = 1
-                case "avg_dist":
-                    ax_index = 2
-                case "peak_dist":
-                    ax_index = 3
-                case "avg_force":
-                    ax_index = 4
-                case "peak_force":
-                    ax_index = 5
-                case other:
-                    continue
-
-            ax[:, ax_index] = self.plot_histograms(ax[:, ax_index], key, plt_setting)
-
         plt.close()
         return fig
 
@@ -228,6 +198,41 @@ class VpAttributes:
 
         return axis
 
+    def plot_histogram_data(self, figsize=FIGSIZE, dpi=DPI_HISTOGRAM):
+        gs_kw = {"hspace": 0.15, "wspace": 0.20}
+        fig, ax = plt.subplots(
+            nrows=FLEETS,
+            ncols=6,
+            figsize=figsize,
+            dpi=dpi,
+            gridspec_kw=gs_kw,
+        )
+        fig.suptitle(
+            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
+            fontweight="bold",
+        )
+        for key, plt_setting in vp_plt_settings.items():
+            match key:
+                case "avg_phase":
+                    ax_index = 0
+                case "peak_phase":
+                    ax_index = 1
+                case "avg_dist":
+                    ax_index = 2
+                case "peak_dist":
+                    ax_index = 3
+                case "avg_force":
+                    ax_index = 4
+                case "peak_force":
+                    ax_index = 5
+                case other:
+                    continue
+
+            ax[:, ax_index] = self.plot_histograms(ax[:, ax_index], key, plt_setting)
+
+        plt.close()
+        return fig
+
     def plot_histograms(self, axis, key, setting):
         """method to plot the attribute histogram in a single axis per vibrator"""
         plt_tol_lines = True
@@ -235,13 +240,12 @@ class VpAttributes:
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
-
             if vib_data.size > 0:
-                if key in ["avg_phase", "peak_phase", "avg_dist", "peak_dist"]:
+                if key in max_tol_keys:
                     data_in_spec = vib_data[vib_data <= setting["tol_max"]]
                     data_out_spec = vib_data[vib_data > setting["tol_max"]]
 
-                elif key in ["avg_force", "peak_force"]:
+                elif key in min_tol_keys:
                     data_in_spec = vib_data[vib_data >= setting["tol_min"]]
                     data_out_spec = vib_data[vib_data < setting["tol_min"]]
 
@@ -273,9 +277,123 @@ class VpAttributes:
             axis[vib - 1].set_yticks([])
             axis[vib - 1].set_yticklabels([])
             if key == "avg_phase":
-                axis[vib - 1].set_ylabel(f"V{vib}", fontsize=8)
+                axis[vib - 1].set_ylabel(f"V{vib}", fontsize=FONTSIZE_8)
 
-        axis[0].set_title(key, fontsize=8)
+        axis[0].set_title(key, fontsize=FONTSIZE_8)
+        return axis
+
+    def plot_error_data(self, figsize=FIGSIZE_ERRORS, dpi=DPI_ERROR):
+        gs_kw = {"wspace": 0.55}
+        fig, ax = plt.subplots(
+            nrows=1,
+            ncols=6,
+            figsize=figsize,
+            dpi=dpi,
+            gridspec_kw=gs_kw,
+        )
+        fig.suptitle(
+            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
+            fontweight="bold",
+        )
+        for ax_index, (key, plt_setting) in enumerate(vp_plt_settings.items()):
+            color = "grey"
+            match key:
+                case "avg_phase":
+                    ax_index = 0
+                case "peak_phase":
+                    ax_index = 1
+                case "avg_dist":
+                    ax_index = 2
+                case "peak_dist":
+                    ax_index = 3
+                case "avg_force":
+                    ax_index = 4
+                case "peak_force":
+                    ax_index = 5
+                case other:
+                    continue
+
+            ax[ax_index] = self.plot_error_bars(ax[ax_index], key, plt_setting)
+
+            # add border around the ax
+            bbox = ax[ax_index].get_tightbbox(fig.canvas.get_renderer())
+            x0, y0, width, height = bbox.transformed(fig.transFigure.inverted()).bounds
+            xpad = 0.01
+            ypad = 0.01
+            fig.add_artist(
+                plt.Rectangle(
+                    (x0 - xpad, y0 - ypad),
+                    width + 2 * xpad,
+                    height + 2 * ypad,
+                    edgecolor=color,
+                    linewidth=1,
+                    fill=False,
+                )
+            )
+        return fig
+
+    def plot_error_bars(self, axis, key, setting):
+        y_step = 0.20
+        bar_height = 0.19
+        y_vals = np.arange(1, FLEETS + 1) * y_step
+        y_labels = []
+        for vib in range(1, FLEETS + 1):
+            vib_data = np.array(
+                self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
+            )
+            if key in max_tol_keys:
+                data_out_spec = vib_data[vib_data > setting["tol_max"]]
+                x_label = f"Limit < {setting['tol_max'] + 1}"
+
+            elif key in min_tol_keys:
+                data_out_spec = vib_data[vib_data < setting["tol_min"]]
+                x_label = f"Limit > {setting['tol_min'] - 1}"
+
+            else:
+                assert False, f"incorrect key: {key}"
+
+            if (size := vib_data.size) > 0:
+                out_spec_percentage = data_out_spec.size / size * 100
+
+                axis.barh(
+                    y_vals[vib - 1],
+                    out_spec_percentage,
+                    align="center",
+                    height=bar_height,
+                    color="red",
+                )
+                axis.barh(
+                    y_vals[vib - 1],
+                    100 - out_spec_percentage,
+                    align="center",
+                    height=bar_height,
+                    left=out_spec_percentage,
+                    color="green",
+                )
+
+                axis.text(
+                    104,
+                    y_vals[vib - 1],
+                    f"{out_spec_percentage:5.1f}%",
+                    fontsize=FONTSIZE_6,
+                )
+
+            y_labels.append(f"V{vib}")
+
+        axis.xaxis.set_major_formatter(mtick.PercentFormatter(100.0))
+        axis.set_xlim(left=0, right=120)
+        max_y = FLEETS * y_step + bar_height * 0.6
+        axis.set_ylim(0, max_y)
+        axis.set_xlabel(x_label, fontsize=FONTSIZE_6)
+        axis.xaxis.set_label_coords(0.4, -0.08)
+        axis.set_xticks([0, 100])
+        axis.set_yticks([])
+        for side in ["top", "right", "bottom", "left"]:
+            axis.spines[side].set_visible(False)
+        axis.yaxis.set_tick_params(length=0)
+        axis.set_yticks(y_vals, y_labels, fontsize=FONTSIZE_6)
+        axis.set_title(f"        {key}", fontsize=FONTSIZE_6, loc="left")
+
         return axis
 
 

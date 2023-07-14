@@ -55,12 +55,14 @@ class VpAttrWorker(QObject):
         figure_dict["VpAttr"] = vp_plot_attributes.plot_vp_data()
         self.progress.emit("VpHist")
         figure_dict["VpHist"] = vp_plot_attributes.plot_histogram_data()
+        self.progress.emit("VpErr")
+        figure_dict["VpErr"] = vp_plot_attributes.plot_error_data()
         self.progress.emit("ActAll")
         figure_dict["ActAll"] = vp_plot_activity.plot_vps_by_interval()
-        time.sleep(1.0)
+        time.sleep(1)
         self.progress.emit("ActEach")
         figure_dict["ActEach"] = vp_plot_activity.plot_vps_by_vibe()
-        time.sleep(1.0)
+        time.sleep(1)
         self.progress.emit("Done")
         self.finished.emit(figure_dict)
 
@@ -92,21 +94,30 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "file_name": "vp_histograms",
                 "fig": {},
             },
-            "ActAll": {
+            "VpErr": {
                 "index": 3,
                 "canvas": None,
                 "rb": self.RB_VpType_03,
                 "layout": self.FormLayoutVpType_03,
                 "save": self.ActionSaveVpType_03,
-                "file_name": "vp_activity_all",
+                "file_name": "vp_error_bars",
                 "fig": {},
             },
-            "ActEach": {
+            "ActAll": {
                 "index": 4,
                 "canvas": None,
                 "rb": self.RB_VpType_04,
                 "layout": self.FormLayoutVpType_04,
                 "save": self.ActionSaveVpType_04,
+                "file_name": "vp_activity_all",
+                "fig": {},
+            },
+            "ActEach": {
+                "index": 5,
+                "canvas": None,
+                "rb": self.RB_VpType_05,
+                "layout": self.FormLayoutVpType_05,
+                "save": self.ActionSaveVpType_05,
                 "file_name": "vp_activity_each",
                 "fig": {},
             },
@@ -192,13 +203,13 @@ class PyqtViewControl(QtWidgets.QMainWindow):
     def get_progress_key(self, key):
         self.progress_key = key
 
-    def get_database_name(self, name):
-        self.database_name = name
-        self.StatusDatabaseLabel.setText(self.database_name)
-
     def update_progress_message(self):
         status_message = self.progress_generator.send(self.progress_key)
         self.StatusLabel.setText(status_message)
+
+    def get_database_name(self, name):
+        self.database_name = name
+        self.StatusDatabaseLabel.setText(self.database_name)
 
     def select_plot(self):
         for val in self.plot_dict.values():

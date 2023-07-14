@@ -55,6 +55,7 @@ def status_message_generator(key):
         "Load": "Load data",
         "VpAttr": "VP attributes",
         "VpHist": "VP histograms",
+        "VpErr": "VP error bars",
         "ActAll": "Activity all",
         "ActEach": "Activity each",
         "Done": "Done",
@@ -72,7 +73,9 @@ def status_message_generator(key):
                 status_message = "\n".join(
                     [
                         status_message,
-                        "".join([status_lines[current_key], progress_dots * (count + 1)]),
+                        "".join(
+                            [status_lines[current_key], progress_dots * (count + 1)]
+                        ),
                     ]
                 )
                 count = (count + 1) % MODULUS

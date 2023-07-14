@@ -29,6 +29,10 @@ from pathlib import Path
 from seis_sps_database import SpsDb
 
 
+def write_memory(df):
+    print(f"sps_df: {df.memory_usage(deep=True).sum()/1024/1024:,.3f} Mbyte")
+
+
 def write_message(message_id, message_var=None):
     message_var = message_var if message_var else ""
     match message_id:
@@ -85,7 +89,14 @@ def check_design_sps(sps_design_file, block_name):
             "count": "sum",
         }
     )
-    sps_df[["line", "point", "count"]] = sps_df[["line", "point", "count"]].astype(int)
+    write_memory(sps_df)
+    sps_df[["line", "point", "count"]] = sps_df[["line", "point", "count"]].apply(
+        pd.to_numeric, downcast="unsigned"
+    )
+    sps_df[["easting", "northing", "elevation"]] = sps_df[
+        ["easting", "northing", "elevation"]
+    ].astype(np.float32)
+    write_memory(sps_df)
 
     # get the source design records from file
     write_message("source_design", f"'{sps_design_file}'")
@@ -99,24 +110,31 @@ def check_design_sps(sps_design_file, block_name):
     except Exception as e:
         write_message("error", f"'{sps_design_file}': {e}")
         exit()
-
+    write_memory(sps_design_df)
     sps_design_df.columns = ["line", "point", "design"]
     sps_design_df[["line", "point", "design"]] = sps_design_df[
         ["line", "point", "design"]
-    ].astype(int)
+    ].apply(pd.to_numeric, downcast="unsigned")
+    write_memory(sps_design_df)
 
     # doing a union between recorded VPs in SPS and the designed VPs
     write_message("crosscheck", None)
     sps_df = pd.merge(sps_df, sps_design_df, on=["line", "point"], how="outer").fillna(
         0
     )
-    sps_df[["line", "point", "count"]] = sps_df[["line", "point", "count"]].astype(int)
+    write_memory(sps_df)
+    sps_df[["line", "point", "count"]] = sps_df[["line", "point", "count"]].apply(
+        pd.to_numeric, downcast="unsigned"
+    )
+    sps_df[["easting", "northing", "elevation"]] = sps_df[
+        ["easting", "northing", "elevation"]
+    ].astype(np.float32)
     sps_df[["design"]] = sps_df[["design"]].astype(bool)
+    write_memory(sps_df)
 
     # write result as csv file
     write_message("csv_out", f"'{sps_extended_file}'")
     sps_df.to_csv(sps_extended_file, index=False)
-
     write_message("done", None)
 
 

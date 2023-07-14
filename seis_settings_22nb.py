@@ -79,7 +79,7 @@ vp_plt_settings = {
         "min": 0,
         "max": 100,
         "interval": 0.1,
-        "tol_min": 61,
+        "tol_min": 60,
         "tol_max": None,
     },
     "peak_phase": {
@@ -91,7 +91,7 @@ vp_plt_settings = {
         "max": 30,
         "interval": 0.1,
         "tol_min": None,
-        "tol_max": 8,
+        "tol_max": 9,
     },
     "peak_dist": {
         "title_attribute": "Peak Distortion",

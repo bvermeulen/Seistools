@@ -26,7 +26,7 @@
       <x>1180</x>
       <y>10</y>
       <width>161</width>
-      <height>181</height>
+      <height>211</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="ControlArea"/>
@@ -44,7 +44,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>4</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -78,8 +78,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1160</width>
-        <height>870</height>
+        <width>1161</width>
+        <height>871</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_03"/>
@@ -91,11 +91,24 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1160</width>
-        <height>870</height>
+        <width>1161</width>
+        <height>871</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutVpType_04"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_5">
+     <widget class="QWidget" name="formLayoutWidget_5">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1161</width>
+        <height>871</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="FormLayoutVpType_05"/>
      </widget>
     </widget>
    </widget>
@@ -105,7 +118,7 @@
       <x>1180</x>
       <y>20</y>
       <width>139</width>
-      <height>171</height>
+      <height>201</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -144,7 +157,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>140</y>
+       <y>170</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -157,7 +170,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>140</y>
+       <y>170</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -166,11 +179,11 @@
       <string>Prev</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_03">
+    <widget class="QRadioButton" name="RB_VpType_04">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>90</y>
+       <y>110</y>
        <width>121</width>
        <height>20</height>
       </rect>
@@ -179,11 +192,11 @@
       <string>Vib activity (all)</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_04">
+    <widget class="QRadioButton" name="RB_VpType_05">
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>110</y>
+       <y>130</y>
        <width>131</width>
        <height>20</height>
       </rect>
@@ -211,12 +224,25 @@
       <bool>true</bool>
      </property>
     </widget>
+    <widget class="QRadioButton" name="RB_VpType_03">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>121</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>VP error bars</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>200</y>
+      <y>230</y>
       <width>161</width>
       <height>201</height>
      </rect>
@@ -256,7 +282,7 @@
           <x>10</x>
           <y>40</y>
           <width>141</width>
-          <height>121</height>
+          <height>151</height>
          </rect>
         </property>
         <property name="font">
@@ -344,6 +370,7 @@
     <addaction name="ActionSaveAll"/>
     <addaction name="ActionSaveVpType_01"/>
     <addaction name="ActionSaveVpType_02"/>
+    <addaction name="ActionSaveVpType_05"/>
     <addaction name="ActionSaveVpType_03"/>
     <addaction name="ActionSaveVpType_04"/>
    </widget>
@@ -396,12 +423,17 @@
     <string>Destination folder</string>
    </property>
   </action>
+  <action name="ActionSaveVpType_05">
+   <property name="text">
+    <string>VP error bars</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>RB_VpType_01</tabstop>
   <tabstop>RB_VpType_02</tabstop>
-  <tabstop>RB_VpType_03</tabstop>
   <tabstop>RB_VpType_04</tabstop>
+  <tabstop>RB_VpType_05</tabstop>
   <tabstop>PB_Prev</tabstop>
   <tabstop>PB_Next</tabstop>
  </tabstops>
