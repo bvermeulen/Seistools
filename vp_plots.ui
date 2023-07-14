@@ -370,9 +370,9 @@
     <addaction name="ActionSaveAll"/>
     <addaction name="ActionSaveVpType_01"/>
     <addaction name="ActionSaveVpType_02"/>
-    <addaction name="ActionSaveVpType_05"/>
     <addaction name="ActionSaveVpType_03"/>
     <addaction name="ActionSaveVpType_04"/>
+    <addaction name="ActionSaveVpType_05"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSave_plots"/>
@@ -410,10 +410,15 @@
   </action>
   <action name="ActionSaveVpType_03">
    <property name="text">
-    <string>Vib activity (all)</string>
+    <string>VP error bars</string>
    </property>
   </action>
   <action name="ActionSaveVpType_04">
+   <property name="text">
+    <string>Vib activity (all)</string>
+   </property>
+  </action>
+  <action name="ActionSaveVpType_05">
    <property name="text">
     <string>Vib activity (each)</string>
    </property>
@@ -423,15 +428,11 @@
     <string>Destination folder</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_05">
-   <property name="text">
-    <string>VP error bars</string>
-   </property>
-  </action>
  </widget>
  <tabstops>
   <tabstop>RB_VpType_01</tabstop>
   <tabstop>RB_VpType_02</tabstop>
+  <tabstop>RB_VpType_03</tabstop>
   <tabstop>RB_VpType_04</tabstop>
   <tabstop>RB_VpType_05</tabstop>
   <tabstop>PB_Prev</tabstop>
