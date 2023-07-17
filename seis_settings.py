@@ -1,1 +1,0 @@
-seis_settings_22nb.py

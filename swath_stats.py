@@ -366,6 +366,13 @@ class SwathProdCalc(OutputMixin):
             )
             area_totals["area_dunes"] = areas["dunes_cs1"] + areas["dunes_cs2"]
             area_totals["area_sabkha"] = areas["sabkha_cs1"] + areas["sabkha_cs2"]
+        else:
+            area_totals["area"] = areas["area_cs1"]
+            area_totals["area_flat"] = areas["flat_cs1"]
+            area_totals["area_rough"] = areas["rough_cs1"]
+            area_totals["area_facilities"] = areas["facilities_cs1"]
+            area_totals["area_dunes"] = areas["dunes_cs1"]
+            area_totals["area_sabkha"] = areas["sabkha_cs1"]
 
         if self.src_infill:
             area_totals["area_flat_infill"] = areas["flat_infill"]

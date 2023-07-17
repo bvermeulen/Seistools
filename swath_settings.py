@@ -1,1 +1,0 @@
-swath_settings_nibras_c.py
