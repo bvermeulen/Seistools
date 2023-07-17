@@ -421,9 +421,9 @@ if __name__ == "__main__":
 
         vp_attr.production_date = production_date
         vp_attr.select_data()
-        # vp_attr.plot_vp_data()
-        # vp_attr.show_plot()
-        # vp_attr.plot_histogram_data()
-        # vp_attr.show_plot()
+        vp_attr.plot_vp_data()
+        vp_attr.show_plot()
+        vp_attr.plot_histogram_data()
+        vp_attr.show_plot()
         vp_attr.plot_error_data()
         vp_attr.show_plot()
