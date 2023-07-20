@@ -1,4 +1,4 @@
-""" application to parse Extended QC files and extract plot the attributes
+""" module to parse Extended QC files
 """
 import re
 from dataclasses import dataclass
@@ -95,7 +95,7 @@ def concat_df(df, val):
         df_column_vals = [None] * len(df_columns)
 
     df = pd.concat(
-        [df, pd.DataFrame([val_list], columns=df_columns)], ignore_index=True
+        [df, pd.DataFrame([df_column_vals], columns=df_columns)], ignore_index=True
     )
     return df
 
