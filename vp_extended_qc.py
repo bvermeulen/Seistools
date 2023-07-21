@@ -12,6 +12,7 @@ class VpExtendedQc:
     def __init__(self, filename):
         self.filename = filename
         self.vaps_df = None
+        self.start_time_index = 3
 
     def get_location(self, production_date, vibrator_id, time_break):
         if self.vaps_df is None:
@@ -20,18 +21,17 @@ class VpExtendedQc:
                 self.vaps_df["time_break"], format="ISO8601"
             )
         try:
-            s_line, s_point = self.vaps_df[
+            s_line, s_point, easting, northing, elevation = self.vaps_df[
                 (self.vaps_df["time_break"] == time_break)
                 & (self.vaps_df["vibrator"] == vibrator_id)
-            ][["line", "point"]].values[0]
+            ][["line", "point", "easting", "northing", "elevation"]].values[0]
         except IndexError:
-            s_line, s_point = -1, -1
+            s_line, s_point, easting, northing, elevation = -1, -1, -1, -1, -1
 
-        return s_line, s_point
+        return s_line, s_point, easting, northing, elevation
 
     def vp_attributes(self, location=False):
         extended_qc_iterator = parser.extended_qc_generator(self.filename)
-        vaps_df = None
         columns_attributes_df = [
             "line",
             "station",
@@ -42,24 +42,35 @@ class VpExtendedQc:
             "peak_dist",
             "avg_force",
             "peak_force",
-            "avg_target_foce",
+            "avg_target_force",
+            "limit_t",
+            "limit_m",
+            "limit_v",
+            "limit_f",
+            "limit_r",
+            "easting",
+            "northing",
+            "elevation",
             "start_time",
             "time_break",
         ]
         attributes_df = pd.DataFrame(columns=columns_attributes_df)
         self.vaps_df = None
         for extended_qc_record in extended_qc_iterator:
-            production_date = (extended_qc_record.time_break + GMT_OFFSET).date()
             ext_qc_df = extended_qc_record.attributes_df
-            avg_vals = ext_qc_df[2:].mean()
-            peak_vals = ext_qc_df[2:].max()
+            avg_vals = ext_qc_df[self.start_time_index :].mean()
+            peak_vals = ext_qc_df[self.start_time_index :].max()
+            count_limits = ext_qc_df[self.start_time_index :][
+                ["limit_t", "limit_m", "limit_v", "limit_f", "limit_r"]
+            ].sum()
+            production_date = (extended_qc_record.time_break + GMT_OFFSET).date()
+            vibrator_id = extended_qc_record.vibrator_id
             tb_ext_qc = extended_qc_record.time_break
             tb_vaps = tb_ext_qc + GMT_OFFSET
-            vibrator_id = extended_qc_record.vibrator_id
-            s_line, s_point = (
+            s_line, s_point, easting, northing, elevation = (
                 self.get_location(production_date, vibrator_id, tb_vaps)
                 if location
-                else (-1, -1)
+                else (-1, -1, -1, -1, -1)
             )
             attributes_list = [
                 s_line,
@@ -72,7 +83,15 @@ class VpExtendedQc:
                 round(avg_vals["force"]),
                 round(peak_vals["force"]),
                 round(avg_vals["target"]),
-                ext_qc_df.iloc[2]["time"],
+                count_limits["limit_t"],
+                count_limits["limit_m"],
+                count_limits["limit_v"],
+                count_limits["limit_f"],
+                count_limits["limit_r"],
+                easting,
+                northing,
+                elevation,
+                ext_qc_df.iloc[self.start_time_index]["time"],
                 tb_ext_qc,
             ]
             attributes_df = pd.concat(
@@ -87,5 +106,5 @@ class VpExtendedQc:
 
 
 if __name__ == "__main__":
-    extended_qc = VpExtendedQc(Path("./data_files/230629_VIB08_test.txt"))
+    extended_qc = VpExtendedQc(Path("./data_files/230629_VIB08.txt"))
     extended_qc.vp_attributes(location=True)
