@@ -1,15 +1,18 @@
 """ application to work with vibrator extended QC
 """
 from pathlib import Path
-import datetime
 import pandas as pd
-import vp_extended_qc_parser as parser
-from seis_vibe_database import VpDb
 from seis_settings import GMT_OFFSET
+from seis_utils import progress_message_generator
+from seis_vibe_database import VpDb
+import vp_extended_qc_parser as parser
+
+
+# TODO calculation stiffness and viscosity only from linear part of sweep sample 9 (4.5 seconds); linear part starts at 4 seconds (sample 8)
 
 
 class VpExtendedQc:
-    def __init__(self, filename):
+    def __init__(self, filename: Path):
         self.filename = filename
         self.vaps_df = None
         self.start_time_index = 3
@@ -30,7 +33,7 @@ class VpExtendedQc:
 
         return s_line, s_point, easting, northing, elevation
 
-    def vp_attributes(self, location=False):
+    def vp_attributes(self, location: bool = False) -> None:
         extended_qc_iterator = parser.extended_qc_generator(self.filename)
         columns_attributes_df = [
             "line",
@@ -55,6 +58,9 @@ class VpExtendedQc:
             "time_break",
         ]
         attributes_df = pd.DataFrame(columns=columns_attributes_df)
+        progress_message = progress_message_generator(
+            f"processing extended qc for {self.filename}"
+        )
         self.vaps_df = None
         for extended_qc_record in extended_qc_iterator:
             ext_qc_df = extended_qc_record.attributes_df
@@ -101,8 +107,11 @@ class VpExtendedQc:
                 ],
                 ignore_index=True,
             )
+            next(progress_message)
 
+        csv_file = self.filename.parent / "".join([self.filename.stem, ".csv"])
         print(attributes_df)
+        attributes_df.to_csv(csv_file, date_format="%Y-%m-%d %H:%M:%S.%f")
 
 
 if __name__ == "__main__":

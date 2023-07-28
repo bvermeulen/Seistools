@@ -336,7 +336,7 @@ class VpAttributes:
         y_step = 0.20
         bar_height = 0.19
         y_vals = np.arange(1, FLEETS + 1) * y_step
-        y_labels = []
+        y_labels = [None for _ in range(FLEETS)]
         for vib in range(1, FLEETS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
@@ -356,14 +356,14 @@ class VpAttributes:
                 out_spec_percentage = data_out_spec.size / size * 100
 
                 axis.barh(
-                    y_vals[vib - 1],
+                    y_vals[FLEETS - vib],
                     out_spec_percentage,
                     align="center",
                     height=bar_height,
                     color="red",
                 )
                 axis.barh(
-                    y_vals[vib - 1],
+                    y_vals[FLEETS - vib],
                     100 - out_spec_percentage,
                     align="center",
                     height=bar_height,
@@ -373,12 +373,11 @@ class VpAttributes:
 
                 axis.text(
                     104,
-                    y_vals[vib - 1],
+                    y_vals[FLEETS - vib],
                     f"{out_spec_percentage:5.1f}%",
                     fontsize=FONTSIZE_6,
                 )
-
-            y_labels.append(f"V{vib}")
+            y_labels[FLEETS - vib] = f"V{vib}"
 
         axis.xaxis.set_major_formatter(mtick.PercentFormatter(100.0))
         axis.set_xlim(left=0, right=120)
