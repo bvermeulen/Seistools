@@ -8,14 +8,12 @@ from seis_vibe_database import VpDb
 import vp_extended_qc_parser as parser
 
 
-# TODO calculation stiffness and viscosity only from linear part of sweep sample 9 (4.5 seconds); linear part starts at 4 seconds (sample 8)
-
-
 class VpExtendedQc:
     def __init__(self, filename: Path):
         self.filename = filename
         self.vaps_df = None
         self.start_time_index = 3
+        self.start_visc_index = 8
 
     def get_location(self, production_date, vibrator_id, time_break):
         if self.vaps_df is None:
@@ -46,6 +44,10 @@ class VpExtendedQc:
             "avg_force",
             "peak_force",
             "avg_target_force",
+            "avg_visc",
+            "peak_visc",
+            "avg_stiff",
+            "peak_stiff",
             "limit_t",
             "limit_m",
             "limit_v",
@@ -55,6 +57,7 @@ class VpExtendedQc:
             "northing",
             "elevation",
             "start_time",
+            "start_visc",
             "time_break",
         ]
         attributes_df = pd.DataFrame(columns=columns_attributes_df)
@@ -64,8 +67,14 @@ class VpExtendedQc:
         self.vaps_df = None
         for extended_qc_record in extended_qc_iterator:
             ext_qc_df = extended_qc_record.attributes_df
-            avg_vals = ext_qc_df[self.start_time_index :].mean()
-            peak_vals = ext_qc_df[self.start_time_index :].max()
+            avg_vals = ext_qc_df[self.start_time_index :][
+                ["phase", "dist", "force", "target"]
+            ].mean()
+            peak_vals = ext_qc_df[self.start_time_index :][
+                ["phase", "dist", "force", "target"]
+            ].max()
+            avg_visc = ext_qc_df[self.start_visc_index :][["visc", "stiff"]].mean()
+            peak_visc = ext_qc_df[self.start_visc_index :][["visc", "stiff"]].max()
             count_limits = ext_qc_df[self.start_time_index :][
                 ["limit_t", "limit_m", "limit_v", "limit_f", "limit_r"]
             ].sum()
@@ -89,6 +98,10 @@ class VpExtendedQc:
                 round(avg_vals["force"]),
                 round(peak_vals["force"]),
                 round(avg_vals["target"]),
+                round(avg_visc["visc"]),
+                round(peak_visc["visc"]),
+                round(avg_visc["stiff"]),
+                round(peak_visc["stiff"]),
                 count_limits["limit_t"],
                 count_limits["limit_m"],
                 count_limits["limit_v"],
@@ -98,6 +111,7 @@ class VpExtendedQc:
                 northing,
                 elevation,
                 ext_qc_df.iloc[self.start_time_index]["time"],
+                ext_qc_df.iloc[self.start_visc_index]["time"],
                 tb_ext_qc,
             ]
             attributes_df = pd.concat(
