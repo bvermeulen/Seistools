@@ -1,9 +1,10 @@
-'''
+"""
     Module for conversion tools for WGS84, UTM 40N and PSD93
     note the module maintains consistency in x, y; easting, northing; and
     longitude, latitude, where x is the first and y is the second argument
     grid conversion is project dependent
-'''
+"""
+import os
 import re
 import json
 from pathlib import Path
@@ -12,38 +13,58 @@ from shapely.geometry import Point
 from pyproj import Proj
 
 
-degree_symbol = '\u00B0'
+degree_symbol = "\u00B0"
 
-with open(Path('./convert_config.json'), 'rt') as f:
-    convert_config_dict = json.load(f)
-origin = convert_config_dict['origin']
-prefix = convert_config_dict['prefix']
+match os.name:
+    case "nt":
+        convert_config_file = (
+            Path.home() / "AppData/Roaming/PythonAppConfig" / "convert_config.json"
+        )
+    case "posix":
+        convert_config_file = (
+            Path.home() / ".Config/PythonAppConfig" / "convert_config.json"
+        )
+    case other:
+        assert False, f"{os.name} is not implemented"
+
+with open(convert_config_file, "rt") as f:
+    config = json.load(f)
+origin = config["origin"]
+prefix = config["prefix"]
 
 
 @dataclass
 class GridOrigin:
-    line: int = origin['line']
-    station: int = origin['station']
-    x: float = origin['x']
-    y: float = origin['y']
-    interval: float = origin['interval']
+    line: int = origin["line"]
+    station: int = origin["station"]
+    x: float = origin["x"]
+    y: float = origin["y"]
+    interval: float = origin["interval"]
 
 
 class ConvertTools:
     EPSG_PSD93 = (
-        '+proj=utm +zone=40 +ellps=clrk80 +towgs84=-180.624,-225.516,173.919,'
-        '-0.81,-1.898,8.336,16.71006 +units=m +no_defs')
+        "+proj=utm +zone=40 +a=6378249.145 +rf=293.465 +towgs84=-180.624,-225.516,173.919,"
+        "-0.81,-1.898,8.336,16.71006 +units=m +no_defs +type=crs"
+    )
     psd93 = Proj(EPSG_PSD93)
-    utm40n = Proj('epsg:32640')
+    utm40n = Proj("epsg:32640")
 
     @staticmethod
     def strip_lon_lat(longitude: str, latitude: str) -> tuple[re.Match, re.Match]:
-        lon = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([EWew])\s*$', longitude)
-        lat = re.match(r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([NSns])\s*$', latitude)
+        lon = re.match(
+            r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([EWew])\s*$',
+            longitude,
+        )
+        lat = re.match(
+            r'^\s*(\d{1,3})[\s\u00B0]\s*(\d{1,2})[\s\']\s*(\d{1,2}|\d{1,2}\.\d*)[\s"]{0,1}\s*([NSns])\s*$',
+            latitude,
+        )
         return lon, lat
 
-    def convert_dms_to_dec_degree(self, longitude: str, latitude: str) -> tuple[float, float]:
-
+    def convert_dms_to_dec_degree(
+        self, longitude: str, latitude: str
+    ) -> tuple[float, float]:
         lon, lat = self.strip_lon_lat(longitude, latitude)
         if lon and lat:
             lat_d = float(lat.group(1))
@@ -66,11 +87,11 @@ class ConvertTools:
             if not (0 <= lat_s < 60) or not (0 <= lon_s < 60):
                 return -1, -1
 
-            latitude = lat_d + lat_m / 60 + lat_s /3600
-            latitude = latitude if lat_ns.upper() == 'N' else latitude * -1
+            latitude = lat_d + lat_m / 60 + lat_s / 3600
+            latitude = latitude if lat_ns.upper() == "N" else latitude * -1
 
-            longitude = lon_d + lon_m / 60 + lon_s /3600
-            longitude = longitude if lon_ew.upper() == 'E' else longitude * -1
+            longitude = lon_d + lon_m / 60 + lon_s / 3600
+            longitude = longitude if lon_ew.upper() == "E" else longitude * -1
 
             return longitude, latitude
 
@@ -80,14 +101,14 @@ class ConvertTools:
     @staticmethod
     def convert_dec_degree_to_dms(longitude: float, latitude: float) -> tuple[str, str]:
         if not (-180 < latitude <= 180) or not (-180 < longitude <= 180):
-            return '-', '-'
+            return "-", "-"
 
         else:
             if latitude >= 0:
-                lat_ns = 'N'
+                lat_ns = "N"
 
             else:
-                lat_ns = 'S'
+                lat_ns = "S"
 
             latitude = abs(latitude)
             lat_d = int(latitude)
@@ -97,13 +118,13 @@ class ConvertTools:
             if int(round(lat_s, 3)) == 60:
                 lat_m += 1
                 lat_s = 0
-            lat = f'{lat_d:3d}{degree_symbol} {lat_m:02d}\' {lat_s:2.3f}" {lat_ns}'
+            lat = f"{lat_d:3d}{degree_symbol} {lat_m:02d}' {lat_s:2.3f}\" {lat_ns}"
 
             if longitude >= 0:
-                lon_ew = 'E'
+                lon_ew = "E"
 
             else:
-                lon_ew = 'W'
+                lon_ew = "W"
 
             longitude = abs(longitude)
             lon_d = abs(int(longitude))
@@ -113,10 +134,9 @@ class ConvertTools:
             if int(round(lon_s, 3)) == 60:
                 lon_m += 1
                 lon_s = 0
-            lon = f'{lon_d:3d}{degree_symbol} {lon_m:02d}\' {lon_s:2.3f}" {lon_ew}'
+            lon = f"{lon_d:3d}{degree_symbol} {lon_m:02d}' {lon_s:2.3f}\" {lon_ew}"
 
             return lon, lat
-
 
     def utm40n_to_wgs84(self, easting: float, northing: float) -> tuple[float, float]:
         converted_point = Point(self.utm40n(easting, northing, inverse=True))
