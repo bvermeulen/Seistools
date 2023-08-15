@@ -6,7 +6,7 @@ import sys
 from enum import Enum
 from pathlib import Path
 from PyQt6 import uic, QtWidgets
-from convert_tools import ConvertTools
+from convert_tools import ConvertTools, prefix
 
 
 class ConvertChoice(Enum):
@@ -41,6 +41,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.pb8_grid_psd93.clicked.connect(lambda x: self.action_float_float(ConvertChoice.grid_psd93))
         self.pb9_psd93_grid.clicked.connect(lambda x: self.action_float_float(ConvertChoice.psd93_grid))
         self.action_connect()
+        self.pb8_grid_psd93.setText(f'{prefix} grid -> PSD93')
+        self.pb9_psd93_grid.setText(f'PSD93 -> {prefix} grid')
 
     def action_format(self, format_choice):
         match format_choice:
@@ -117,12 +119,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
             case ConvertChoice.grid_psd93:
                 dlg = DialogFloatFloat(
-                    self, convert_choice, '22NB grid to PSD93', 'Line', 'Station',
+                    self, convert_choice, f'{prefix} grid to PSD93', 'Line', 'Station',
                     'Easting', 'Northing'
                 )
             case ConvertChoice.psd93_grid:
                 dlg = DialogFloatFloat(
-                    self, convert_choice, 'PSD93 to 22NB grid', 'Easting', 'Northing',
+                    self, convert_choice, f'PSD93 to {prefix} grid', 'Easting', 'Northing',
                     'Line', 'Station'
                 )
             case _:
@@ -227,11 +229,11 @@ class DialogFloatFloat(QtWidgets.QDialog):
                 f_fmt = '.2f'
 
             case ConvertChoice.grid_psd93:
-                val1, val2 = convert.grid22nb_psd93(val1, val2)
+                val1, val2 = convert.grid_psd93(val1, val2)
                 f_fmt = '.2f'
 
             case ConvertChoice.psd93_grid:
-                val1, val2 = convert.psd93_grid22nb(val1, val2)
+                val1, val2 = convert.psd93_grid(val1, val2)
                 f_fmt = '.0f'
 
             case _:

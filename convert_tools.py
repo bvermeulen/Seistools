@@ -5,6 +5,8 @@
     grid conversion is project dependent
 '''
 import re
+import json
+from pathlib import Path
 from dataclasses import dataclass
 from shapely.geometry import Point
 from pyproj import Proj
@@ -12,32 +14,27 @@ from pyproj import Proj
 
 degree_symbol = '\u00B0'
 
-@dataclass
-class GridOrigin22CO:
-    line: int = 1000
-    station: int = 1000
-    x: float = 358_028.8
-    y: float = 2_277_156.3
-    interval: float = 6.25
+with open(Path('./convert_config.json'), 'rt') as f:
+    convert_config_dict = json.load(f)
+origin = convert_config_dict['origin']
+prefix = convert_config_dict['prefix']
 
 
 @dataclass
-class GridOrigin22NB:
-    line: int = 1000
-    station: int = 1000
-    x: float = 483_978.8
-    y: float = 2_363_481.3
-    interval: float = 12.50
+class GridOrigin:
+    line: int = origin['line']
+    station: int = origin['station']
+    x: float = origin['x']
+    y: float = origin['y']
+    interval: float = origin['interval']
 
 
 class ConvertTools:
-
     EPSG_PSD93 = (
         '+proj=utm +zone=40 +ellps=clrk80 +towgs84=-180.624,-225.516,173.919,'
         '-0.81,-1.898,8.336,16.71006 +units=m +no_defs')
     psd93 = Proj(EPSG_PSD93)
     utm40n = Proj('epsg:32640')
-
 
     @staticmethod
     def strip_lon_lat(longitude: str, latitude: str) -> tuple[re.Match, re.Match]:
@@ -151,34 +148,20 @@ class ConvertTools:
         converted_point = Point(self.psd93(converted_point.x, converted_point.y))
         return converted_point.x, converted_point.y
 
-    def grid22co_psd93(self, line, station):
-        # 22CO grid to psd93 easting, northing
-        origin = GridOrigin22CO()
+    @staticmethod
+    def grid_psd93(line, station):
+        # grid to psd93 easting, northing
+        origin = GridOrigin()
         interval = origin.interval
         easting = (line - origin.line) * interval + origin.x
         northing = (station - origin.station) * interval + origin.y
         return easting, northing
 
-    def psd93_grid22co(self, easting, northing):
-        # psd93 easting, northing to 22CO grid
-        origin = GridOrigin22CO()
+    @staticmethod
+    def psd93_grid(easting, northing):
+        # psd93 easting, northing to grid
+        origin = GridOrigin()
         inv_interval = 1 / origin.interval
         line = origin.line + round((easting - origin.x) * inv_interval / 32) * 32.0
         station = origin.station + round((northing - origin.y) * inv_interval / 4) * 4.0
-        return line, station
-
-    def grid22nb_psd93(self, line, station):
-        # 22NB grid to psd93 easting, northing
-        origin = GridOrigin22NB()
-        interval = origin.interval
-        easting = (line - origin.line) * interval + origin.x
-        northing = (station - origin.station) * interval + origin.y
-        return easting, northing
-
-    def psd93_grid22nb(self, easting, northing):
-        # psd93 easting, northing to 22NB grid
-        origin = GridOrigin22NB()
-        inv_interval = 1 / origin.interval
-        line = origin.line + round((easting - origin.x) * inv_interval / 8) * 8.0
-        station = origin.station + round((northing - origin.y) * inv_interval / 6) * 6.0
         return line, station

@@ -79,7 +79,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>22NB grid -&gt; PSD93</string>
+     <string>Grid -&gt; PSD93</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pb6_utm40_psd93">
@@ -105,7 +105,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>PSD93 -&gt; 22NB grid</string>
+     <string>PSD93 -&gt; Grid</string>
     </property>
    </widget>
    <widget class="QPushButton" name="pb1_wgs84_psd93">
