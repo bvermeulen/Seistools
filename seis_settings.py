@@ -5,7 +5,6 @@ import json
 import datetime
 from dataclasses import dataclass
 from pathlib import Path
-from enum import IntEnum
 
 match os.name:
     case "nt":
@@ -45,40 +44,25 @@ RESULTS_FOLDER = (
 )
 DATABASE = PROJECT_PATH / files["DATABASE"]
 
-EXPIRY_DATE = datetime.date(2023, 8, 31)
 general = seis_config["general"]
-LINK_VP_TO_VAPS = general["LINK_VP_TO_VAPS"]
-DATABASE_TABLE = general["DATABASE_TABLE"]
-PROGRESS_SKIPS = general["PROGRESS_SKIPS"]
-GMT_OFFSET = datetime.timedelta(hours=general["GMT_OFFSET"])
-# if distance < DENSE_CRITERIUM then dense_flag is true
-DENSE_CRITERIUM = general["DENSE_CRITERIUM"]
+FLEETS = general["FLEETS"]
 SWEEP_TIME = general["SWEEP_TIME"]
 PAD_DOWN_TIME = general["PAD_DOWN_TIME"]
-FLEETS = general["FLEETS"]
-MARKERSIZE_VP = general["MARKERSIZE_VP"]
-MARKERSIZE_NODE = general["MARKERSIZE_NODE"]
-TOL_COLOR = general["TOL_COLOR"]
+# if distance < DENSE_CRITERIUM then dense_flag is true
+DENSE_CRITERIUM = general["DENSE_CRITERIUM"]
 
-AREA_EASTING_MIN = 610_000
-AREA_EASTING_MAX = 760_000
-AREA_NORTHING_MIN = 2_345_000
-AREA_NORHING_MAX = 2_455_000
-URL_STAMEN = "http://tile.stamen.com/terrain/{z}/{x}/{y}.png"
-MAP_FILE = r"BackgroundMap/3D_31256.jpg"
-EPSG_UTM_40N = 32640
-EPSG_WGS84 = 4326
-EPSG_OSM = 3857
+EXPIRY_DATE = datetime.date(2024, 8, 31)
+LINK_VP_TO_VAPS = False
+DATABASE_TABLE = "VAPS"
+PROGRESS_SKIPS = 750
+GMT_OFFSET = datetime.timedelta(hours=+4)
+MARKERSIZE_VP = 0.2
+MARKERSIZE_NODE = 1.0
+TOL_COLOR = "red"
 EPSG_PSD93 = 3440
 
 vp_plt_settings = seis_config["vp_plt_settings"]
 node_plt_settings = seis_config["node_plt_settings"]
-
-
-class MapTypes(IntEnum):
-    local = 0
-    osm = 1
-    no_background = 3
 
 
 @dataclass
