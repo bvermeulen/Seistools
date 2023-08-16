@@ -8,6 +8,6 @@ A couple of tools for the seismic data analyst.
 - Various apps for displaying vibrator and node attributes
 - Interactive display of attributes (*vp_plots_pyqt.py*)
 
-JSON configuation files must be located in:
+JSON configuation files (*convert_config.json* and *seis_config.json*) must be located in:
 
 %APPDATA%/PythonAppConfig
