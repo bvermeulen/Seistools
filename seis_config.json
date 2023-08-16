@@ -1,0 +1,212 @@
+{
+    "prefix": "23XX",
+    "file_paths": {
+        "PROJECT_PATH": "D:/client/project",
+        "DATA_FILES_VP": null,
+        "DATA_FILES_VAPS": "QC/data/vaps",
+        "DATA_FILES_QUANTUM": "QC/data/quantum_nodes",
+        "DATA_FILES_NUSEIS": null,
+        "DATA_FILES_SPS": "QC/data/sps_final",
+        "DATA_FILES_WEATHER": "QC/wind_logs",
+        "RESULTS_FOLDER": "QC/vibe_activity",
+        "DATABASE": "QC/database/procect_db.sqlite3"
+    },
+    "general": {
+        "FLEETS": 10,
+        "SWEEP_TIME": 12,
+        "PAD_DOWN_TIME": 1.5,
+        "DENSE_CRITERIUM": 10
+    },
+    "vp_plt_settings": {
+        "avg_phase": {
+            "title_attribute": "Average Phase",
+            "y-axis_label_attribute": "Degrees",
+            "title_density": "Average Phase Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 15,
+            "interval": 0.1,
+            "tol_min": null,
+            "tol_max": 4
+        },
+        "avg_dist": {
+            "title_attribute": "Average Distortion",
+            "y-axis_label_attribute": "Percentage",
+            "title_density": "Average Distortion Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 80,
+            "interval": 0.1,
+            "tol_min": null,
+            "tol_max": 25
+        },
+        "avg_force": {
+            "title_attribute": "Average Force",
+            "y-axis_label_attribute": "Percentage",
+            "title_density": "Average Force Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 100,
+            "interval": 0.1,
+            "tol_min": 60,
+            "tol_max": null
+        },
+        "peak_phase": {
+            "title_attribute": "Peak Phase",
+            "y-axis_label_attribute": "Degrees",
+            "title_density": "Peak Phase Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 30,
+            "interval": 0.1,
+            "tol_min": null,
+            "tol_max": 9
+        },
+        "peak_dist": {
+            "title_attribute": "Peak Distortion",
+            "y-axis_label_attribute": "Percentage",
+            "title_density": "Peak Distortion Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 100,
+            "interval": 0.1,
+            "tol_min": null,
+            "tol_max": 35
+        },
+        "peak_force": {
+            "title_attribute": "Peak Force",
+            "y-axis_label_attribute": "Percentage",
+            "title_density": "Peak Force Density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 100,
+            "interval": 0.1,
+            "tol_min": 75,
+            "tol_max": null
+        },
+        "elevation": {
+            "title_attribute": "Elevation",
+            "y-axis_label_attribute": "meters",
+            "title_density": "Elevation density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 200,
+            "interval": 1
+        },
+        "avg_stiffness": {
+            "title_attribute": "Stiffness",
+            "y-axis_label_attribute": "Level",
+            "title_density": "Stiffness density",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 50,
+            "interval": 1
+        },
+        "avg_viscosity": {
+            "title_attribute": "Viscosity",
+            "y-axis_label_attribute": "Level",
+            "title_density": "Viscosity density",
+            "y-axis_label_density": "",
+            "min": 15,
+            "max": 25,
+            "interval": 1
+        },
+        "none": {
+            "title_attribute": "",
+            "y-axis_label_attribute": "",
+            "title_density": "",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 0,
+            "interval": 0
+        },
+        "vib_activity": {
+            "fig_title": "Vibrator activity: ",
+            "max_vp_hour": 1800,
+            "tick_intval_vp_hour": 100,
+            "vp_hour_target": 900,
+            "max_vibs": 15,
+            "tick_intval_vibs": 1,
+            "vibs_target": 0
+        }
+    },
+    "node_plt_settings": {
+        "frequency": {
+            "title_attribute": "Natural Frequency",
+            "y-axis_label_attribute": "Hz",
+            "title_density": "Natural Frequency",
+            "y-axis_label_density": "",
+            "min": 3,
+            "max": 7,
+            "interval": 0.01,
+            "tol_min": 4.6,
+            "tol_max": 5.4
+        },
+        "damping": {
+            "title_attribute": "Damping",
+            "y-axis_label_attribute": "%",
+            "title_density": "Damping",
+            "y-axis_label_density": "",
+            "min": 45.0,
+            "max": 75.0,
+            "interval": 1.00,
+            "tol_min": 55.2,
+            "tol_max": 64.8
+        },
+        "sensitivity": {
+            "title_attribute": "Sensitivity",
+            "y-axis_label_attribute": "V / (m/s)",
+            "title_density": "Sensitivity",
+            "y-axis_label_density": "",
+            "min": 70,
+            "max": 90,
+            "interval": 0.1,
+            "tol_min": 74.4,
+            "tol_max": 85.6
+        },
+        "resistance": {
+            "title_attribute": "Resistance",
+            "y-axis_label_attribute": "Ohm",
+            "title_density": "Resistance",
+            "y-axis_label_density": "",
+            "min": 1700,
+            "max": 2000,
+            "interval": 0.5,
+            "tol_min": 1702,
+            "tol_max": 1998
+        },
+        "thd": {
+            "title_attribute": "Distortion",
+            "y-axis_label_attribute": "%",
+            "title_density": "Distortion",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 0.15,
+            "interval": 0.005,
+            "tol_min": null,
+            "tol_max": 0.1
+        },
+        "noise": {
+            "title_attribute": "Noise",
+            "y-axis_label_attribute": "microVolt",
+            "title_density": "Noise",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 100,
+            "interval": 1,
+            "tol_min": null,
+            "tol_max": null
+        },
+        "tilt": {
+            "title_attribute": "Tilt",
+            "y-axis_label_attribute": "Degrees",
+            "title_density": "Tilt",
+            "y-axis_label_density": "",
+            "min": 0,
+            "max": 15,
+            "interval": 0.05,
+            "tol_min": null,
+            "tol_max": 10
+        }
+    }
+}
