@@ -22,7 +22,7 @@ match os.name:
         )
     case "posix":
         convert_config_file = (
-            Path.home() / ".Config/PythonAppConfig" / "convert_config.json"
+            Path.home() / ".config/PythonAppConfig" / "convert_config.json"
         )
     case other:
         assert False, f"{os.name} is not implemented"
