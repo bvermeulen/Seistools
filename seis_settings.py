@@ -12,7 +12,7 @@ match os.name:
             Path.home() / "AppData/Roaming/PythonAppConfig" / "seis_config.json"
         )
     case "posix":
-        seis_config_file = Path.home() / ".Config/PythonAppConfig" / "seis_config.json"
+        seis_config_file = Path.home() / ".config/PythonAppConfig" / "seis_config.json"
     case other:
         assert False, f"{os.name} is not implemented"
 
