@@ -26,7 +26,7 @@
       <x>1180</x>
       <y>10</y>
       <width>161</width>
-      <height>211</height>
+      <height>231</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="ControlArea"/>
@@ -44,7 +44,7 @@
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>4</number>
+     <number>5</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -56,7 +56,7 @@
         <height>870</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormLayoutVpType_01"/>
+      <layout class="QFormLayout" name="FormLayoutType_01"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_2">
@@ -69,7 +69,7 @@
         <height>870</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormLayoutVpType_02"/>
+      <layout class="QFormLayout" name="FormLayoutType_02"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_3">
@@ -82,7 +82,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormLayoutVpType_03"/>
+      <layout class="QFormLayout" name="FormLayoutType_03"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_4">
@@ -95,7 +95,7 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormLayoutVpType_04"/>
+      <layout class="QFormLayout" name="FormLayoutType_04"/>
      </widget>
     </widget>
     <widget class="QWidget" name="page_5">
@@ -108,7 +108,20 @@
         <height>871</height>
        </rect>
       </property>
-      <layout class="QFormLayout" name="FormLayoutVpType_05"/>
+      <layout class="QFormLayout" name="FormLayoutType_05"/>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="page_6">
+     <widget class="QWidget" name="formLayoutWidget_6">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1161</width>
+        <height>871</height>
+       </rect>
+      </property>
+      <layout class="QFormLayout" name="FormLayoutType_06"/>
      </widget>
     </widget>
    </widget>
@@ -118,7 +131,7 @@
       <x>1180</x>
       <y>20</y>
       <width>139</width>
-      <height>201</height>
+      <height>221</height>
      </rect>
     </property>
     <property name="frameShape">
@@ -127,7 +140,7 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QRadioButton" name="RB_VpType_01">
+    <widget class="QRadioButton" name="RB_Type_01">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -140,7 +153,7 @@
       <string>VP attributes</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_02">
+    <widget class="QRadioButton" name="RB_Type_02">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -157,7 +170,7 @@
      <property name="geometry">
       <rect>
        <x>50</x>
-       <y>170</y>
+       <y>190</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -170,7 +183,7 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>170</y>
+       <y>190</y>
        <width>41</width>
        <height>23</height>
       </rect>
@@ -179,7 +192,7 @@
       <string>Prev</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_04">
+    <widget class="QRadioButton" name="RB_Type_04">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -192,7 +205,7 @@
       <string>Vib activity (all)</string>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_05">
+    <widget class="QRadioButton" name="RB_Type_05">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -224,7 +237,7 @@
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QRadioButton" name="RB_VpType_03">
+    <widget class="QRadioButton" name="RB_Type_03">
      <property name="geometry">
       <rect>
        <x>10</x>
@@ -237,14 +250,27 @@
       <string>VP error bars</string>
      </property>
     </widget>
+    <widget class="QRadioButton" name="RB_Type_06">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>150</y>
+       <width>131</width>
+       <height>20</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Node attributes</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>230</y>
+      <y>250</y>
       <width>161</width>
-      <height>201</height>
+      <height>261</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout">
@@ -282,7 +308,7 @@
           <x>10</x>
           <y>40</y>
           <width>141</width>
-          <height>151</height>
+          <height>211</height>
          </rect>
         </property>
         <property name="font">
@@ -368,11 +394,12 @@
     <addaction name="ActionDestinationFolder"/>
     <addaction name="separator"/>
     <addaction name="ActionSaveAll"/>
-    <addaction name="ActionSaveVpType_01"/>
-    <addaction name="ActionSaveVpType_02"/>
-    <addaction name="ActionSaveVpType_03"/>
-    <addaction name="ActionSaveVpType_04"/>
-    <addaction name="ActionSaveVpType_05"/>
+    <addaction name="ActionSaveType_01"/>
+    <addaction name="ActionSaveType_02"/>
+    <addaction name="ActionSaveType_03"/>
+    <addaction name="ActionSaveType_04"/>
+    <addaction name="ActionSaveType_05"/>
+    <addaction name="ActionSaveType_06"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuSave_plots"/>
@@ -398,27 +425,27 @@
     <string>All</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_01">
+  <action name="ActionSaveType_01">
    <property name="text">
     <string>VP attributes</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_02">
+  <action name="ActionSaveType_02">
    <property name="text">
     <string>VP histograms</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_03">
+  <action name="ActionSaveType_03">
    <property name="text">
     <string>VP error bars</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_04">
+  <action name="ActionSaveType_04">
    <property name="text">
     <string>Vib activity (all)</string>
    </property>
   </action>
-  <action name="ActionSaveVpType_05">
+  <action name="ActionSaveType_05">
    <property name="text">
     <string>Vib activity (each)</string>
    </property>
@@ -428,15 +455,22 @@
     <string>Destination folder</string>
    </property>
   </action>
+  <action name="ActionSaveType_06">
+   <property name="text">
+    <string>Node attributes</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
-  <tabstop>RB_VpType_01</tabstop>
-  <tabstop>RB_VpType_02</tabstop>
-  <tabstop>RB_VpType_03</tabstop>
-  <tabstop>RB_VpType_04</tabstop>
-  <tabstop>RB_VpType_05</tabstop>
+  <tabstop>RB_Type_01</tabstop>
+  <tabstop>RB_Type_02</tabstop>
+  <tabstop>RB_Type_03</tabstop>
+  <tabstop>RB_Type_04</tabstop>
+  <tabstop>RB_Type_05</tabstop>
+  <tabstop>RB_Type_06</tabstop>
   <tabstop>PB_Prev</tabstop>
   <tabstop>PB_Next</tabstop>
+  <tabstop>DateEdit</tabstop>
  </tabstops>
  <resources/>
  <connections/>

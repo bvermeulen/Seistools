@@ -34,14 +34,17 @@ def status_message_generator(key):
     MODULUS = 10
     status_lines = {
         "Wait": "Please wait ...",
-        "Load": "Load data",
+        "LoadVp": "Load VP data",
+        "LoadNode": "Load Node data",
         "VpAttr": "VP attributes",
         "VpHist": "VP histograms",
         "VpErr": "VP error bars",
         "ActAll": "Activity all",
         "ActEach": "Activity each",
+        "NodeAttr": "Node attributes",
         "Done": "Done",
-        "Error": "Error getting data",
+        "NoVpData": "No VP data ...",
+        "NoNodeData": "No Node data ..."
     }
     current_key = None
     progress_dots = "."
@@ -63,8 +66,17 @@ def status_message_generator(key):
                 count = (count + 1) % MODULUS
 
         else:
-            if key not in ["Wait", "Done", "Error"]:
-                if current_key not in ["Wait", "Done"]:
+            if key not in ["Wait", "Done", "NoVpData", "NoNodeData"]:
+                if current_key in ["NoVpData", "NoNodeData"]:
+                    status_message = "\n".join(status_message.split("\n")[:-1])
+                    status_message = "\n".join(
+                        [
+                            status_message,
+                            "".join([status_lines[current_key]]),
+                            "".join([status_lines[key], progress_dots]),
+                        ]
+                    )
+                elif current_key not in ["Wait", "Done"]:
                     status_message = "\n".join(status_message.split("\n")[:-1])
                     status_message = "\n".join(
                         [
@@ -73,30 +85,29 @@ def status_message_generator(key):
                             "".join([status_lines[key], progress_dots]),
                         ]
                     )
-
                 else:
                     status_message = "\n".join(
                         [status_message, "".join([status_lines[key], progress_dots])]
                     )
-
                 count = 0
+
+            elif key  == "NoVpData":
+                status_message = "\n".join(status_message.split("\n")[:-1])
+                status_message = "\n".join(
+                    [status_message, status_lines[key]]
+                )
+
+            elif key == "NoNodeData":
+                status_message = "\n".join(status_message.split("\n")[:-1])
+                status_message = "\n".join(
+                    [status_message, status_lines[key]]
+                )
 
             elif key == "Wait":
                 status_message = "".join([status_message, status_lines[key]])
 
             elif key == "Done":
-                status_message = "\n".join(status_message.split("\n")[:-1])
-                status_message = "\n".join(
-                    [
-                        status_message,
-                        "".join([status_lines[current_key], progress_done]),
-                        status_lines[key],
-                    ]
-                )
                 status_message = "\n".join(status_message.split("\n")[1:])
-
-            elif key == "Error":
-                status_message = status_lines[key]
 
             else:
                 assert False, f"Key {key} is invalid"

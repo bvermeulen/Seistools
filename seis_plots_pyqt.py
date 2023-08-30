@@ -10,7 +10,7 @@ import datetime
 from functools import partial
 import warnings
 from pathlib import Path
-from vp_plots_module import DbUtils, VpAttributes, VpActivity
+from seis_plots_module import DbUtils, VpAttributes, VpActivity, NodeAttributes
 from PyQt6 import uic, QtWidgets
 from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
@@ -22,6 +22,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25B6"
 LEFT_ARROW_SYMBOL = "\u25C0"
 TIMER_DELAY = 750
+STATUS_DELAY = 0.750
 destination_folder_description = "Saved plots are stored in: "
 base_database = Path("D:\\OneDrive\\Work\\PDO\\")
 
@@ -31,7 +32,7 @@ class MplCanvas(FigureCanvas):
         super().__init__(fig)
 
 
-class VpAttrWorker(QObject):
+class SeisAttrWorker(QObject):
     finished = pyqtSignal(dict)
     progress = pyqtSignal(str)
     database = pyqtSignal(str)
@@ -42,29 +43,46 @@ class VpAttrWorker(QObject):
         self.database.emit(db_utils.database_name)
         figure_dict = {}
         self.progress.emit("Wait")
-        self.progress.emit("Load")
-        vp_df = db_utils.get_vp_data_by_date(production_date)
-        if vp_df.empty:
-            self.progress.emit("Error")
-            self.finished.emit(figure_dict)
-            return
+        time.sleep(STATUS_DELAY)
+        self.progress.emit("LoadVp")
+        time.sleep(STATUS_DELAY)
+        vp_df = db_utils.get_data_by_date("VP", production_date)
+        if not vp_df.empty:
+            vp_plot_attributes = VpAttributes(vp_df, production_date)
+            vp_plot_activity = VpActivity(vp_df, production_date)
+            self.progress.emit("VpAttr")
+            figure_dict["VpAttr"] = vp_plot_attributes.plot_vp_data()
+            time.sleep(STATUS_DELAY)
+            self.progress.emit("VpHist")
+            figure_dict["VpHist"] = vp_plot_attributes.plot_histogram_data()
+            time.sleep(STATUS_DELAY)
+            self.progress.emit("VpErr")
+            figure_dict["VpErr"] = vp_plot_attributes.plot_error_data()
+            time.sleep(STATUS_DELAY)
+            self.progress.emit("ActAll")
+            figure_dict["ActAll"] = vp_plot_activity.plot_vps_by_interval()
+            time.sleep(STATUS_DELAY)
+            self.progress.emit("ActEach")
+            figure_dict["ActEach"] = vp_plot_activity.plot_vps_by_vibe()
+            time.sleep(STATUS_DELAY)
 
-        vp_plot_attributes = VpAttributes(vp_df, production_date)
-        vp_plot_activity = VpActivity(vp_df, production_date)
-        self.progress.emit("VpAttr")
-        figure_dict["VpAttr"] = vp_plot_attributes.plot_vp_data()
-        self.progress.emit("VpHist")
-        figure_dict["VpHist"] = vp_plot_attributes.plot_histogram_data()
-        time.sleep(1)
-        self.progress.emit("VpErr")
-        figure_dict["VpErr"] = vp_plot_attributes.plot_error_data()
-        time.sleep(1)
-        self.progress.emit("ActAll")
-        figure_dict["ActAll"] = vp_plot_activity.plot_vps_by_interval()
-        time.sleep(1)
-        self.progress.emit("ActEach")
-        figure_dict["ActEach"] = vp_plot_activity.plot_vps_by_vibe()
-        time.sleep(1)
+        else:
+            self.progress.emit("NoVpData")
+            time.sleep(STATUS_DELAY)
+
+        self.progress.emit("LoadNode")
+        time.sleep(STATUS_DELAY)
+        node_df = db_utils.get_data_by_date("NODE", production_date)
+        if not node_df.empty:
+            node_plot_attributes = NodeAttributes(node_df, production_date)
+            self.progress.emit("NodeAttr")
+            figure_dict["NodeAttr"] = node_plot_attributes.plot_node_data()
+            time.sleep(STATUS_DELAY)
+
+        else:
+            self.progress.emit("NoNodeData")
+            time.sleep(STATUS_DELAY)
+
         self.progress.emit("Done")
         self.finished.emit(figure_dict)
 
@@ -72,57 +90,66 @@ class VpAttrWorker(QObject):
 class PyqtViewControl(QtWidgets.QMainWindow):
     """PyQt view and control"""
 
-    request_vp_attributes = pyqtSignal(object, object)
+    request_seis_attributes = pyqtSignal(object, object)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        uic.loadUi(Path(__file__).parent / "vp_plots.ui", self)
+        uic.loadUi(Path(__file__).parent / "seis_plots.ui", self)
         self.plot_dict = {
             "VpAttr": {
                 "index": 1,
                 "canvas": None,
-                "rb": self.RB_VpType_01,
-                "layout": self.FormLayoutVpType_01,
-                "save": self.ActionSaveVpType_01,
+                "rb": self.RB_Type_01,
+                "layout": self.FormLayoutType_01,
+                "save": self.ActionSaveType_01,
                 "file_name": "vp_attributes",
                 "fig": {},
             },
             "VpHist": {
                 "index": 2,
                 "canvas": None,
-                "rb": self.RB_VpType_02,
-                "layout": self.FormLayoutVpType_02,
-                "save": self.ActionSaveVpType_02,
+                "rb": self.RB_Type_02,
+                "layout": self.FormLayoutType_02,
+                "save": self.ActionSaveType_02,
                 "file_name": "vp_histograms",
                 "fig": {},
             },
             "VpErr": {
                 "index": 3,
                 "canvas": None,
-                "rb": self.RB_VpType_03,
-                "layout": self.FormLayoutVpType_03,
-                "save": self.ActionSaveVpType_03,
+                "rb": self.RB_Type_03,
+                "layout": self.FormLayoutType_03,
+                "save": self.ActionSaveType_03,
                 "file_name": "vp_error_bars",
                 "fig": {},
             },
             "ActAll": {
                 "index": 4,
                 "canvas": None,
-                "rb": self.RB_VpType_04,
-                "layout": self.FormLayoutVpType_04,
-                "save": self.ActionSaveVpType_04,
+                "rb": self.RB_Type_04,
+                "layout": self.FormLayoutType_04,
+                "save": self.ActionSaveType_04,
                 "file_name": "vp_activity_all",
                 "fig": {},
             },
             "ActEach": {
                 "index": 5,
                 "canvas": None,
-                "rb": self.RB_VpType_05,
-                "layout": self.FormLayoutVpType_05,
-                "save": self.ActionSaveVpType_05,
+                "rb": self.RB_Type_05,
+                "layout": self.FormLayoutType_05,
+                "save": self.ActionSaveType_05,
                 "file_name": "vp_activity_each",
                 "fig": {},
             },
+            "NodeAttr": {
+                "index": 6,
+                "canvas": None,
+                "rb": self.RB_Type_06,
+                "layout": self.FormLayoutType_06,
+                "save": self.ActionSaveType_06,
+                "file_name": "node_attributes",
+                "fig": {},
+            }
         }
         self.ActionQuit.triggered.connect(self.quit)
         self.ActionDefaultDatabase.triggered.connect(
@@ -148,7 +175,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.project = None
         self.database_name = None
         self.destination_folder = Path(sys.path[0])
-        self.RB_VpType_01.setChecked(True)
+        self.RB_Type_01.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
         self.StatusDatabaseLabel.setText("")
         self.StatusDestinationLabel.setText(
@@ -162,7 +189,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             return
 
         self.thread = QThread()
-        self.worker = VpAttrWorker()
+        self.worker = SeisAttrWorker()
         self.worker.moveToThread(self.thread)
         self.worker.finished.connect(self.update_canvas_data)
         self.worker.finished.connect(self.thread.quit)
@@ -170,8 +197,8 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.thread.finished.connect(self.thread.deleteLater)
         self.worker.progress.connect(self.get_progress_key)
         self.worker.database.connect(self.get_database_name)
-        self.request_vp_attributes.connect(self.worker.run)
-        self.request_vp_attributes.emit(self.project, self.production_date)
+        self.request_seis_attributes.connect(self.worker.run)
+        self.request_seis_attributes.emit(self.project, self.production_date)
         self.enable_disable_buttons(enabled=False)
         self.thread.start()
         self.progress_key = "Wait"
@@ -186,16 +213,16 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.update_progress_message()
         self.timer.stop()
 
-        if not figure_dict:
-            return
-
         for key, value in self.plot_dict.items():
             value["fig"] = figure_dict.get(key)
             if value["canvas"]:
+                value["canvas"].hide()
                 value["layout"].removeWidget(value["canvas"])
+                value["canvas"] = None
 
-            value["canvas"] = MplCanvas(value["fig"])
-            value["layout"].addWidget(value["canvas"])
+            if value["fig"]:
+                value["canvas"] = MplCanvas(value["fig"])
+                value["layout"].addWidget(value["canvas"])
 
     def enable_disable_buttons(self, enabled=False):
         self.DateEdit.setEnabled(enabled)
