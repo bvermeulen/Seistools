@@ -107,6 +107,16 @@ def status_message_generator(key):
                 status_message = "".join([status_message, status_lines[key]])
 
             elif key == "Done":
+                if current_key in ["NoVpData", "NoNodeData"]:
+                    pass
+                else:
+                    status_message = "\n".join(status_message.split("\n")[:-1])
+                    status_message = "\n".join(
+                        [
+                            status_message,
+                            "".join([status_lines[current_key], progress_done]),
+                        ]
+                    )
                 status_message = "\n".join(status_message.split("\n")[1:])
 
             else:

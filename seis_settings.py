@@ -44,12 +44,11 @@ RESULTS_FOLDER = (
 )
 DATABASE = PROJECT_PATH / files["DATABASE"]
 
-general = seis_config["general"]
-FLEETS = general["FLEETS"]
-SWEEP_TIME = general["SWEEP_TIME"]
-PAD_DOWN_TIME = general["PAD_DOWN_TIME"]
+FLEETS = seis_config["general"]["FLEETS"]
+SWEEP_TIME = seis_config["general"]["SWEEP_TIME"]
+PAD_DOWN_TIME = seis_config["general"]["PAD_DOWN_TIME"]
 # if distance < DENSE_CRITERIUM then dense_flag is true
-DENSE_CRITERIUM = general["DENSE_CRITERIUM"]
+DENSE_CRITERIUM = seis_config["general"]["DENSE_CRITERIUM"]
 
 EXPIRY_DATE = datetime.date(2024, 8, 31)
 LINK_VP_TO_VAPS = False

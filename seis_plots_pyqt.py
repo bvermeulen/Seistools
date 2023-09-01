@@ -10,6 +10,7 @@ import datetime
 from functools import partial
 import warnings
 from pathlib import Path
+#import ptvsd -- for debugging the thread
 from seis_plots_module import DbUtils, VpAttributes, VpActivity, NodeAttributes
 from PyQt6 import uic, QtWidgets
 from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
@@ -39,6 +40,7 @@ class SeisAttrWorker(QObject):
 
     @pyqtSlot(object, object)
     def run(self, project, production_date):
+        # ptvsd.debug_this_thread()
         db_utils = DbUtils(database=project) if project else DbUtils()
         self.database.emit(db_utils.database_name)
         figure_dict = {}

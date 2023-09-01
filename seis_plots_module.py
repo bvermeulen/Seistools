@@ -9,7 +9,7 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 from scipy import stats
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mtick
@@ -57,18 +57,25 @@ class DbUtils:
             case other:
                 assert False, f'{type_data} is invalid, must be "VP" or "NODE"'
 
-        # return empty dataframe if production date is later then the date of the most recent uploaded data.
+        # return an empty dataframe if production date is not within the date range of the uploaded data.
+        # filename for vaps must be in format <YY><DOY>, and for node <YY><MM><DD>
         try:
             with engine.connect() as con:
-                file_name = con.execute(f"select file_name from {file_table} order by file_name desc").fetchone()[0]
-                max_date = (
-                    datetime.datetime.strptime(file_name[2:7], '%y%j').date() if type_data.upper() == "VP"
-                    else datetime.datetime.strptime(file_name[0:6], '%y%m%d').date()
+                file_names = [row[0] for row in con.execute(f"select file_name from {file_table} order by file_name asc")]
+                if not file_names:
+                    return pd.DataFrame()
+                min_date = (
+                    datetime.datetime.strptime(file_names[0][2:7], '%y%j').date() if type_data.upper() == "VP"
+                    else datetime.datetime.strptime(file_names[0][0:6], '%y%m%d').date()
                 )
-                if production_date > max_date:
+                max_date = (
+                    datetime.datetime.strptime(file_names[-1][2:7], '%y%j').date() if type_data.upper() == "VP"
+                    else datetime.datetime.strptime(file_names[-1][0:6], '%y%m%d').date()
+                )
+                if not (min_date <= production_date <= max_date):
                     return pd.DataFrame()
         except Exception as e:
-            # on error just continue without checking the production date
+            # on error just continue without checking the dates
             pass
 
         # extract data
