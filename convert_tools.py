@@ -18,11 +18,11 @@ degree_symbol = "\u00B0"
 match os.name:
     case "nt":
         convert_config_file = (
-            Path.home() / "AppData/Roaming/PythonAppConfig" / "convert_config.json"
+            Path.home() / "AppData/Roaming/SeistooolsConfig" / "convert_config.json"
         )
     case "posix":
         convert_config_file = (
-            Path.home() / ".config/PythonAppConfig" / "convert_config.json"
+            Path.home() / ".config/SeistoolsConfig" / "convert_config.json"
         )
     case other:
         assert False, f"{os.name} is not implemented"
