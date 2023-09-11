@@ -18,7 +18,7 @@ degree_symbol = "\u00B0"
 match os.name:
     case "nt":
         convert_config_file = (
-            Path.home() / "AppData/Roaming/SeistooolsConfig" / "convert_config.json"
+            Path.home() / "AppData/Roaming/SeistoolsConfig" / "convert_config.json"
         )
     case "posix":
         convert_config_file = (
