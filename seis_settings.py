@@ -9,7 +9,7 @@ from pathlib import Path
 match os.name:
     case "nt":
         seis_config_file = (
-            Path.home() / "AppData/Roaming/SeistoolConfig" / "seis_config.json"
+            Path.home() / "AppData/Roaming/SeistoolsConfig" / "seis_config.json"
         )
     case "posix":
         seis_config_file = Path.home() / ".config/SeistoolsConfig" / "seis_config.json"
