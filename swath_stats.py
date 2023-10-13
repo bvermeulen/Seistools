@@ -510,7 +510,7 @@ class SwathProdCalc(OutputMixin):
             vp_sabkha += vp_sabkha_infill
             dozer_km_vp += dozer_km_infill
 
-        if area > 0:
+        if vp_actual > 0:
             vp_density = vp_actual / area
             ctm = (
                 cfg.ctm_constant
