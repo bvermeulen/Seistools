@@ -153,33 +153,33 @@ def test_dms_to_dec_degree_value():
     assert val2 == pytest.approx(18.102086)
 
 
-def test_utm40n_to_wgs84():
+def test_utm_to_wgs84():
     easting, northing = 384629.55, 2001821.11
-    val1, val2 = ctools.utm40n_to_wgs84(easting, northing)
+    val1, val2 = ctools.utm_to_wgs84(easting, northing)
     assert val1 == pytest.approx(55.909611)
     assert val2 == pytest.approx(18.102086)
 
     easting, northing = 459302.27, 2418372.34
-    val1, val2 = ctools.utm40n_to_wgs84(easting, northing)
+    val1, val2 = ctools.utm_to_wgs84(easting, northing)
     assert val1 == pytest.approx(56.606085)
     assert val2 == pytest.approx(21.868937)
 
 
-def test_psd93_to_wgs84():
+def test_local_to_wgs84():
     easting, northing = 384339.0, 2001588.0
-    val1, val2 = ctools.psd93_to_wgs84(easting, northing)
+    val1, val2 = ctools.local_to_wgs84(easting, northing)
     assert val1 == pytest.approx(55.909611)
     assert val2 == pytest.approx(18.102086)
 
     easting, northing = 459012.0, 2418130.0
-    val1, val2 = ctools.psd93_to_wgs84(easting, northing)
+    val1, val2 = ctools.local_to_wgs84(easting, northing)
     assert val1 == pytest.approx(56.606085)
     assert val2 == pytest.approx(21.868937)
 
 
-def test_wgs84_to_utm40n():
+def test_wgs84_to_utm():
     lon, lat = 55.909611, 18.102086
-    val1, val2 = ctools.wgs84_to_utm40n(lon, lat)
+    val1, val2 = ctools.wgs84_to_utm(lon, lat)
     assert val1 == pytest.approx(384629.55)
     assert val2 == pytest.approx(2001821.11)
 
@@ -187,14 +187,14 @@ def test_wgs84_to_utm40n():
         56.606085,
         21.868937,
     )
-    val1, val2 = ctools.wgs84_to_utm40n(lon, lat)
+    val1, val2 = ctools.wgs84_to_utm(lon, lat)
     assert val1 == pytest.approx(459302.27)
     assert val2 == pytest.approx(2418372.34)
 
 
-def test_wgs84_to_psd93():
+def test_wgs84_to_local():
     lon, lat = 55.909611, 18.102086
-    val1, val2 = ctools.wgs84_to_psd93(lon, lat)
+    val1, val2 = ctools.wgs84_to_local(lon, lat)
     assert val1 == pytest.approx(384338.97)
     assert val2 == pytest.approx(2001588.03)
 
@@ -202,30 +202,30 @@ def test_wgs84_to_psd93():
         56.606085,
         21.868937,
     )
-    val1, val2 = ctools.wgs84_to_psd93(lon, lat)
+    val1, val2 = ctools.wgs84_to_local(lon, lat)
     assert val1 == pytest.approx(459012.0)
     assert val2 == pytest.approx(2418130.0)
 
 
-def test_utm40n_to_psd93():
+def test_utm_to_local():
     easting, northing = 459302.27, 2418372.34
-    val1, val2 = ctools.utm40n_to_psd93(easting, northing)
+    val1, val2 = ctools.utm_to_local(easting, northing)
     assert val1 == pytest.approx(459012)
     assert val2 == pytest.approx(2418130)
 
     easting, northing = 384629.55, 2001821.11
-    val1, val2 = ctools.utm40n_to_psd93(easting, northing)
+    val1, val2 = ctools.utm_to_local(easting, northing)
     assert val1 == pytest.approx(384339.0)
     assert val2 == pytest.approx(2001588.0)
 
 
-def test_psd93_to_utm40n():
+def test_local_to_utm():
     easting, northing = 459012.0, 2418130.0
-    val1, val2 = ctools.psd93_to_utm40n(easting, northing)
+    val1, val2 = ctools.local_to_utm(easting, northing)
     assert val1 == pytest.approx(459302.27)
     assert val2 == pytest.approx(2418372.34)
 
     easting, northing = 384339.0, 2001588.0
-    val1, val2 = ctools.psd93_to_utm40n(easting, northing)
+    val1, val2 = ctools.local_to_utm(easting, northing)
     assert val1 == pytest.approx(384629.55)
     assert val2 == pytest.approx(2001821.11)

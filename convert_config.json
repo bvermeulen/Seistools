@@ -1,11 +1,17 @@
 {
+    "title": "<html><head/><body><p align=\"center\"><span style=\"font-size:10pt;\">Convert coordinates<br>(Oman PSD93)</span></p></body></html>",
     "prefix": "23XX",
-    "origin":
-        {
-            "line": 1000,
-            "station": 1000,
-            "x": 350000,
-            "y": 2300000,
-            "interval": 10.00
-        }
+    "projection": {
+        "utm_zone": "40N",
+        "utm_proj": "epsg: 32640",
+        "local_name": "PSD93",
+        "local_proj": "+proj=utm +zone=40 +a=6378249.145 +rf=293.465 +towgs84=-180.624,-225.516, 173.919, -0.81,-1.898,8.336,16.71006 +units=m +no_defs +type=crs"
+    },
+    "origin": {
+        "line": 1000,
+        "station": 1000,
+        "x": 350000,
+        "y": 2300000,
+        "interval": 10.00
     }
+}

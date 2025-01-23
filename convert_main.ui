@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>298</width>
-    <height>500</height>
+    <width>261</width>
+    <height>457</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
-   <widget class="QPushButton" name="pb3_wgs84_utm40">
+   <widget class="QPushButton" name="pb3_wgs84_utm">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -27,10 +27,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>WGS84 -&gt; UTM 40N</string>
+     <string>WGS84 -&gt; UTM</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb2_psd93_wgs84">
+   <widget class="QPushButton" name="pb2_local_wgs84">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -40,10 +40,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>PSD93 -&gt; WGS84</string>
+     <string>local -&gt; WGS84</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb5_psd93_utm40">
+   <widget class="QPushButton" name="pb5_local_utm">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -53,10 +53,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>PSD93 -&gt; UTM 40N</string>
+     <string>local -&gt; UTM</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb4_utm40_wgs84">
+   <widget class="QPushButton" name="pb4_utm_wgs84">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -66,10 +66,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>UTM 40N -&gt; WGS84</string>
+     <string>UTM -&gt; WGS84</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb8_grid_psd93">
+   <widget class="QPushButton" name="pb8_grid_local">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -79,10 +79,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>Grid -&gt; PSD93</string>
+     <string>grid -&gt; local</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb6_utm40_psd93">
+   <widget class="QPushButton" name="pb6_utm_local">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -92,10 +92,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>UTM 40N -&gt; PSD93</string>
+     <string>UTM -&gt; local</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb9_psd93_grid">
+   <widget class="QPushButton" name="pb9_local_grid">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -105,10 +105,10 @@
      </rect>
     </property>
     <property name="text">
-     <string>PSD93 -&gt; Grid</string>
+     <string>local -&gt; grid</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pb1_wgs84_psd93">
+   <widget class="QPushButton" name="pb1_wgs84_local">
     <property name="geometry">
      <rect>
       <x>60</x>
@@ -118,7 +118,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>WGS84 -&gt; PSD93</string>
+     <string>WGS84 -&gt; local</string>
     </property>
     <property name="default">
      <bool>false</bool>
@@ -140,7 +140,7 @@
      <string>Lat-Lon</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="title_label">
     <property name="enabled">
      <bool>true</bool>
     </property>
@@ -155,7 +155,6 @@
     <property name="font">
      <font>
       <pointsize>10</pointsize>
-      <weight>75</weight>
       <bold>true</bold>
       <kerning>false</kerning>
      </font>
@@ -167,11 +166,10 @@
      <number>1</number>
     </property>
     <property name="text">
-     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Convert coordinates&lt;br&gt;(Oman PSD93)&lt;/span&gt;&lt;/body&gt;&lt;/head&gt;&lt;/html&gt;
-</string>
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:14pt;&quot;&gt;Title&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
     </property>
-    <property name="textFormat">
-     <enum>Qt::AutoText</enum>
+    <property name="wordWrap">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -180,8 +178,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>298</width>
-     <height>26</height>
+     <width>261</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuExit">
@@ -229,15 +227,15 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>pb1_wgs84_psd93</tabstop>
-  <tabstop>pb2_psd93_wgs84</tabstop>
-  <tabstop>pb3_wgs84_utm40</tabstop>
-  <tabstop>pb4_utm40_wgs84</tabstop>
-  <tabstop>pb5_psd93_utm40</tabstop>
-  <tabstop>pb6_utm40_psd93</tabstop>
+  <tabstop>pb1_wgs84_local</tabstop>
+  <tabstop>pb2_local_wgs84</tabstop>
+  <tabstop>pb3_wgs84_utm</tabstop>
+  <tabstop>pb4_utm_wgs84</tabstop>
+  <tabstop>pb5_local_utm</tabstop>
+  <tabstop>pb6_utm_local</tabstop>
   <tabstop>pb7_lon_lat</tabstop>
-  <tabstop>pb8_grid_psd93</tabstop>
-  <tabstop>pb9_psd93_grid</tabstop>
+  <tabstop>pb8_grid_local</tabstop>
+  <tabstop>pb9_local_grid</tabstop>
  </tabstops>
  <resources/>
  <connections/>
