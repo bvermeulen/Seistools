@@ -70,12 +70,12 @@ class ConvertTools:
             lat_d = float(lat.group(1))
             lat_m = float(lat.group(2))
             lat_s = float(lat.group(3))
-            lat_ns = lat.group(4)
+            lat_ns = lat.group(4).upper()
 
             lon_d = float(lon.group(1))
             lon_m = float(lon.group(2))
             lon_s = float(lon.group(3))
-            lon_ew = lon.group(4)
+            lon_ew = lon.group(4).upper()
 
             # check correct ranges
             if not (0 <= lat_d < 180) or not (0 <= lon_d < 180):
@@ -85,6 +85,9 @@ class ConvertTools:
                 return -1, -1
 
             if not (0 <= lat_s < 60) or not (0 <= lon_s < 60):
+                return -1, -1
+
+            if not (lat_ns in ["N", "S"]) or not (lon_ew in ["E", "W"]):
                 return -1, -1
 
             latitude = lat_d + lat_m / 60 + lat_s / 3600

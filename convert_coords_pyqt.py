@@ -322,7 +322,7 @@ class DialogFloatFloat(QtWidgets.QDialog):
                 f_fmt = ".6f"
 
             case ConvertChoice.wgs84_utm:
-                val1, val2 = convert.wgs84_to_utmn(val1, val2)
+                val1, val2 = convert.wgs84_to_utm(val1, val2)
                 f_fmt = ".2f"
 
             case ConvertChoice.utm_wgs84:
@@ -370,15 +370,17 @@ class DialogDMSFloat(QtWidgets.QDialog):
     def action_convert(self, convert_choice):
         self.lineEditOutput_1.setText("")
         self.lineEditOutput_2.setText("")
-        val1 = self.lineEditInput_1.text()
+        val1 = self.lineEditInput_1.text() if self.lineEditInput_1.text() else "0"
         val2 = self.lineEditInput_2.text() if self.lineEditInput_2.text() else "0"
         val3 = self.lineEditInput_3.text() if self.lineEditInput_3.text() else "0"
-        val4 = self.lineEditInput_4.text()
+        val4 = self.lineEditInput_4.text() if self.lineEditInput_4.text() else "E"
         val5 = self.lineEditInput_5.text() if self.lineEditInput_5.text() else "0"
         val6 = self.lineEditInput_6.text() if self.lineEditInput_6.text() else "0"
+        val7 = self.lineEditInput_7.text() if self.lineEditInput_7.text() else "0"
+        val8 = self.lineEditInput_8.text() if self.lineEditInput_8.text() else "N"
 
-        val1 = "".join([val1, "\u00B0", val2, "'", val3, '"', "E"])
-        val2 = "".join([val4, "\u00B0", val5, "'", val6, '"', "N"])
+        val1 = "".join([val1, "\u00B0", val2, "'", val3, '"', val4])
+        val2 = "".join([val5, "\u00B0", val6, "'", val7, '"', val8])
         val1, val2 = convert.convert_dms_to_dec_degree(val1, val2)
         if val1 == -1 and val2 == -1:
             return

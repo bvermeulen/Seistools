@@ -18,9 +18,15 @@
     <rect>
      <x>90</x>
      <y>40</y>
-     <width>21</width>
+     <width>41</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -38,7 +44,6 @@
    <property name="font">
     <font>
      <pointsize>10</pointsize>
-     <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
@@ -90,9 +95,14 @@
     <rect>
      <x>90</x>
      <y>130</y>
-     <width>113</width>
+     <width>141</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -106,9 +116,14 @@
     <rect>
      <x>90</x>
      <y>160</y>
-     <width>113</width>
+     <width>141</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -159,11 +174,17 @@
   <widget class="QLineEdit" name="lineEditInput_2">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>140</x>
      <y>40</y>
-     <width>21</width>
+     <width>31</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -172,37 +193,36 @@
   <widget class="QLineEdit" name="lineEditInput_3">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>180</x>
      <y>40</y>
-     <width>41</width>
+     <width>51</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
    </property>
    <property name="text">
     <string/>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEditInput_6">
+  <widget class="QLineEdit" name="lineEditInput_7">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>180</x>
      <y>70</y>
-     <width>41</width>
+     <width>51</width>
      <height>22</height>
     </rect>
    </property>
-   <property name="text">
-    <string/>
-   </property>
-  </widget>
-  <widget class="QLineEdit" name="lineEditInput_4">
-   <property name="geometry">
-    <rect>
-     <x>90</x>
-     <y>70</y>
-     <width>21</width>
-     <height>22</height>
-    </rect>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -211,11 +231,36 @@
   <widget class="QLineEdit" name="lineEditInput_5">
    <property name="geometry">
     <rect>
-     <x>120</x>
+     <x>90</x>
      <y>70</y>
-     <width>21</width>
+     <width>41</width>
      <height>22</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditInput_6">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>70</y>
+     <width>31</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
    </property>
    <property name="text">
     <string/>
@@ -224,7 +269,7 @@
   <widget class="QLabel" name="DMSLabel1">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>130</x>
      <y>40</y>
      <width>16</width>
      <height>16</height>
@@ -237,7 +282,7 @@
   <widget class="QLabel" name="DMSLabel1_2">
    <property name="geometry">
     <rect>
-     <x>110</x>
+     <x>130</x>
      <y>70</y>
      <width>16</width>
      <height>16</height>
@@ -250,7 +295,7 @@
   <widget class="QLabel" name="DMSLabel1_3">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>170</x>
      <y>70</y>
      <width>16</width>
      <height>16</height>
@@ -263,7 +308,7 @@
   <widget class="QLabel" name="DMSLabel1_4">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>170</x>
      <y>40</y>
      <width>16</width>
      <height>16</height>
@@ -276,27 +321,71 @@
   <widget class="QLabel" name="DMSLabel1_5">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>230</x>
      <y>40</y>
      <width>16</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>&quot; E</string>
+    <string>&quot;</string>
    </property>
   </widget>
   <widget class="QLabel" name="DMSLabel1_6">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>230</x>
      <y>70</y>
      <width>21</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>&quot; N</string>
+    <string>&quot;</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditInput_4">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>40</y>
+     <width>31</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="placeholderText">
+    <string>E</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="lineEditInput_8">
+   <property name="geometry">
+    <rect>
+     <x>240</x>
+     <y>70</y>
+     <width>31</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>Segoe UI</family>
+     <kerning>false</kerning>
+    </font>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="placeholderText">
+    <string>N</string>
    </property>
   </widget>
  </widget>
@@ -307,6 +396,8 @@
   <tabstop>lineEditInput_4</tabstop>
   <tabstop>lineEditInput_5</tabstop>
   <tabstop>lineEditInput_6</tabstop>
+  <tabstop>lineEditInput_7</tabstop>
+  <tabstop>lineEditInput_8</tabstop>
   <tabstop>pb_convert</tabstop>
   <tabstop>pb_exit</tabstop>
   <tabstop>lineEditOutput_2</tabstop>
