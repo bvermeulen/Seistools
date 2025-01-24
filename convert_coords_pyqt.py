@@ -453,11 +453,11 @@ class DialogFloatDMS(QtWidgets.QDialog):
         if lon and lat:
             self.lineEditOutput_1.setText(f"{float(lon.group(1)):.0f}")
             self.lineEditOutput_2.setText(f"{float(lon.group(2)):.0f}")
-            self.lineEditOutput_3.setText(f"{float(lon.group(3)):.2f}")
+            self.lineEditOutput_3.setText(f"{float(lon.group(3)):.3f}")
             self.lineEditOutput_4.setText(f"{lon.group(4)}")
             self.lineEditOutput_5.setText(f"{float(lat.group(1)):.0f}")
             self.lineEditOutput_6.setText(f"{float(lat.group(2)):.0f}")
-            self.lineEditOutput_7.setText(f"{float(lat.group(3)):.2f}")
+            self.lineEditOutput_7.setText(f"{float(lat.group(3)):.3f}")
             self.lineEditOutput_8.setText(f"{lat.group(4)}")
 
         else:

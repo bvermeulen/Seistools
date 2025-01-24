@@ -179,7 +179,7 @@
     <rect>
      <x>180</x>
      <y>130</y>
-     <width>51</width>
+     <width>61</width>
      <height>22</height>
     </rect>
    </property>
@@ -195,7 +195,7 @@
     <rect>
      <x>180</x>
      <y>160</y>
-     <width>51</width>
+     <width>61</width>
      <height>22</height>
     </rect>
    </property>
@@ -241,7 +241,7 @@
   <widget class="QLineEdit" name="lineEditOutput_4">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>250</x>
      <y>130</y>
      <width>31</width>
      <height>22</height>
@@ -257,7 +257,7 @@
   <widget class="QLineEdit" name="lineEditOutput_8">
    <property name="geometry">
     <rect>
-     <x>240</x>
+     <x>250</x>
      <y>160</y>
      <width>31</width>
      <height>22</height>
@@ -325,7 +325,7 @@
   <widget class="QLabel" name="DMSLabel1_9">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>240</x>
      <y>130</y>
      <width>16</width>
      <height>16</height>
@@ -338,7 +338,7 @@
   <widget class="QLabel" name="DMSLabel1_10">
    <property name="geometry">
     <rect>
-     <x>230</x>
+     <x>240</x>
      <y>160</y>
      <width>16</width>
      <height>16</height>
