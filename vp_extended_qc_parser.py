@@ -1,5 +1,6 @@
 """ module to parse Extended QC files
 """
+
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -216,7 +217,7 @@ def parse_line(ext_qc, line):
     return ext_qc, None
 
 
-def extended_qc_generator(fn: Path) -> list:
+def extended_qc_generator(fn: Path):
     read_lines = read_line_generator(fn)
     ext_qc = ExtendedQcFields(*[None] * len(ExtendedQcFields.__annotations__))
     ext_qc.attributes_df = pd.DataFrame(columns=df_columns)
