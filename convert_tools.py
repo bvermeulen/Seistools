@@ -4,11 +4,13 @@
     longitude, latitude, where x is the first and y is the second argument
     grid conversion is project dependent
 """
+
 import os
 import re
 import json
 from pathlib import Path
 from dataclasses import dataclass
+import numpy as np
 from shapely.geometry import Point
 from pyproj import Proj
 
@@ -29,6 +31,7 @@ match os.name:
 
 with open(convert_config_file, "rt") as f:
     config = json.load(f)
+
 title = config["title"]
 prefix = config["prefix"]
 origin = config["origin"]
@@ -39,6 +42,7 @@ local_name = projection["local_name"]
 
 @dataclass
 class GridOrigin:
+    azimuth: float = origin["azimuth"]
     line: int = origin["line"]
     station: int = origin["station"]
     x: float = origin["x"]
@@ -49,6 +53,16 @@ class GridOrigin:
 class ConvertTools:
     proj_local = Proj(projection["local_proj"])
     proj_utm = Proj(projection["utm_proj"])
+
+    @staticmethod
+    def transformation() -> tuple[float, float]:
+        """transformation from interval to their corresponding x,  y components
+        based on azimuth
+        """
+        azimuth = np.pi / 180 * GridOrigin().azimuth
+        sin_azm = np.sin(azimuth)
+        cos_azm = np.cos(azimuth)
+        return sin_azm, cos_azm
 
     @staticmethod
     def strip_lon_lat(longitude: str, latitude: str) -> tuple[re.Match, re.Match]:
@@ -171,20 +185,24 @@ class ConvertTools:
         converted_point = Point(self.proj_local(converted_point.x, converted_point.y))
         return converted_point.x, converted_point.y
 
-    @staticmethod
-    def grid_local(line, station):
+    def grid_local(self, line, station):
         # grid to local easting, northing
         origin = GridOrigin()
-        interval = origin.interval
-        easting = (line - origin.line) * interval + origin.x
-        northing = (station - origin.station) * interval + origin.y
+        sin_azm, cos_azm = self.transformation()
+        # step 1 move to origin with respect to the line number
+        new_origin_x = (line - origin.line) * cos_azm * origin.interval + origin.x
+        new_origin_y = -(line - origin.line) * sin_azm * origin.interval + origin.y
+        # step 2 calculate x, y with respect to the new origin
+        easting = (station - origin.station) * sin_azm * origin.interval + new_origin_x
+        northing = (station - origin.station) * cos_azm * origin.interval + new_origin_y
         return easting, northing
 
-    @staticmethod
-    def local_grid(easting, northing):
+    def local_grid(self, easting, northing):
         # local easting, northing to grid
         origin = GridOrigin()
-        inv_interval = 1 / origin.interval
-        line = origin.line + round((easting - origin.x) * inv_interval / 32) * 32.0
-        station = origin.station + round((northing - origin.y) * inv_interval / 4) * 4.0
+        sin_azm, cos_azm = self.transformation()
+        x1 = (easting - origin.x) * sin_azm + (northing - origin.y) * cos_azm
+        y1 = (easting - origin.x) * cos_azm - (northing - origin.y) * sin_azm
+        station = round(x1 / origin.interval + origin.station, 0)
+        line = round(y1 / origin.interval + origin.line,0)
         return line, station
