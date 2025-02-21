@@ -1,5 +1,6 @@
 """ application to work with vibrator extended QC
 """
+
 from pathlib import Path
 import pandas as pd
 from seis_settings import GMT_OFFSET
@@ -8,7 +9,7 @@ from seis_vibe_database import VpDb
 import vp_extended_qc_parser_ve464 as parser
 
 
-qc_columns= [
+qc_columns = [
     "line",
     "station",
     "vibrator",
@@ -34,6 +35,10 @@ qc_columns= [
     "start_visc",
     "time_break",
 ]
+
+# skip last sample -1; to include last give the value 9999
+LAST_SAMPLE = -1
+
 
 class VpExtendedQc:
     def __init__(self, filename: Path):
@@ -66,16 +71,21 @@ class VpExtendedQc:
         for extended_qc_record in extended_qc_iterator:
             start_time_index = extended_qc_record.time_inhibit - 1
             start_visc_index = extended_qc_record.time_inhibit - 1
+            end_time_index = LAST_SAMPLE
             ext_qc_df = extended_qc_record.attributes_df
-            avg_vals = ext_qc_df[start_time_index :][
+            avg_vals = ext_qc_df[start_time_index:end_time_index][
                 ["phase", "dist", "force"]
             ].mean()
-            peak_vals = ext_qc_df[start_time_index :][
+            peak_vals = ext_qc_df[start_time_index:end_time_index][
                 ["phase", "dist", "force"]
             ].max()
-            avg_visc = ext_qc_df[start_visc_index :][["visc", "stiff"]].mean()
-            peak_visc = ext_qc_df[start_visc_index :][["visc", "stiff"]].max()
-            count_limits = ext_qc_df[start_time_index :][
+            avg_visc = ext_qc_df[start_visc_index:end_time_index][
+                ["visc", "stiff"]
+            ].mean()
+            peak_visc = ext_qc_df[start_visc_index:end_time_index][
+                ["visc", "stiff"]
+            ].max()
+            count_limits = ext_qc_df[start_time_index:end_time_index][
                 ["limit_f", "limit_p", "limit_m", "limit_v", "limit_e"]
             ].sum()
             production_date = (extended_qc_record.time_break + GMT_OFFSET).date()
@@ -123,11 +133,19 @@ class VpExtendedQc:
             next(progress_message)
 
         csv_file = self.filename.parent / "".join([self.filename.stem, ".csv"])
-        print(attributes_df)
+        print("\n",
+            attributes_df[
+                [
+                    val
+                    for i, val in enumerate(qc_columns)
+                    if i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 21, 23]
+                ]
+            ]
+        )
         attributes_df.to_csv(csv_file, date_format="%Y-%m-%d %H:%M:%S.%f", index=False)
 
 
 if __name__ == "__main__":
-    filename = Path("./data_files/dsd05_250202.txt")
+    filename = Path("./data_files/250214_dsd01_700101.txt")
     extended_qc = VpExtendedQc(filename)
     extended_qc.vp_attributes(location=False)
