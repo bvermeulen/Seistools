@@ -88,6 +88,10 @@ class VpExtendedQc:
             count_limits = ext_qc_df[start_time_index:end_time_index][
                 ["limit_f", "limit_p", "limit_m", "limit_v", "limit_e"]
             ].sum()
+            avg_vals.fillna(0, inplace=True)
+            peak_vals.fillna(0, inplace=True)
+            avg_visc.fillna(0, inplace=True)
+            peak_visc.fillna(0, inplace=True)
             production_date = (extended_qc_record.time_break + GMT_OFFSET).date()
             vibrator_id = extended_qc_record.fleet_number
             tb_ext_qc = extended_qc_record.time_break
@@ -146,6 +150,6 @@ class VpExtendedQc:
 
 
 if __name__ == "__main__":
-    filename = Path("./data_files/250214_dsd01_700101.txt")
+    filename = Path("./data_files/250223_dsd03.txt")
     extended_qc = VpExtendedQc(filename)
     extended_qc.vp_attributes(location=False)
