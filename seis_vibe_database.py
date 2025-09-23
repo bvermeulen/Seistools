@@ -8,7 +8,7 @@ from seis_settings import (
     SWEEP_TIME,
     PAD_DOWN_TIME,
     DENSE_CRITERIUM,
-    EPSG_PSD93,
+    EPSG_PROJECT,
     VapsTable,
     VpTable,
 )
@@ -98,7 +98,7 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vp}", '
-            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+            f'"geom", {EPSG_PROJECT}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -154,7 +154,7 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vaps}", '
-            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+            f'"geom", {int(EPSG_PROJECT)}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -237,7 +237,7 @@ class VpDb:
                     vp_record.qc_flag,
                     point.x,
                     point.y,
-                    EPSG_PSD93,
+                    EPSG_PROJECT,
                 ),
             )
 
@@ -321,7 +321,7 @@ class VpDb:
                     vaps_record.positioning,
                     point.x,
                     point.y,
-                    EPSG_PSD93,
+                    EPSG_PROJECT,
                 ),
             )
             next(progress_message)

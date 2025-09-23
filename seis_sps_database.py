@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from shapely.geometry import Point
 import seis_utils
-from seis_settings import EPSG_PSD93
+from seis_settings import EPSG_PROJECT
 from seis_database import DbUtils
 
 
@@ -66,7 +66,7 @@ class SpsDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_sps}", '
-            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+            f'"geom", {EPSG_PROJECT}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -141,7 +141,7 @@ class SpsDb:
                     sps_record.vibrator,
                     point.x,
                     point.y,
-                    EPSG_PSD93,
+                    EPSG_PROJECT,
                 ),
             )
             next(progress_message)

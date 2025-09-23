@@ -1,5 +1,5 @@
-""" Read noise test for Quantum nodes and store to database
-"""
+"""Read noise test for Quantum nodes and store to database"""
+
 from datetime import datetime
 import dataclasses
 import pandas as pd
@@ -38,8 +38,12 @@ class Rcv:
 
             if bits_df.empty:
                 continue
+
+            # filter out duplicate tests on the same day and keep the last
+            bits_df["test_date"] = bits_df.apply(lambda x: x[6].date(), axis=1)
+            bits_df = bits_df.drop_duplicates(subset=[0, "test_date"], keep="last")
+            # sort on line and station
             bits_df.sort_values(by=[1, 2], inplace=True)
-            bits_df = bits_df.drop_duplicates(subset=[0], keep="last")
             node_records = []
 
             progress_bar = seis_utils.set_progress_bar(
@@ -74,26 +78,26 @@ class Rcv:
             node_record.line = int(bits_row[1])
             node_record.station = int(bits_row[2])
             node_record.rcvr_index = 1
-            node_record.software = bits_row[3]
-            node_record.geoph_model = bits_row[4]
-            node_record.test_time = bits_row[5].strftime("%Y-%m-%d %H:%M:%S")
-            node_record.temp = bits_row[6] if bits_row[6] > 0 else None
-            node_record.bits_type = bits_row[7]
-            node_record.tilt = bits_row[8] if bits_row[8] > 0 else None
-            node_record.config_id = bits_row[9]
-            node_record.resistance = float(bits_row[10]) if bits_row[10] > 0 else None
-            node_record.noise = bits_row[12] if bits_row[12] > 0 else None
-            node_record.thd = bits_row[13] if bits_row[13] > 0 else None
-            node_record.polarity = bits_row[14]
-            node_record.frequency = bits_row[15] if bits_row[15] > 0 else None
-            node_record.damping = bits_row[16] if bits_row[16] > 0 else None
-            node_record.sensitivity = bits_row[17] if bits_row[17] > 0 else None
-            node_record.dyn_range = bits_row[18]
-            node_record.ein = bits_row[19]
+            node_record.software = bits_row[4]
+            node_record.geoph_model = bits_row[5]
+            node_record.test_time = bits_row[6].strftime("%Y-%m-%d %H:%M:%S")
+            node_record.temp = bits_row[9] if bits_row[9] > 0 else None
+            node_record.bits_type = bits_row[13]
+            node_record.tilt = bits_row[14] if bits_row[14] > 0 else None
+            node_record.config_id = bits_row[15]
+            node_record.resistance = float(bits_row[22]) if bits_row[22] > 0 else None
+            node_record.noise = bits_row[23] if bits_row[23] > 0 else None
+            node_record.thd = bits_row[24] if bits_row[24] > 0 else None
+            node_record.polarity = None
+            node_record.frequency = bits_row[26] if bits_row[26] > 0 else None
+            node_record.damping = bits_row[27] if bits_row[27] > 0 else None
+            node_record.sensitivity = bits_row[28] if bits_row[28] > 0 else None
+            node_record.dyn_range = bits_row[19]
+            node_record.ein = bits_row[18]
             node_record.gain = bits_row[20]
             node_record.offset = bits_row[21]
-            node_record.gps_time = int(bits_row[22])
-            node_record.ext_geophone = 1 if bits_row[23] == "TRUE" else 0
+            node_record.gps_time = int(bits_row[34])
+            node_record.ext_geophone = 1 if bits_row[57] == "TRUE" else 0
 
         except (ValueError, TypeError):
             return empty_record

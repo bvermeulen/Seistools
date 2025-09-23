@@ -2,7 +2,7 @@ import datetime
 import pandas as pd
 from shapely.geometry import Point
 import seis_utils
-from seis_settings import EPSG_PSD93
+from seis_settings import EPSG_PROJECT
 from seis_database import DbUtils
 
 
@@ -56,7 +56,7 @@ class QuantumDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_rcvr_points}", '
-            f'"geom", {EPSG_PSD93}, "POINT", "XY");'
+            f'"geom", {EPSG_PROJECT}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
         print(f"create table {cls.table_rcvr_points}")
@@ -147,7 +147,7 @@ class QuantumDb:
                         rcv_record.elevation,
                         point.x,
                         point.y,
-                        EPSG_PSD93,
+                        EPSG_PROJECT,
                     ),
                 )
 

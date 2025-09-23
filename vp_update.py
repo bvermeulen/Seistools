@@ -1,9 +1,10 @@
-""" module to update vaps and vp record files in the database
-    author: Bruno Vermeulen
-    email: bvermeulen@hotmail.com
-    Copyright: 2021
+"""module to update vaps and vp record files in the database
+author: Bruno Vermeulen
+email: bvermeulen@hotmail.com
+Copyright: 2021
 
 """
+
 import warnings
 import datetime
 import numpy as np
@@ -15,6 +16,7 @@ from seis_settings import (
     PROGRESS_SKIPS,
     LINK_VP_TO_VAPS,
     GMT_OFFSET,
+    GPS_TIME_OFFSET,
     FilesVpTable,
     VpTable,
     FilesVapsTable,
@@ -23,7 +25,7 @@ from seis_settings import (
 
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
-HEADER_ROWS = 71
+HEADER_ROWS = 0
 
 
 class Vaps:
@@ -90,7 +92,7 @@ class Vaps:
 
         try:
             time_break = datetime.datetime.fromtimestamp(
-                int(vaps_line[134:147]) * 0.001
+                (int(vaps_line[134:147]) * 0.001 + GPS_TIME_OFFSET)
             )
             time_break += GMT_OFFSET
 
@@ -111,7 +113,9 @@ class Vaps:
             vaps_record.northing = float(vaps_line[64:74])
             vaps_record.elevation = float(vaps_line[74:80])
             vaps_record.time_break = time_break
-            vaps_record.hdop = float(vaps_line[126:130])
+            vaps_record.hdop = (
+                None if vaps_line[126:130] != "" else float(vaps_line[126:130])
+            )
             vaps_record.tb_date = vaps_line[130:150]
             vaps_record.positioning = vaps_line[150:225]
 
@@ -296,7 +300,7 @@ class Vp:
 
 
 if __name__ == "__main__":
-    seis_utils.check_expiry_date()
+    # seis_utils.check_expiry_date()
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()

@@ -1,5 +1,5 @@
-""" settings and data structures for vp app
-"""
+"""settings and data structures for vp app"""
+
 import os
 import json
 import datetime
@@ -49,16 +49,20 @@ SWEEP_TIME = seis_config["general"]["SWEEP_TIME"]
 PAD_DOWN_TIME = seis_config["general"]["PAD_DOWN_TIME"]
 # if distance < DENSE_CRITERIUM then dense_flag is true
 DENSE_CRITERIUM = seis_config["general"]["DENSE_CRITERIUM"]
+GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
+EPSG_PROJECT = seis_config["general"]["EPSG"]
 
-EXPIRY_DATE = datetime.date(2024, 8, 31)
+EXPIRY_DATE = datetime.date(2026, 8, 31)
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = "VAPS"
 PROGRESS_SKIPS = 750
-GMT_OFFSET = datetime.timedelta(hours=+4)
+GMT_OFFSET = datetime.timedelta(hours=+GMT_OFFSET)
+GPS_TIME_OFFSET = 315964782
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
 TOL_COLOR = "red"
 EPSG_PSD93 = 3440
+EPSG_UTM38N = 32638
 
 vp_plt_settings = seis_config["vp_plt_settings"]
 node_plt_settings = seis_config["node_plt_settings"]
