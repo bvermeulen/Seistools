@@ -1,31 +1,34 @@
-""" PyQt shell for vp_attributes
-    author: Bruno Vermeulen
-    email: bvermeulen@hotmail.com
-    © 2023 howdimain
-    admin@howdiweb.nl
+"""PyQt shell for vp_attributes
+author: Bruno Vermeulen
+email: bvermeulen@hotmail.com
+© 2023 howdimain
+admin@howdiweb.nl
 """
+
 import sys
 import time
 import datetime
 from functools import partial
 import warnings
 from pathlib import Path
-#import ptvsd -- for debugging the thread
+
+# import ptvsd -- for debugging the thread
 from seis_plots_module import DbUtils, VpAttributes, VpActivity, NodeAttributes
 from PyQt6 import uic, QtWidgets
 from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
+from seis_settings import PROJECT_PATH, PLOT_RESULTS
 
 matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
-RIGHT_ARROW_SYMBOL = "\u25B6"
-LEFT_ARROW_SYMBOL = "\u25C0"
+RIGHT_ARROW_SYMBOL = "\u25b6"
+LEFT_ARROW_SYMBOL = "\u25c0"
 TIMER_DELAY = 750
 STATUS_DELAY = 0.750
 destination_folder_description = "Saved plots are stored in: "
-base_database = Path("D:\\OneDrive\\Work\\PDO\\")
+base_database = Path(PROJECT_PATH.parent)
 
 
 class MplCanvas(FigureCanvas):
@@ -151,7 +154,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "save": self.ActionSaveType_06,
                 "file_name": "node_attributes",
                 "fig": {},
-            }
+            },
         }
         self.ActionQuit.triggered.connect(self.quit)
         self.ActionDefaultDatabase.triggered.connect(
@@ -176,7 +179,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.progress_key = None
         self.project = None
         self.database_name = None
-        self.destination_folder = Path(sys.path[0])
+        self.destination_folder = Path(PLOT_RESULTS)
         self.RB_Type_01.setChecked(True)
         self.StatusHeaderLabel.setText("Status")
         self.StatusDatabaseLabel.setText("")
@@ -292,7 +295,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
 
     def select_destination_folder(self):
         destination_folder = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select destination folder"
+            self, "Select destination folder", directory=PLOT_RESULTS.parent.as_posix()
         )
         if destination_folder:
             self.destination_folder = Path(destination_folder)

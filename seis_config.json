@@ -9,7 +9,8 @@
         "DATA_FILES_SPS": "QC/data/sps_final",
         "DATA_FILES_WEATHER": "QC/wind_logs",
         "RESULTS_FOLDER": "QC/vibe_activity",
-        "DATABASE": "QC/database/procect_db.sqlite3"
+        "DATABASE": "QC/database/procect_db.sqlite3",
+        "PLOT_FILES": "QC/data/plot_results"
     },
     "general": {
         "FLEETS": 10,

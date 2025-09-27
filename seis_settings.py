@@ -43,6 +43,7 @@ RESULTS_FOLDER = (
     PROJECT_PATH / files["RESULTS_FOLDER"] if files["RESULTS_FOLDER"] else None
 )
 DATABASE = PROJECT_PATH / files["DATABASE"]
+PLOT_RESULTS = PROJECT_PATH / files["PLOT_RESULTS"]
 
 FLEETS = seis_config["general"]["FLEETS"]
 SWEEP_TIME = seis_config["general"]["SWEEP_TIME"]
