@@ -307,7 +307,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         base_file_name = "".join([self.production_date.strftime("%y%m%d"), "_"])
         for key, value in self.plot_dict.items():
             if not value["fig"]:
-                break
+                continue
 
             file_name = self.destination_folder / "".join(
                 [base_file_name, value.get("file_name"), ".png"]

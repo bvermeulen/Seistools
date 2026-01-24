@@ -30,7 +30,7 @@ class Rcv:
                 continue
 
             try:
-                bits_df = pd.read_excel(filename, header=None, skiprows=1)
+                bits_df = pd.read_excel(filename)
 
             except PermissionError:
                 node_db.delete_node_file(id_file)
@@ -40,10 +40,15 @@ class Rcv:
                 continue
 
             # filter out duplicate tests on the same day and keep the last
-            bits_df["test_date"] = bits_df.apply(lambda x: x[6].date(), axis=1)
-            bits_df = bits_df.drop_duplicates(subset=[0, "test_date"], keep="last")
+            bits_df.sort_values(by=["Test Time"], inplace=True)
+            bits_df["test_date"] = bits_df.apply(lambda x: x["Test Time"].date(), axis=1)
+            bits_df = bits_df.drop_duplicates(
+                subset=["Serial #", "test_date"], keep="last"
+            )
             # sort on line and station
-            bits_df.sort_values(by=[1, 2], inplace=True)
+            bits_df.sort_values(
+                by=["Deployment Line", "Deployment Station"], inplace=True
+            )
             node_records = []
 
             progress_bar = seis_utils.set_progress_bar(
@@ -74,30 +79,50 @@ class Rcv:
         node_record = QuantumTable(*[None] * 26)
 
         try:
-            node_record.qtm_sn = bits_row[0]
-            node_record.line = int(bits_row[1])
-            node_record.station = int(bits_row[2])
+            node_record.qtm_sn = bits_row["Serial #"]
+            node_record.line = int(bits_row["Deployment Line"])
+            node_record.station = int(bits_row["Deployment Station"])
             node_record.rcvr_index = 1
-            node_record.software = bits_row[4]
-            node_record.geoph_model = bits_row[5]
-            node_record.test_time = bits_row[6].strftime("%Y-%m-%d %H:%M:%S")
-            node_record.temp = bits_row[9] if bits_row[9] > 0 else None
-            node_record.bits_type = bits_row[13]
-            node_record.tilt = bits_row[14] if bits_row[14] > 0 else None
-            node_record.config_id = bits_row[15]
-            node_record.resistance = float(bits_row[22]) if bits_row[22] > 0 else None
-            node_record.noise = bits_row[23] if bits_row[23] > 0 else None
-            node_record.thd = bits_row[24] if bits_row[24] > 0 else None
+            node_record.software = bits_row["Software Version"]
+            node_record.geoph_model = bits_row["Geophone Model"]
+            node_record.test_time = bits_row["Test Time"].strftime("%Y-%m-%d %H:%M:%S")
+            node_record.temp = (
+                bits_row["Temperature"] if bits_row["Temperature"] > -30 else None
+            )
+            node_record.bits_type = bits_row["BITs Type"]
+            node_record.tilt = bits_row["Tilt Angle"] if bits_row["Tilt Angle"] > 0 else None
+            node_record.config_id = bits_row["Config ID"]
+            node_record.resistance = (
+                float(bits_row["Geophone Resistance, Ohms"])
+                if bits_row["Geophone Resistance, Ohms"] > 0
+                else None
+            )
+            node_record.noise = (
+                bits_row["Sensor Noise, uV/µg"]
+                if bits_row["Sensor Noise, uV/µg"] > 0
+                else None
+            )
+            node_record.thd = (
+                bits_row["Sensor THD, %"] if bits_row["Sensor THD, %"] > 0 else None
+            )
             node_record.polarity = None
-            node_record.frequency = bits_row[26] if bits_row[26] > 0 else None
-            node_record.damping = bits_row[27] if bits_row[27] > 0 else None
-            node_record.sensitivity = bits_row[28] if bits_row[28] > 0 else None
-            node_record.dyn_range = bits_row[19]
-            node_record.ein = bits_row[18]
-            node_record.gain = bits_row[20]
-            node_record.offset = bits_row[21]
-            node_record.gps_time = int(bits_row[34])
-            node_record.ext_geophone = 1 if bits_row[57] == "TRUE" else 0
+            node_record.frequency = (
+                bits_row["Nat. Frequency"] if bits_row["Nat. Frequency"] > 0 else None
+            )
+            node_record.damping = (
+                bits_row["Damping"] if bits_row["Damping"] > 0 else None
+            )
+            node_record.sensitivity = (
+                bits_row["Sensitivity"] if bits_row["Sensitivity"] > 0 else None
+            )
+            node_record.dyn_range = bits_row["DR at Config Gain, dB"]
+            node_record.ein = bits_row["EIN at Config Gain, uV"]
+            node_record.gain = bits_row["Gain at Config Gain"]
+            node_record.offset = bits_row["Offset at Config Gain, uV"]
+            node_record.gps_time = int(bits_row["GPS Time"])
+            node_record.ext_geophone = (
+                1 if bits_row["Using External Geophone"] == "TRUE" else 0
+            )
 
         except (ValueError, TypeError):
             return empty_record
