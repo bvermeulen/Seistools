@@ -1,9 +1,10 @@
-""" module to provide plot for vibe attributes and activity
-    author: Bruno Vermeulen
-    email: bvermeulen@hotmail.com
-    © 2023 howdimain
-    admin@howdiweb.nl
+"""module to provide plot for vibe attributes and activity
+author: Bruno Vermeulen
+email: bvermeulen@hotmail.com
+© 2023 howdimain
+admin@howdiweb.nl
 """
+
 import datetime
 from collections import Counter
 import numpy as np
@@ -22,6 +23,7 @@ from seis_settings import (
     vp_plt_settings,
     node_plt_settings,
 )
+
 FONTSIZE_6 = 6
 FONTSIZE_8 = 8
 plt.rc("xtick", labelsize=FONTSIZE_8)
@@ -51,7 +53,7 @@ class DbUtils:
                 data_table = "vaps_records"
                 date_field = "time_break"
             case "NODE":
-                file_table = 'node_quantum_files'
+                file_table = "node_quantum_files"
                 data_table = "node_quantum_attributes"
                 date_field = "test_time"
             case other:
@@ -61,16 +63,25 @@ class DbUtils:
         # filename for vaps must be in format <YY><DOY>, and for node <YY><MM><DD>
         try:
             with engine.connect() as con:
-                file_names = [row[0] for row in con.execute(f"select file_name from {file_table} order by file_name asc")]
+                file_names = [
+                    row[0]
+                    for row in con.execute(
+                        f"select file_name from {file_table} order by file_name asc"
+                    )
+                ]
                 if not file_names:
                     return pd.DataFrame()
                 min_date = (
-                    datetime.datetime.strptime(file_names[0][2:7], '%y%j').date() if type_data.upper() == "VP"
-                    else datetime.datetime.strptime(file_names[0][0:6], '%y%m%d').date()
+                    datetime.datetime.strptime(file_names[0][2:7], "%y%j").date()
+                    if type_data.upper() == "VP"
+                    else datetime.datetime.strptime(file_names[0][0:6], "%y%m%d").date()
                 )
                 max_date = (
-                    datetime.datetime.strptime(file_names[-1][2:7], '%y%j').date() if type_data.upper() == "VP"
-                    else datetime.datetime.strptime(file_names[-1][0:6], '%y%m%d').date()
+                    datetime.datetime.strptime(file_names[-1][2:7], "%y%j").date()
+                    if type_data.upper() == "VP"
+                    else datetime.datetime.strptime(
+                        file_names[-1][0:6], "%y%m%d"
+                    ).date()
                 )
                 if not (min_date <= production_date <= max_date):
                     return pd.DataFrame()
@@ -112,7 +123,7 @@ class VpAttributes:
             (ax0[2], ax1[2], ax0[5], ax1[5]),
         ) = plt.subplots(nrows=3, ncols=4, figsize=figsize, dpi=dpi)
         fig.suptitle(
-            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
+            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} Sweeps)',
             fontweight="bold",
         )
         for key, plt_setting in vp_plt_settings.items():
@@ -242,7 +253,7 @@ class VpAttributes:
             gridspec_kw=gs_kw,
         )
         fig.suptitle(
-            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
+            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} Sweeps)',
             fontweight="bold",
         )
         for key, plt_setting in vp_plt_settings.items():
@@ -326,7 +337,7 @@ class VpAttributes:
             gridspec_kw=gs_kw,
         )
         fig.suptitle(
-            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} VPs)',
+            f'Vib attributes for: {self.production_date.strftime("%d %b %Y")} ({self.total_vps} Sweeps)',
             fontweight="bold",
         )
         for ax_index, (key, plt_setting) in enumerate(vp_plt_settings.items()):
@@ -513,7 +524,7 @@ class VpActivity:
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=FIGSIZE_ACTIVITY_ALL)
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
-            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} Sweeps)',
             fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
@@ -548,9 +559,11 @@ class VpActivity:
         ax2.grid(axis="y", linewidth=0.5, linestyle="-", zorder=0)
         vibs = self.vps_by_interval_df["num_vibs"].to_numpy()
         colors = [
-            TOL_COLOR
-            if nv < vp_plt_settings["vib_activity"]["vibs_target"]
-            else "green"
+            (
+                TOL_COLOR
+                if nv < vp_plt_settings["vib_activity"]["vibs_target"]
+                else "green"
+            )
             for nv in vibs
         ]
         width = interval / SECONDS_PER_DAY
@@ -567,7 +580,7 @@ class VpActivity:
         )
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
-            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} Sweeps)',
             fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
@@ -729,4 +742,3 @@ class NodeAttributes:
 
         axis.axvline(node_data.mean(), linestyle="dashed", color="black", linewidth=0.7)
         return axis
-

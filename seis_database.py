@@ -57,6 +57,7 @@ class DbUtils:
             if connection:
                 connection.close()
 
+
     @classmethod
     def db_table_to_df(cls, db_table: str) -> pd.DataFrame:
         db_engine = cls.get_db_engine()

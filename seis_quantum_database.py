@@ -13,6 +13,7 @@ class QuantumDb:
     table_node_files = "node_quantum_files"
     table_node_attributes = "node_quantum_attributes"
     table_receivers = "rcvr_points"
+    projection = None
 
     @classmethod
     @DbUtils.connect
@@ -37,7 +38,31 @@ class QuantumDb:
 
     @classmethod
     @DbUtils.connect
+    def set_geometry_projection(cls, cursor):
+        # create a custom project if necessary
+        if isinstance(EPSG_PROJECT, str):
+            cls.projection = 900001
+            sql_string = (
+                f"INSERT INTO spatial_ref_sys "
+                f"(srid, auth_name, auth_srid, proj4text) "
+                f"VALUES ("
+                f"{cls.projection}, "
+                f"'OMV_GNAS_2D', "
+                f"{cls.projection}, "
+                f"'{EPSG_PROJECT}' "
+                f") "
+                f"ON CONFLICT DO NOTHING;"
+            )
+            cursor.execute(sql_string)
+
+        else:
+            cls.projection = int(EPSG_PROJECT)
+
+    @classmethod
+    @DbUtils.connect
     def create_table_rcvr_points(cls, cursor):
+        cls.set_geometry_projection()
+
         """create table with receiver positions"""
         sql_string = (
             f"CREATE TABLE {cls.table_rcvr_points} ("
@@ -56,7 +81,7 @@ class QuantumDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_rcvr_points}", '
-            f'"geom", {EPSG_PROJECT}, "POINT", "XY");'
+            f'"geom", {cls.projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
         print(f"create table {cls.table_rcvr_points}")

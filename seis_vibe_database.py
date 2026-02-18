@@ -20,6 +20,7 @@ class VpDb:
     table_vp = "vp_records"
     table_vaps_files = "vaps_files"
     table_vaps = "vaps_records"
+    projection = None
 
     @classmethod
     @DbUtils.connect
@@ -51,6 +52,28 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
+    def set_geometry_projection(cls, cursor):
+        # create a custom project if necessary
+        if isinstance(EPSG_PROJECT, str):
+            cls.projection = 900001
+            sql_string = (
+                f"INSERT INTO spatial_ref_sys "
+                f"(srid, auth_name, auth_srid, proj4text) "
+                f"VALUES ("
+                f"{cls.projection}, "
+                f"'OMV_GNAS_2D', "
+                f"{cls.projection}, "
+                f"'{EPSG_PROJECT}' "
+                f") "
+                f"ON CONFLICT DO NOTHING;"
+            )
+            cursor.execute(sql_string)
+
+        else:
+            cls.projection = int(EPSG_PROJECT)
+
+    @classmethod
+    @DbUtils.connect
     def create_table_vp_files(cls, cursor):
         sql_string = (
             f"CREATE TABLE {cls.table_vp_files} ("
@@ -65,6 +88,8 @@ class VpDb:
     @classmethod
     @DbUtils.connect
     def create_table_vp(cls, cursor):
+        cls.set_geometry_projection()
+
         # first create the table
         sql_string = (
             f"CREATE TABLE {cls.table_vp} ("
@@ -98,7 +123,7 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vp}", '
-            f'"geom", {EPSG_PROJECT}, "POINT", "XY");'
+            f'"geom", {cls.projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -120,6 +145,8 @@ class VpDb:
     @classmethod
     @DbUtils.connect
     def create_table_vaps(cls, cursor):
+        cls.set_geometry_projection()
+
         sql_string = (
             f"CREATE TABLE {cls.table_vaps} ("
             f"id INTEGER PRIMARY KEY, "
@@ -154,7 +181,7 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vaps}", '
-            f'"geom", {int(EPSG_PROJECT)}, "POINT", "XY");'
+            f'"geom", {cls.projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -237,7 +264,7 @@ class VpDb:
                     vp_record.qc_flag,
                     point.x,
                     point.y,
-                    EPSG_PROJECT,
+                    cls.projection,
                 ),
             )
 
@@ -321,7 +348,7 @@ class VpDb:
                     vaps_record.positioning,
                     point.x,
                     point.y,
-                    EPSG_PROJECT,
+                    cls.projection,
                 ),
             )
             next(progress_message)

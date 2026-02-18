@@ -92,7 +92,7 @@ class Vaps:
 
         try:
             time_break = datetime.datetime.fromtimestamp(
-                (int(vaps_line[134:147]) * 0.001 + GPS_TIME_OFFSET)
+                (int(vaps_line[130:151]) * 0.001 + GPS_TIME_OFFSET)
             )
             time_break += GMT_OFFSET
 
@@ -114,7 +114,7 @@ class Vaps:
             vaps_record.elevation = float(vaps_line[74:80])
             vaps_record.time_break = time_break
             vaps_record.hdop = (
-                None if vaps_line[126:130] != "" else float(vaps_line[126:130])
+                None if vaps_line[126:130] == "" else float(vaps_line[126:130])
             )
             vaps_record.tb_date = vaps_line[130:150]
             vaps_record.positioning = vaps_line[150:225]
