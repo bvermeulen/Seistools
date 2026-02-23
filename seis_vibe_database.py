@@ -8,7 +8,7 @@ from seis_settings import (
     SWEEP_TIME,
     PAD_DOWN_TIME,
     DENSE_CRITERIUM,
-    EPSG_PROJECT,
+    VpType,
     VapsTable,
     VpTable,
 )
@@ -20,7 +20,8 @@ class VpDb:
     table_vp = "vp_records"
     table_vaps_files = "vaps_files"
     table_vaps = "vaps_records"
-    projection = None
+    table_ep = "ep_records"
+    srid_projection = DbUtils().get_geometry_projection()
 
     @classmethod
     @DbUtils.connect
@@ -52,28 +53,6 @@ class VpDb:
 
     @classmethod
     @DbUtils.connect
-    def set_geometry_projection(cls, cursor):
-        # create a custom project if necessary
-        if isinstance(EPSG_PROJECT, str):
-            cls.projection = 900001
-            sql_string = (
-                f"INSERT INTO spatial_ref_sys "
-                f"(srid, auth_name, auth_srid, proj4text) "
-                f"VALUES ("
-                f"{cls.projection}, "
-                f"'OMV_GNAS_2D', "
-                f"{cls.projection}, "
-                f"'{EPSG_PROJECT}' "
-                f") "
-                f"ON CONFLICT DO NOTHING;"
-            )
-            cursor.execute(sql_string)
-
-        else:
-            cls.projection = int(EPSG_PROJECT)
-
-    @classmethod
-    @DbUtils.connect
     def create_table_vp_files(cls, cursor):
         sql_string = (
             f"CREATE TABLE {cls.table_vp_files} ("
@@ -81,14 +60,12 @@ class VpDb:
             f"file_name VARCHAR(100), "
             f"file_date TIMESTAMP);"
         )
-
         cursor.execute(sql_string)
         print(f"create table {cls.table_vp_files}")
 
     @classmethod
     @DbUtils.connect
     def create_table_vp(cls, cursor):
-        cls.set_geometry_projection()
 
         # first create the table
         sql_string = (
@@ -123,7 +100,7 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vp}", '
-            f'"geom", {cls.projection}, "POINT", "XY");'
+            f'"geom", {cls.srid_projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
@@ -145,7 +122,6 @@ class VpDb:
     @classmethod
     @DbUtils.connect
     def create_table_vaps(cls, cursor):
-        cls.set_geometry_projection()
 
         sql_string = (
             f"CREATE TABLE {cls.table_vaps} ("
@@ -181,11 +157,56 @@ class VpDb:
         # once table is created you can add the geomety column
         sql_string = (
             f'SELECT AddGeometryColumn("{cls.table_vaps}", '
-            f'"geom", {cls.projection}, "POINT", "XY");'
+            f'"geom", {cls.srid_projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
 
         print(f"create table {cls.table_vaps}")
+
+    @classmethod
+    @DbUtils.connect
+    def create_table_ep(cls, cursor):
+        sql_string = (
+            f"CREATE TABLE {cls.table_ep} ("
+            f"id INTEGER PRIMARY KEY, "
+            f"file_id INTEGER REFERENCES {cls.table_vaps_files}(id) ON DELETE CASCADE, "
+            f"line INTEGER, "
+            f"point INTEGER, "
+            f"fleet_nr INTEGER, "
+            f"vib_count INTEGER, "
+            f"avg_phase INTEGER, "
+            f"peak_phase INTEGER, "
+            f"avg_dist INTEGER, "
+            f"peak_dist INTEGER, "
+            f"avg_force INTEGER, "
+            f"peak_force INTEGER, "
+            f"avg_stiffness INTEGER, "
+            f"avg_viscosity INTEGER, "
+            f"easting DOUBLE PRECISION, "
+            f"northing DOUBLE PRECISION, "
+            f"elevation REAL, "
+            f"drive INTEGER, "
+            f"vptype VARCHAR(2), "
+            f"time_break TIMESTAMP, "
+            f"tb_date VARCHAR(30), "
+            f"vibs VARCHAR(20), "
+            f"deltatime_ep REAL, "
+            f"distance_fleet REAL, "
+            f"time_fleet REAL, "
+            f"velocity_fleet REAL, "
+            f"dense_flag BOOLEAN "
+            f"); "
+        )
+        cursor.execute(sql_string)
+
+        # once table is created you can add the geomety column
+        sql_string = (
+            f'SELECT AddGeometryColumn("{cls.table_ep}", '
+            f'"geom", {cls.srid_projection}, "POINT", "XY");'
+        )
+        cursor.execute(sql_string)
+
+        print(f"create table {cls.table_ep}")
 
     @classmethod
     @DbUtils.connect
@@ -226,7 +247,6 @@ class VpDb:
         progress_message = seis_utils.progress_message_generator(
             f"populate database for table: {cls.table_vp}                   "
         )
-
         sql_vp_record = (
             f"INSERT INTO {cls.table_vp} ("
             f"file_id, vaps_id, line, station, vibrator, time_break, "
@@ -264,10 +284,9 @@ class VpDb:
                     vp_record.qc_flag,
                     point.x,
                     point.y,
-                    cls.projection,
+                    cls.srid_projection,
                 ),
             )
-
             next(progress_message)
 
     @classmethod
@@ -300,9 +319,7 @@ class VpDb:
             f"file_name, file_date) "
             f"VALUES (?, ?); "
         )
-
         cursor.execute(sql_string, (vaps_file.file_name, vaps_file.file_date))
-
         return cursor.lastrowid
 
     @classmethod
@@ -348,32 +365,149 @@ class VpDb:
                     vaps_record.positioning,
                     point.x,
                     point.y,
-                    cls.projection,
+                    cls.srid_projection,
                 ),
             )
             next(progress_message)
 
     @classmethod
     @DbUtils.connect
-    def update_vp_distance(
+    def update_ep_table_by_date(
         cls, database_table: str, prod_date: datetime.datetime, cursor: any
+    ) -> None:
+
+        progress_message = seis_utils.progress_message_generator(
+            f"populate database for table: {cls.table_ep}                             "
+        )
+
+        sql_string = (
+            f"DELETE FROM {cls.table_ep} "
+            f"WHERE DATE(time_break) = '{prod_date.strftime("%Y-%m-%d")}';"
+        )
+        cursor.execute(sql_string)
+
+        sql_string = (
+            f"INSERT INTO {cls.table_ep} ("
+            f"file_id, line, point, fleet_nr, vib_count, "
+            f"avg_phase, peak_phase, avg_dist, peak_dist, "
+            f"avg_force, peak_force, avg_stiffness, avg_viscosity, "
+            f"easting, northing, elevation, drive, vptype, "
+            f"time_break, tb_date, vibs, deltatime_ep, geom) "
+            f"VALUES ({",".join(["?"]*22)}, MakePoint(?, ?, ?));"
+        )
+        vp_df = cls.create_ep_data_by_date(database_table, prod_date)
+        vibsets = []
+        for _, row in vp_df.iterrows():
+            vibset = {int(v) for v in row["vibs"].split(",")}
+            vibsets.append(vibset)
+
+        fleets = seis_utils.find_max_subsets(vibsets)
+
+        def get_next_time_break(index):
+            try:
+                time_break_next = vp_df.iloc[index].time_break
+                time_break_next = datetime.datetime.strptime(
+                    time_break_next, "%Y-%m-%d %H:%M:%S"
+                )
+            except IndexError:
+                time_break_next = None
+
+            return time_break_next
+
+        for index, vp in vp_df.iterrows():
+            point = Point(vp.easting, vp.northing)
+            time_break = datetime.datetime.strptime(vp.time_break, "%Y-%m-%d %H:%M:%S")
+            time_break_next = get_next_time_break(index + 1)
+            deltatime_ep = (
+                (time_break_next - time_break).seconds if time_break_next else None
+            )
+            vibset = {int(v) for v in vp["vibs"].split(",")}
+            for fleet_nr, fleet in enumerate(fleets):
+                if vibset.issubset(fleet):
+                    break
+
+            match (vp.vib_count, vp.drive):
+                case VpType.V1.value:
+                    vtype = "V1"
+                case VpType.V2.value:
+                    vtype = "V2"
+                case VpType.V3.value:
+                    vtype = "V3"
+                case VpType.V4.value:
+                    vtype = "V4"
+                case other:
+                    vtype = "V_"
+
+            cursor.execute(
+                sql_string,
+                (
+                    vp.file_id,
+                    vp.line,
+                    vp.point,
+                    fleet_nr + 1,
+                    vp.vib_count,
+                    round(vp.avg_phase, 0),
+                    round(vp.peak_phase, 0),
+                    round(vp.avg_dist, 0),
+                    round(vp.peak_dist, 0),
+                    round(vp.avg_force, 0),
+                    round(vp.peak_force, 0),
+                    round(vp.avg_stiffness, 0),
+                    round(vp.avg_viscosity, 0),
+                    vp.easting,
+                    vp.northing,
+                    vp.elevation,
+                    vp.drive,
+                    vtype,
+                    time_break,
+                    vp.tb_date,
+                    vp.vibs,
+                    deltatime_ep,
+                    point.x,
+                    point.y,
+                    cls.srid_projection,
+                ),
+            )
+            next(progress_message)
+
+        return fleets
+
+    @classmethod
+    @DbUtils.connect
+    def update_vp_distance(
+        cls, database_table: str, prod_date: datetime.datetime, fleets, cursor: any
     ) -> None:
         """Add values for distance, time, velocity, denseflag to the database_table
         This can only be done after all vps have been added to the database
         as only then it be sorted by consecutive vp points by vibrator
         """
-        if database_table == "VAPS":
-            table = cls.table_vaps
+        distance = "distance"
+        time = "time"
+        velocity = "velocity"
+        match database_table:
+            case "VAPS":
+                table = cls.table_vaps
+                fleets = FLEETS
+                fleet_or_vibe = "vibrator"
 
-        else:
-            table = cls.table_vp
+            case "VP":
+                table = cls.table_vp
+                fleets = FLEETS
+                fleet_or_vibe = "vibrator"
+
+            case "EP":
+                table = cls.table_ep
+                fleet_or_vibe = "fleet_nr"
+                distance = "distance_fleet"
+                time = "time_fleet"
+                velocity = "velocity_fleet"
 
         sql_string = (
             f"UPDATE {table} "
             f"SET"
-            f"    distance = ?, "
-            f"    time = ?, "
-            f"    velocity = ?, "
+            f"    {distance} = ?, "
+            f"    {time} = ?, "
+            f"    {velocity} = ?, "
             f"    dense_flag = ? "
             f"WHERE id = ?;"
         )
@@ -383,8 +517,8 @@ class VpDb:
         )
         vp_records_df = cls.get_vp_data_by_date(database_table, prod_date)
 
-        for vib in range(1, FLEETS + 1):
-            vib_df = vp_records_df[vp_records_df["vibrator"] == vib]
+        for fleet in range(1, fleets + 1):
+            vib_df = vp_records_df[vp_records_df[fleet_or_vibe] == fleet]
             vp_pts = [
                 (val[0], Point(val[1], val[2]), val[3])
                 for val in zip(
@@ -485,7 +619,14 @@ class VpDb:
         cls, database_table, production_date: datetime.datetime
     ) -> pd.DataFrame:
         """retrieve vp data by date"""
-        table = cls.table_vaps if database_table == "VAPS" else cls.table_vp
+        match database_table:
+            case "VAPS":
+                table = cls.table_vaps
+            case "VP":
+                table = cls.table_vp
+            case "EP":
+                table = cls.table_ep
+
         engine = DbUtils().get_db_engine()
         sql_string = (
             f"SELECT * FROM {table} WHERE "
@@ -500,6 +641,42 @@ class VpDb:
         table = cls.table_vaps if database_table == "VAPS" else cls.table_vp
         engine = DbUtils().get_db_engine()
         sql_string = f"SELECT * FROM {table} WHERE " f"line = {line} ORDER BY station;"
+        return pd.read_sql_query(sql_string, con=engine)
+
+    @classmethod
+    def create_ep_data_by_date(
+        cls, database_table: str, production_date: datetime.datetime
+    ) -> pd.DataFrame:
+        engine = DbUtils().get_db_engine()
+        table = cls.table_vaps if database_table == "VAPS" else cls.table_vp
+
+        """retrieve ep data of the fleet by date"""
+        sql_string = (
+            f"SELECT "
+            f"file_id, "
+            f"line, "
+            f"point, "
+            f"sum(fleet_nr) vib_count, "
+            f"avg(avg_phase) avg_phase, "
+            f"avg(peak_phase) peak_phase, "
+            f"avg(avg_dist) avg_dist, "
+            f"avg(peak_dist) peak_dist, "
+            f"avg(avg_force) avg_force, "
+            f"avg(peak_force) peak_force, "
+            f"avg(avg_stiffness) avg_stiffness, "
+            f"avg(avg_viscosity) avg_viscosity, "
+            f"avg(easting) easting, "
+            f"avg(northing) northing, "
+            f"avg(elevation) elevation, "
+            f"avg(drive) drive, "
+            f"time_break, "
+            f"tb_date, "
+            f"group_concat(vibrator, ',')  vibs "
+            f"FROM {table} "
+            f"WHERE DATE(time_break) = '{production_date.strftime("%Y-%m-%d")}' "
+            f"GROUP BY tb_date "
+            f"ORDER BY tb_date; "
+        )
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod

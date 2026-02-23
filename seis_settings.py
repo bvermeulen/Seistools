@@ -3,6 +3,7 @@
 import os
 import json
 import datetime
+from enum import Enum
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -53,12 +54,19 @@ DENSE_CRITERIUM = seis_config["general"]["DENSE_CRITERIUM"]
 GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
 EPSG_PROJECT = seis_config["general"]["EPSG"]
 
+class VpType(Enum):
+    V1 = tuple(seis_config["general"]["V1"])
+    V2 = tuple(seis_config["general"]["V2"])
+    V3 = tuple(seis_config["general"]["V3"])
+    V4 = tuple(seis_config["general"]["V4"])
+
+
 EXPIRY_DATE = datetime.date(2026, 8, 31)
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = "VAPS"
 PROGRESS_SKIPS = 750
 GMT_OFFSET = datetime.timedelta(hours=+GMT_OFFSET)
-GPS_TIME_OFFSET = 0 # 315964782
+GPS_TIME_OFFSET = 0  # 315964782
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
 TOL_COLOR = "red"

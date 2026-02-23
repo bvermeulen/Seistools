@@ -22,7 +22,6 @@ from seis_settings import (
     FilesVapsTable,
     VapsTable,
 )
-
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 0
@@ -82,7 +81,13 @@ class Vaps:
                 if vaps_records:
                     cls.vp_db.update_vaps(vaps_records)
                     cls.vp_db.update_vp_distance(
+                        "VAPS", vaps_records[0].time_break.date(), 0
+                    )
+                    fleets = cls.vp_db.update_ep_table_by_date(
                         "VAPS", vaps_records[0].time_break.date()
+                    )
+                    cls.vp_db.update_vp_distance(
+                        "EP", vaps_records[0].time_break.date(), len(fleets)
                     )
                 progress_bar.finish()
 
@@ -304,6 +309,7 @@ if __name__ == "__main__":
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
+    vp_db.create_table_ep()
     # vp_db.create_table_vp_files()
     # vp_db.create_table_vp()
 

@@ -267,3 +267,37 @@ def set_val(value, dtype):
 
     except (TypeError, ValueError):
         return value
+
+
+def find_max_subsets(sets_collection):
+    """
+    Filters a collection of sets to keep only those that are maximal
+    (not a proper subset of any other set in the collection).
+
+    Args:
+        sets_collection: An iterable of sets (e.g., a list of sets).
+
+    Returns:
+        A new set containing only the maximal sets.
+    """
+    # Convert input to a list of frozensets to handle them in another set
+    frozensets_list = [frozenset(s) for s in sets_collection]
+
+    # Sort the sets by size in descending order for a potential minor optimization
+    frozensets_list.sort(key=len, reverse=True)
+
+    maximal_sets = set()
+    for current_set in frozensets_list:
+        # Check if the current_set is a subset of any set already determined as maximal
+        is_subset_of_existing = False
+        for max_set in maximal_sets:
+            # The issubset() function efficiently checks for subset relationship
+            if current_set.issubset(max_set):
+                is_subset_of_existing = True
+                break
+
+        # If it's not a subset of any existing maximal set, it is maximal itself
+        if not is_subset_of_existing:
+            maximal_sets.add(current_set)
+
+    return [set(fs) for fs in maximal_sets]

@@ -148,12 +148,12 @@ class PssConverter:
 
     def convert_pss_to_vaps(self):
         for index, row in self.pss_df.iterrows():
-            if row["Void"] == "Void":
+            if row["Void"] == "Void" or row["EP Count"] != 1:
                 continue
 
-            date_txt = row["Date"]
+            date_txt = row["TB Date"]
             tdate = datetime.strptime(date_txt, "%m/%d/%Y")
-            time_txt = row["Time"]
+            time_txt = row["TB Time"]
             ttime = datetime.strptime(time_txt, "%H:%M:%S").time()
             tdatetime = datetime.combine(tdate, ttime).replace(tzinfo=timezone.utc)
             td_doy = tdatetime.utctimetuple().tm_yday
@@ -161,7 +161,7 @@ class PssConverter:
 
             self.line = row["Line"]
             self.station = row["Station"]
-            self.index = 1 # row["EP ID"]
+            self.index = 1  # row["EP ID"]
             self.fleet_number = 1
             self.vibrator_number = row["Unit ID"]
             self.drive_level = row["Drive Level"]
@@ -263,7 +263,7 @@ class PssConverter:
 
 if __name__ == "__main__":
     base_folder = Path("d:/onedrive/work/epi/omv/omv gnas 2D/qc/vib_node_data/pss")
-    file = base_folder / "PSS_20260216.csv"
+    file = base_folder / "PSS_20260221.csv"
     pss = PssConverter(file)
     pss.read_pss()
     vaps_line = pss.convert_pss_to_vaps()
