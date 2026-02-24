@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import matplotlib.ticker as mtick
 from seis_settings import (
-    FLEETS,
+    VIBRATORS,
     DATABASE,
     TOL_COLOR,
     MARKERSIZE_VP,
@@ -52,10 +52,16 @@ class DbUtils:
                 file_table = "vaps_files"
                 data_table = "vaps_records"
                 date_field = "time_break"
+
+            case "EP":
+                data_table = "ep_records"
+                date_field = "time_break"
+
             case "NODE":
                 file_table = "node_quantum_files"
                 data_table = "node_quantum_attributes"
                 date_field = "test_time"
+
             case other:
                 assert False, f'{type_data} is invalid, must be "VP" or "NODE"'
 
@@ -169,7 +175,7 @@ class VpAttributes:
         axis.set_ylim(bottom=setting["min"], top=setting["max"])
 
         plt_tol_lines = True
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = self.vp_records_df[self.vp_records_df["vibrator"] == vib][
                 key
             ].to_list()
@@ -204,7 +210,7 @@ class VpAttributes:
         axis.set_ylabel(setting["y-axis_label_density"])
         plt_tol_lines = True
 
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -246,7 +252,7 @@ class VpAttributes:
     def plot_histogram_data(self, figsize=FIGSIZE, dpi=DPI_HISTOGRAM):
         gs_kw = {"hspace": 0.15, "wspace": 0.20}
         fig, ax = plt.subplots(
-            nrows=FLEETS,
+            nrows=VIBRATORS,
             ncols=6,
             figsize=figsize,
             dpi=dpi,
@@ -281,7 +287,7 @@ class VpAttributes:
     def plot_histograms(self, axis, key, setting):
         """method to plot the attribute histogram in a single axis per vibrator"""
         plt_tol_lines = True
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -315,7 +321,7 @@ class VpAttributes:
                     )
 
             axis[vib - 1].set_xlim(left=setting["min"], right=setting["max"])
-            if vib != FLEETS:
+            if vib != VIBRATORS:
                 axis[vib - 1].set_xticklabels([])
                 axis[vib - 1].set_xticks([])
 
@@ -380,9 +386,9 @@ class VpAttributes:
     def plot_error_bars(self, axis, key, setting):
         y_step = 0.20
         bar_height = 0.19
-        y_vals = np.arange(1, FLEETS + 1) * y_step
-        y_labels = [None for _ in range(FLEETS)]
-        for vib in range(1, FLEETS + 1):
+        y_vals = np.arange(1, VIBRATORS + 1) * y_step
+        y_labels = [None for _ in range(VIBRATORS)]
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -401,14 +407,14 @@ class VpAttributes:
                 out_spec_percentage = data_out_spec.size / size * 100
 
                 axis.barh(
-                    y_vals[FLEETS - vib],
+                    y_vals[VIBRATORS - vib],
                     out_spec_percentage,
                     align="center",
                     height=bar_height,
                     color="red",
                 )
                 axis.barh(
-                    y_vals[FLEETS - vib],
+                    y_vals[VIBRATORS - vib],
                     100 - out_spec_percentage,
                     align="center",
                     height=bar_height,
@@ -418,15 +424,15 @@ class VpAttributes:
 
                 axis.text(
                     104,
-                    y_vals[FLEETS - vib],
+                    y_vals[VIBRATORS - vib],
                     f"{out_spec_percentage:5.1f}%",
                     fontsize=FONTSIZE_6,
                 )
-            y_labels[FLEETS - vib] = f"V{vib}"
+            y_labels[VIBRATORS - vib] = f"V{vib}"
 
         axis.xaxis.set_major_formatter(mtick.PercentFormatter(100.0))
         axis.set_xlim(left=0, right=120)
-        max_y = FLEETS * y_step + bar_height * 0.6
+        max_y = VIBRATORS * y_step + bar_height * 0.6
         axis.set_ylim(0, max_y)
         axis.set_xlabel(x_label, fontsize=FONTSIZE_6)
         axis.xaxis.set_label_coords(0.4, -0.08)
@@ -444,7 +450,19 @@ class VpAttributes:
 class VpActivity:
     """methods to plot vibrator acticity"""
 
-    def __init__(self, vp_records_df, production_date):
+    def __init__(self, vp_records_df, production_date, activity_type):
+        match activity_type:
+            case "EP":
+                self.fleets = vp_plt_settings["vib_activity"]["fleets"]
+                self.fleet_type = "fleet_nr"
+
+            case "VP":
+                self.fleets = VIBRATORS
+                self.fleet_type = "vibrator"
+
+            case other:
+                print(f"invalid option: {activity_type}")
+
         self.vp_records_df = vp_records_df
         self.production_date = production_date
         self.vps_by_second = {second: [] for second in range(SECONDS_PER_DAY)}
@@ -454,11 +472,11 @@ class VpActivity:
         self.aggregate_vps_by_interval()
 
     def populate_vps_by_second(self):
-        for vib in range(1, FLEETS + 1):
+        for fleet in range(1, self.fleets + 1):
             # get time strings and convert to datetime objects
-            vib_data = self.vp_records_df[self.vp_records_df["vibrator"] == vib][
-                "time_break"
-            ]
+            vib_data = self.vp_records_df[
+                self.vp_records_df[f"{self.fleet_type}"] == fleet
+            ]["time_break"]
             if not vib_data.empty:
                 vib_data = pd.to_datetime(vib_data, format="ISO8601").to_list()
 
@@ -471,7 +489,7 @@ class VpActivity:
                     + vp_time.time().minute * 60
                     + vp_time.time().second
                 )
-                self.vps_by_second[vp_seconds].append(vib)
+                self.vps_by_second[vp_seconds].append(fleet)
 
     def add_vps_interval(self, interval, second, vib_list):
         _date = datetime.datetime.combine(self.production_date, datetime.time(0, 0, 0))
@@ -515,7 +533,7 @@ class VpActivity:
             self.vps_by_interval_list,
             columns=(
                 ["time"]
-                + [f"V{i:02}" for i in range(1, FLEETS + 1)]
+                + [f"V{i:02}" for i in range(1, self.fleets + 1)]
                 + ["total", "vps_hour", "num_vibs"]
             ),
         )
@@ -524,7 +542,7 @@ class VpActivity:
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=FIGSIZE_ACTIVITY_ALL)
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
-            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} Sweeps)',
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
             fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
@@ -574,24 +592,32 @@ class VpActivity:
         return fig
 
     def plot_vps_by_vibe(self, interval: int = INTERVAL):
-        ax = [None for _ in range(FLEETS)]
+        ax = [None for _ in range(self.fleets)]
         fig, ax = plt.subplots(
-            nrows=FLEETS, ncols=1, figsize=FIGSIZE, gridspec_kw={"hspace": 0.10}
+            nrows=self.fleets, ncols=1, figsize=FIGSIZE, gridspec_kw={"hspace": 0.10}
         )
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
-            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} Sweeps)',
+            f'{self.production_date.strftime("%d-%b-%Y")} ({self.total_vps} VPs)',
             fontweight="bold",
         )
         time_format = mdates.DateFormatter("%H:%M")
         times = self.vps_by_interval_df["time"].to_numpy()
         ax[0].set_title(f"VPs per hour - interval {interval / 60:.0f} minutes")
-        for vib in range(1, FLEETS + 1):
-            ax[vib - 1].yaxis.set_ticks(np.arange(0, 200, 50))
+        for vib in range(1, self.fleets + 1):
+            ax[vib - 1].yaxis.set_ticks(
+                np.arange(
+                    0,
+                    vp_plt_settings["vib_activity"]["max_vp_hour_fleet"],
+                    vp_plt_settings["vib_activity"]["tick_intval_vp_hour_fleet"],
+                )
+            )
             ax[vib - 1].set_xticklabels([])
             ax[vib - 1].tick_params(axis="both", labelsize=8)
             ax[vib - 1].set_ylabel(f"V{vib}", fontsize=8)
-            ax[vib - 1].set_ylim(bottom=0, top=200)
+            ax[vib - 1].set_ylim(
+                bottom=0, top=vp_plt_settings["vib_activity"]["max_vp_hour_fleet"]
+            )
             ax[vib - 1].xaxis.set_major_formatter(time_format)
             ax[vib - 1].grid(axis="y", linewidth=0.5, linestyle="-", zorder=0)
             ax[vib - 1].grid(axis="x", linewidth=0.5, linestyle="-", zorder=0)
@@ -601,6 +627,11 @@ class VpActivity:
                 / interval
             )
             ax[vib - 1].step(times, vps, where="post", linewidth=0.9, zorder=3)
+            ax[vib - 1].axhline(
+                vp_plt_settings["vib_activity"]["vp_hour_fleet_target"],
+                color=TOL_COLOR,
+                linewidth=0.5,
+            )
 
         plt.close()
         return fig

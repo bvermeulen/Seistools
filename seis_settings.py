@@ -46,13 +46,14 @@ RESULTS_FOLDER = (
 DATABASE = PROJECT_PATH / files["DATABASE"]
 PLOT_RESULTS = PROJECT_PATH / files["PLOT_RESULTS"]
 
-FLEETS = seis_config["general"]["FLEETS"]
+VIBRATORS = seis_config["general"]["VIBRATORS"]
 SWEEP_TIME = seis_config["general"]["SWEEP_TIME"]
 PAD_DOWN_TIME = seis_config["general"]["PAD_DOWN_TIME"]
 # if distance < DENSE_CRITERIUM then dense_flag is true
 DENSE_CRITERIUM = seis_config["general"]["DENSE_CRITERIUM"]
 GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
 EPSG_PROJECT = seis_config["general"]["EPSG"]
+
 
 class VpType(Enum):
     V1 = tuple(seis_config["general"]["V1"])

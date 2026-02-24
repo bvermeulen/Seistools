@@ -19,7 +19,7 @@ from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
-from seis_settings import PROJECT_PATH, PLOT_RESULTS
+from seis_settings import PROJECT_PATH, PLOT_RESULTS, vp_plt_settings
 
 matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -52,9 +52,21 @@ class SeisAttrWorker(QObject):
         self.progress.emit("LoadVp")
         time.sleep(STATUS_DELAY)
         vp_df = db_utils.get_data_by_date("VP", production_date)
+        ep_df = db_utils.get_data_by_date("EP", production_date)
+        activity_type = vp_plt_settings["vib_activity"]["activity_type"]
+
         if not vp_df.empty:
             vp_plot_attributes = VpAttributes(vp_df, production_date)
-            vp_plot_activity = VpActivity(vp_df, production_date)
+            match activity_type:
+                case "EP":
+                    ep_plot_activity = VpActivity(ep_df, production_date, activity_type)
+
+                case "VP":
+                    ep_plot_activity = VpActivity(vp_df, production_date, activity_type)
+
+                case other:
+                    print(f"invalid option: {activity_type}")
+
             self.progress.emit("VpAttr")
             figure_dict["VpAttr"] = vp_plot_attributes.plot_vp_data()
             time.sleep(STATUS_DELAY)
@@ -65,10 +77,10 @@ class SeisAttrWorker(QObject):
             figure_dict["VpErr"] = vp_plot_attributes.plot_error_data()
             time.sleep(STATUS_DELAY)
             self.progress.emit("ActAll")
-            figure_dict["ActAll"] = vp_plot_activity.plot_vps_by_interval()
+            figure_dict["ActAll"] = ep_plot_activity.plot_vps_by_interval()
             time.sleep(STATUS_DELAY)
             self.progress.emit("ActEach")
-            figure_dict["ActEach"] = vp_plot_activity.plot_vps_by_vibe()
+            figure_dict["ActEach"] = ep_plot_activity.plot_vps_by_vibe()
             time.sleep(STATUS_DELAY)
 
         else:

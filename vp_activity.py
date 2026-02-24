@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-""" module to calculate and display vibrator activity over 24 hours time perdio
-    calculates number of vp's for each second of day in hashtable and displays in
-    user defined interval
-    author: Bruno Vermeulen
-    email: bvermeulen@hotmail.com
-    Copyright: 2021
+"""
+module to calculate and display vibrator activity over 24 hours time perdio
+calculates number of vp's for each second of day in hashtable and displays in
+user defined interval
+author: Bruno Vermeulen
+email: bvermeulen@hotmail.com
+Copyright: 2021
 
 """
 import sys
@@ -19,7 +20,7 @@ import matplotlib.dates as mdates
 import seis_utils
 from seis_vibe_database import VpDb
 from seis_settings import (
-    FLEETS,
+    VIBRATORS,
     DATABASE_TABLE,
     TOL_COLOR,
     RESULTS_FOLDER,
@@ -52,7 +53,7 @@ class VpActive:
             f'process records for {self.production_date.strftime("%d-%b-%Y")}'
         )
 
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             # get time strings and convert to datetime objects
             vib_data = self.vp_records_df[self.vp_records_df["vibrator"] == vib][
                 "time_break"
@@ -123,7 +124,7 @@ class VpActive:
             self.vps_by_interval_list,
             columns=(
                 ["time"]
-                + [f"V{i:02}" for i in range(1, FLEETS + 1)]
+                + [f"V{i:02}" for i in range(1, VIBRATORS + 1)]
                 + ["total", "vps_hour", "num_vibs"]
             ),
         )
@@ -168,9 +169,11 @@ class VpActive:
         ax2.grid(axis="y", linewidth=0.5, linestyle="-", zorder=0)
         vibs = self.vps_by_interval_df["num_vibs"].to_numpy()
         colors = [
-            TOL_COLOR
-            if nv < vp_plt_settings["vib_activity"]["vibs_target"]
-            else "green"
+            (
+                TOL_COLOR
+                if nv < vp_plt_settings["vib_activity"]["vibs_target"]
+                else "green"
+            )
             for nv in vibs
         ]
         width = interval / SECONDS_PER_DAY
@@ -181,9 +184,9 @@ class VpActive:
         plt.close()
 
     def plot_vps_by_vibe(self, interval):
-        ax = [None for i in range(FLEETS)]
+        ax = [None for i in range(VIBRATORS)]
         fig, (ax) = plt.subplots(
-            nrows=FLEETS, ncols=1, figsize=(7, 12), gridspec_kw={"hspace": 0}
+            nrows=VIBRATORS, ncols=1, figsize=(7, 12), gridspec_kw={"hspace": 0}
         )
         fig.suptitle(
             f'{vp_plt_settings["vib_activity"]["fig_title"]} '
@@ -192,21 +195,21 @@ class VpActive:
         time_format = mdates.DateFormatter("%H:%M")
         times = self.vps_by_interval_df["time"].to_numpy()
         ax[0].set_title(f"VPs per hour - interval {interval / 60:.0f} minutes")
-        for vib in range(1, FLEETS + 1):
-            ax[FLEETS - vib].set_xticklabels([])
-            ax[FLEETS - vib].yaxis.set_ticks(np.arange(0, 200, 50))
-            ax[FLEETS - vib].tick_params(axis="both", labelsize=8)
-            ax[FLEETS - vib].set_ylabel(f"V{vib}", fontsize=8)
-            ax[FLEETS - vib].xaxis.set_major_formatter(time_format)
-            ax[FLEETS - vib].set_ylim(bottom=0, top=200)
-            ax[FLEETS - vib].grid(axis="y", linewidth=0.5, linestyle="-", zorder=0)
-            ax[FLEETS - vib].grid(axis="x", linewidth=0.5, linestyle="-", zorder=0)
+        for vib in range(1, VIBRATORS + 1):
+            ax[VIBRATORS - vib].set_xticklabels([])
+            ax[VIBRATORS - vib].yaxis.set_ticks(np.arange(0, 200, 50))
+            ax[VIBRATORS - vib].tick_params(axis="both", labelsize=8)
+            ax[VIBRATORS - vib].set_ylabel(f"V{vib}", fontsize=8)
+            ax[VIBRATORS - vib].xaxis.set_major_formatter(time_format)
+            ax[VIBRATORS - vib].set_ylim(bottom=0, top=200)
+            ax[VIBRATORS - vib].grid(axis="y", linewidth=0.5, linestyle="-", zorder=0)
+            ax[VIBRATORS - vib].grid(axis="x", linewidth=0.5, linestyle="-", zorder=0)
             vps = (
                 self.vps_by_interval_df[f"V{vib:02}"].fillna(0).to_numpy()
                 * 3600
                 / interval
             )
-            ax[FLEETS - vib].step(times, vps, where="post", linewidth=0.9, zorder=3)
+            ax[VIBRATORS - vib].step(times, vps, where="post", linewidth=0.9, zorder=3)
 
         plt.show()
         plt.close()

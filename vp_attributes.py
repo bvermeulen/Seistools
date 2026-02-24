@@ -1,8 +1,10 @@
-""" display vibe attributes
-    author: Bruno Vermeulen
-    email: bvermeulen@hotmail.com
-    Copyright: 2023
 """
+display vibe attributes
+author: Bruno Vermeulen
+email: bvermeulen@hotmail.com
+Copyright: 2023
+"""
+
 import numpy as np
 from scipy import stats
 import matplotlib.pyplot as plt
@@ -10,7 +12,7 @@ import matplotlib.ticker as mtick
 import seis_utils
 from seis_vibe_database import VpDb
 from seis_settings import (
-    FLEETS,
+    VIBRATORS,
     DATABASE_TABLE,
     TOL_COLOR,
     MARKERSIZE_VP,
@@ -104,7 +106,7 @@ class VpAttributes:
         axis.set_ylim(bottom=setting["min"], top=setting["max"])
 
         plt_tol_lines = True
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = self.vp_records_df[self.vp_records_df["vibrator"] == vib][
                 key
             ].to_list()
@@ -139,7 +141,7 @@ class VpAttributes:
         axis.set_ylabel(setting["y-axis_label_density"])
         plt_tol_lines = True
 
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -184,7 +186,7 @@ class VpAttributes:
         axis.set_ylabel(setting["y-axis_label_density"])
 
         plt_tol_lines = True
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -210,7 +212,7 @@ class VpAttributes:
     def plot_histogram_data(self, figsize=FIGSIZE_HISTOGRAM, dpi=DPI_HISTOGRAM):
         gs_kw = {"hspace": 0.15, "wspace": 0.20}
         fig, ax = plt.subplots(
-            nrows=FLEETS,
+            nrows=VIBRATORS,
             ncols=6,
             figsize=figsize,
             dpi=dpi,
@@ -244,7 +246,7 @@ class VpAttributes:
     def plot_histograms(self, axis, key, setting):
         """method to plot the attribute histogram in a single axis per vibrator"""
         plt_tol_lines = True
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -281,7 +283,7 @@ class VpAttributes:
                     )
 
             axis[vib - 1].set_xlim(left=setting["min"], right=setting["max"])
-            if vib != FLEETS:
+            if vib != VIBRATORS:
                 axis[vib - 1].set_xticklabels([])
                 axis[vib - 1].set_xticks([])
 
@@ -346,9 +348,9 @@ class VpAttributes:
     def plot_error_bars(self, axis, key, setting):
         y_step = 0.20
         bar_height = 0.19
-        y_vals = np.arange(1, FLEETS + 1) * y_step
+        y_vals = np.arange(1, VIBRATORS + 1) * y_step
         y_labels = []
-        for vib in range(1, FLEETS + 1):
+        for vib in range(1, VIBRATORS + 1):
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -393,7 +395,7 @@ class VpAttributes:
 
         axis.xaxis.set_major_formatter(mtick.PercentFormatter(100.0))
         axis.set_xlim(left=0, right=120)
-        max_y = FLEETS * y_step + bar_height * 0.6
+        max_y = VIBRATORS * y_step + bar_height * 0.6
         axis.set_ylim(0, max_y)
         axis.set_xlabel(x_label, fontsize=FONTSIZE_SMALL)
         axis.xaxis.set_label_coords(0.4, -0.08)

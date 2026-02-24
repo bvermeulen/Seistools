@@ -4,7 +4,7 @@ import pandas as pd
 from shapely.geometry import Point
 import seis_utils
 from seis_settings import (
-    FLEETS,
+    VIBRATORS,
     SWEEP_TIME,
     PAD_DOWN_TIME,
     DENSE_CRITERIUM,
@@ -487,12 +487,12 @@ class VpDb:
         match database_table:
             case "VAPS":
                 table = cls.table_vaps
-                fleets = FLEETS
+                fleets = VIBRATORS
                 fleet_or_vibe = "vibrator"
 
             case "VP":
                 table = cls.table_vp
-                fleets = FLEETS
+                fleets = VIBRATORS
                 fleet_or_vibe = "vibrator"
 
             case "EP":
