@@ -263,7 +263,7 @@ class PssConverter:
 
 if __name__ == "__main__":
     base_folder = Path("d:/onedrive/work/epi/omv/omv gnas 2D/qc/vib_node_data/pss")
-    file = base_folder / "PSS_20260223.csv"
+    file = base_folder / "PSS_20260225.csv"
     pss = PssConverter(file)
     pss.read_pss()
     vaps_line = pss.convert_pss_to_vaps()
