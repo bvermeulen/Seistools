@@ -101,8 +101,7 @@ class Vaps:
             )
             time_break += GMT_OFFSET
             time_break = time_break.replace(tzinfo=None)
-
-
+            
             vaps_record.line = int(float(vaps_line[1:17]))
             vaps_record.station = int(float(vaps_line[17:25]))
             vaps_record.fleet_nr = vaps_line[26:27]

@@ -132,13 +132,15 @@ class PssConverter:
         self.tb_unix: str = "1234567890100010"
         self.positioning: str = ""
 
-        vaps_file_name = file_name.parent / ("VAPS_" + file_name.stem[4:] + ".txt")
+        vaps_file_name = (
+            file_name.parent / "../VAPS" / ("VAPS_" + file_name.stem[4:] + ".txt")
+        )
         self.vaps_writer = self.write_vaps_generator(vaps_file_name)
         self.vaps_writer.send(None)
         self.vaps_writer.send(VAPS_HEADER)
 
-    def read_pss(self):
-        self.pss_df = pd.read_csv(file)
+    def read_pss(self, seperator=","):
+        self.pss_df = pd.read_csv(file, sep=seperator)
 
     def write_vaps_generator(self, vaps_file_name: Path):
         with open(vaps_file_name, mode="wt") as vaps_file:
@@ -147,7 +149,7 @@ class PssConverter:
                 vaps_file.write(vaps_line)
 
     def convert_pss_to_vaps(self):
-        for index, row in self.pss_df.iterrows():
+        for _, row in self.pss_df.iterrows():
             if row["Void"] == "Void" or row["EP Count"] != 1:
                 continue
 
@@ -263,8 +265,8 @@ class PssConverter:
 
 if __name__ == "__main__":
     base_folder = Path("d:/onedrive/work/epi/omv/omv gnas 2D/qc/vib_node_data/pss")
-    file = base_folder / "PSS_20260225.csv"
+    file = base_folder / "PSS_20260314.csv"
     pss = PssConverter(file)
-    pss.read_pss()
+    pss.read_pss(seperator=",")
     vaps_line = pss.convert_pss_to_vaps()
     print(f"{pss.construct_vaps_line()=}")
