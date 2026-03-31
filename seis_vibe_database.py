@@ -359,7 +359,7 @@ class VpDb:
                     vaps_record.easting,
                     vaps_record.northing,
                     vaps_record.elevation,
-                    vaps_record.time_break,
+                    vaps_record.time_break.strftime("%Y-%m-%d %H:%M:%S.%f"),
                     vaps_record.hdop,
                     vaps_record.tb_date,
                     vaps_record.positioning,
@@ -407,7 +407,7 @@ class VpDb:
             try:
                 time_break_next = vp_df.iloc[index].time_break
                 time_break_next = datetime.datetime.strptime(
-                    time_break_next, "%Y-%m-%d %H:%M:%S"
+                    time_break_next, "%Y-%m-%d %H:%M:%S.%f"
                 )
             except IndexError:
                 time_break_next = None
@@ -416,7 +416,9 @@ class VpDb:
 
         for index, vp in vp_df.iterrows():
             point = Point(vp.easting, vp.northing)
-            time_break = datetime.datetime.strptime(vp.time_break, "%Y-%m-%d %H:%M:%S")
+            time_break = datetime.datetime.strptime(
+                vp.time_break, "%Y-%m-%d %H:%M:%S.%f"
+            )
             time_break_next = get_next_time_break(index + 1)
             deltatime_ep = (
                 (time_break_next - time_break).seconds if time_break_next else None

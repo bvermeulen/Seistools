@@ -22,6 +22,7 @@ from seis_settings import (
     FilesVapsTable,
     VapsTable,
 )
+
 # ignore warning velocity =  dist / time in method update_vo_distance
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 HEADER_ROWS = 0
@@ -97,11 +98,11 @@ class Vaps:
 
         try:
             time_break = datetime.datetime.fromtimestamp(
-                (int(vaps_line[130:151]) * 0.001 + GPS_TIME_OFFSET), tz=datetime.UTC
+                int(vaps_line[130:151]) * 0.001 + GPS_TIME_OFFSET, tz=datetime.UTC
             )
             time_break += GMT_OFFSET
             time_break = time_break.replace(tzinfo=None)
-            
+
             vaps_record.line = int(float(vaps_line[1:17]))
             vaps_record.station = int(float(vaps_line[17:25]))
             vaps_record.fleet_nr = vaps_line[26:27]

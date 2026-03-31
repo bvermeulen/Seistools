@@ -159,7 +159,9 @@ class PssConverter:
             ttime = datetime.strptime(time_txt, "%H:%M:%S").time()
             tdatetime = datetime.combine(tdate, ttime).replace(tzinfo=timezone.utc)
             td_doy = tdatetime.utctimetuple().tm_yday
-            tb_break = str(int(tdatetime.timestamp())) + f"{int(row["TB Micro"]):03}"
+            tb_break = (
+                str(int(tdatetime.timestamp())) + f"{int(row["TB Micro"] * 0.001):03}"
+            )
 
             self.line = row["Line"]
             self.station = row["Station"]
@@ -265,7 +267,7 @@ class PssConverter:
 
 if __name__ == "__main__":
     base_folder = Path("d:/onedrive/work/epi/omv/omv gnas 2D/qc/vib_node_data/pss")
-    file = base_folder / "PSS_20260314.csv"
+    file = base_folder / "PSS_20260330.csv"
     pss = PssConverter(file)
     pss.read_pss(seperator=",")
     vaps_line = pss.convert_pss_to_vaps()
