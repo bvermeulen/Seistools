@@ -1,8 +1,8 @@
 """
-    Module for conversion tools for WGS84, UTM and local
-    note the module maintains consistency in x, y; easting, northing; and
-    longitude, latitude, where x is the first and y is the second argument
-    grid conversion is project dependent
+Module for conversion tools for WGS84, UTM and local
+note the module maintains consistency in x, y; easting, northing; and
+longitude, latitude, where x is the first and y is the second argument
+grid conversion is project dependent
 """
 
 import os
@@ -15,7 +15,7 @@ from shapely.geometry import Point
 from pyproj import Proj
 
 
-degree_symbol = "\u00B0"
+degree_symbol = "\u00b0"
 
 match os.name:
     case "nt":
@@ -48,6 +48,7 @@ class GridOrigin:
     x: float = origin["x"]
     y: float = origin["y"]
     interval: float = origin["interval"]
+    sl_direction: int = origin.get("sl", 1)
 
 
 class ConvertTools:
@@ -187,22 +188,26 @@ class ConvertTools:
 
     def grid_local(self, line, station):
         # grid to local easting, northing
-        origin = GridOrigin()
+        orgn = GridOrigin()
         sin_azm, cos_azm = self.transformation()
         # step 1 move to origin with respect to the line number
-        new_origin_x = (line - origin.line) * cos_azm * origin.interval + origin.x
-        new_origin_y = -(line - origin.line) * sin_azm * origin.interval + origin.y
+        new_origin_x = (line - orgn.line) * cos_azm * orgn.interval + orgn.x
+        new_origin_y = (
+            -orgn.sl_direction * (line - orgn.line) * sin_azm * orgn.interval + orgn.y
+        )
         # step 2 calculate x, y with respect to the new origin
-        easting = (station - origin.station) * sin_azm * origin.interval + new_origin_x
-        northing = (station - origin.station) * cos_azm * origin.interval + new_origin_y
+        easting = (station - orgn.station) * sin_azm * orgn.interval + new_origin_x
+        northing = (station - orgn.station) * cos_azm * orgn.interval + new_origin_y
         return easting, northing
 
     def local_grid(self, easting, northing):
         # local easting, northing to grid
-        origin = GridOrigin()
+        orgn = GridOrigin()
         sin_azm, cos_azm = self.transformation()
-        x1 = (easting - origin.x) * sin_azm + (northing - origin.y) * cos_azm
-        y1 = (easting - origin.x) * cos_azm - (northing - origin.y) * sin_azm
-        station = round(x1 / origin.interval + origin.station, 0)
-        line = round(y1 / origin.interval + origin.line,0)
+        x1 = (easting - orgn.x) * sin_azm + (northing - orgn.y) * cos_azm
+        y1 = (easting - orgn.x) * cos_azm - orgn.sl_direction * (
+            northing - orgn.y
+        ) * sin_azm
+        station = round(x1 / orgn.interval + orgn.station, 0)
+        line = round(y1 / orgn.interval + orgn.line, 0)
         return line, station
