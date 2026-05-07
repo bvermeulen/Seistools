@@ -86,11 +86,15 @@ class QuantumDb:
             f"qtm_sn VARCHAR(10), "
             f"software VARCHAR(20), "
             f"geoph_model VARCHAR(10), "
+            f"project_id INTEGER, "
+            f"config_id INTEGER, "
+            f"result VARCHAR(10), "
+            f"result_descr VARCHAR(30), "
+            f"bat_charge INTEGER, "
             f"test_time TIMESTAMP, "
             f"temp REAL, "
             f"bits_type VARCHAR(15), "
             f"tilt REAL, "
-            f"config_id INTEGER, "
             f"resistance REAL, "
             f"noise REAL, "
             f"thd REAL, "
@@ -98,10 +102,12 @@ class QuantumDb:
             f"frequency REAL, "
             f"damping REAL, "
             f"sensitivity REAL, "
-            f"dyn_range REAL, "
-            f"ein REAL, "
             f"gain REAL, "
-            f"offset REAL, "
+            f"sample_rate VARCHAR(10), "
+            f"ein_at_gain REAL, "
+            f"dr_at_gain REAL, "
+            f"gain_at_gain REAL, "
+            f"offset_at_gain REAL, "
             f"gps_time INTEGER, "
             f"ext_geophone BOOLEAN);"
         )
@@ -216,11 +222,12 @@ class QuantumDb:
 
         sql_insert_string = (
             f"INSERT INTO {cls.table_node_attributes} ("
-            f"id_file, id_point, qtm_sn, software, geoph_model, test_time, temp, "
-            f"bits_type, tilt, config_id, resistance, noise, thd, polarity, "
-            f"frequency, damping, sensitivity, dyn_range, ein, gain, offset, "
+            f"id_file, id_point, qtm_sn, software, geoph_model, project_id, config_id, "
+            f"result, result_descr, bat_charge, test_time, temp, bits_type, tilt, "
+            f"resistance, noise, thd, polarity, frequency, damping, sensitivity, "
+            f"gain, sample_rate, ein_at_gain, dr_at_gain, gain_at_gain, offset_at_gain, "
             f"gps_time, ext_geophone) "
-            f'VALUES ({", ".join(["?"]*23)}); '
+            f'VALUES ({", ".join(["?"]*29)}); '
         )
         for rcvr_id, node_record in zip(rcvr_ids, node_records):
             cursor.execute(
@@ -231,11 +238,15 @@ class QuantumDb:
                     node_record.qtm_sn,
                     node_record.software,
                     node_record.geoph_model,
+                    node_record.project_id,
+                    node_record.config_id,
+                    node_record.result,
+                    node_record.result_descr,
+                    node_record.bat_charge,
                     node_record.test_time,
                     node_record.temp,
                     node_record.bits_type,
                     node_record.tilt,
-                    node_record.config_id,
                     node_record.resistance,
                     node_record.noise,
                     node_record.thd,
@@ -243,10 +254,12 @@ class QuantumDb:
                     node_record.frequency,
                     node_record.damping,
                     node_record.sensitivity,
-                    node_record.dyn_range,
-                    node_record.ein,
                     node_record.gain,
-                    node_record.offset,
+                    node_record.sample_rate,
+                    node_record.ein_at_gain,
+                    node_record.dr_at_gain,
+                    node_record.gain_at_gain,
+                    node_record.offset_at_gain,
                     node_record.gps_time,
                     node_record.ext_geophone,
                 ),

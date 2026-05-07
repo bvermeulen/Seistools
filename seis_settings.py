@@ -96,9 +96,11 @@ class QuantumTable:
     geoph_model: str
     test_time: datetime.datetime
     temp: float
+    bat_charge: float
+    project_id: int
+    config_id: int
     bits_type: str
     tilt: float
-    config_id: int
     resistance: float
     noise: float
     thd: float
@@ -106,12 +108,16 @@ class QuantumTable:
     frequency: float
     damping: float
     sensitivity: float
-    dyn_range: float
-    ein: float
     gain: float
-    offset: float
+    sample_rate: str
+    ein_at_gain: float
+    dr_at_gain: float
+    gain_at_gain: float
+    offset_at_gain: float
     gps_time: int
     ext_geophone: bool
+    result: str
+    result_descr: str
 
 
 @dataclass

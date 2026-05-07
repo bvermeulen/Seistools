@@ -41,7 +41,9 @@ class Rcv:
 
             # filter out duplicate tests on the same day and keep the last
             bits_df.sort_values(by=["Test Time"], inplace=True)
-            bits_df["test_date"] = bits_df.apply(lambda x: x["Test Time"].date(), axis=1)
+            bits_df["test_date"] = bits_df.apply(
+                lambda x: x["Test Time"].date(), axis=1
+            )
             bits_df = bits_df.drop_duplicates(
                 subset=["Serial #", "test_date"], keep="last"
             )
@@ -75,8 +77,8 @@ class Rcv:
 
     @staticmethod
     def parse_node_line(bits_row):
-        empty_record = QuantumTable(*[None] * 26)
-        node_record = QuantumTable(*[None] * 26)
+        empty_record = QuantumTable(*[None] * 32)
+        node_record = QuantumTable(*[None] * 32)
 
         try:
             node_record.qtm_sn = bits_row["Serial #"]
@@ -86,43 +88,31 @@ class Rcv:
             node_record.software = bits_row["Software Version"]
             node_record.geoph_model = bits_row["Geophone Model"]
             node_record.test_time = bits_row["Test Time"].strftime("%Y-%m-%d %H:%M:%S")
-            node_record.temp = (
-                bits_row["Temperature"] if bits_row["Temperature"] > -30 else None
-            )
-            node_record.bits_type = bits_row["BITs Type"]
-            node_record.tilt = bits_row["Tilt Angle"] if bits_row["Tilt Angle"] > 0 else None
+            node_record.temp = bits_row["Temperature"]
+            node_record.bat_charge = bits_row["Battery Charge %"]
+            node_record.project_id = bits_row["Project ID"]
             node_record.config_id = bits_row["Config ID"]
-            node_record.resistance = (
-                float(bits_row["Geophone Resistance, Ohms"])
-                if bits_row["Geophone Resistance, Ohms"] > 0
-                else None
-            )
-            node_record.noise = (
-                bits_row["Sensor Noise, uV/µg"]
-                if bits_row["Sensor Noise, uV/µg"] > 0
-                else None
-            )
-            node_record.thd = (
-                bits_row["Sensor THD, %"] if bits_row["Sensor THD, %"] > 0 else None
-            )
-            node_record.polarity = None
-            node_record.frequency = (
-                bits_row["Nat. Frequency"] if bits_row["Nat. Frequency"] > 0 else None
-            )
-            node_record.damping = (
-                bits_row["Damping"] if bits_row["Damping"] > 0 else None
-            )
-            node_record.sensitivity = (
-                bits_row["Sensitivity"] if bits_row["Sensitivity"] > 0 else None
-            )
-            node_record.dyn_range = bits_row["DR at Config Gain, dB"]
-            node_record.ein = bits_row["EIN at Config Gain, uV"]
-            node_record.gain = bits_row["Gain at Config Gain"]
-            node_record.offset = bits_row["Offset at Config Gain, uV"]
+            node_record.bits_type = bits_row["BITs Type"]
+            node_record.tilt = bits_row["Node Tilt Angle"]
+            node_record.resistance = float(bits_row["Geophone Resistance, Ohms"])
+            node_record.noise = bits_row["Sensor Noise, uV/µg"]
+            node_record.thd = bits_row["Sensor THD, %"]
+            node_record.polarity = bits_row["Polarity (Experimental)"]
+            node_record.frequency = bits_row["Nat. Frequency"]
+            node_record.damping =bits_row["Damping"]
+            node_record.sensitivity = bits_row["Sensitivity"]
+            node_record.gain = bits_row["Gain In Config"]
+            node_record.sample_rate = bits_row["Sample Rate"]
+            node_record.ein_at_gain = bits_row["EIN at Config Gain, uV"]
+            node_record.dr_at_gain = bits_row["DR at Config Gain, dB"]
+            node_record.gain_at_gain = bits_row["Gain at Config Gain"]
+            node_record.offset_at_gain = bits_row["Offset at Config Gain, uV"]
             node_record.gps_time = int(bits_row["GPS Time"])
             node_record.ext_geophone = (
                 1 if bits_row["Using External Geophone"] == "TRUE" else 0
             )
+            node_record.result = bits_row["Overall Result"]
+            node_record.result_descr = bits_row["Overall Result Description"]
 
         except (ValueError, TypeError):
             return empty_record
