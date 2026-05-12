@@ -53,6 +53,7 @@ PAD_DOWN_TIME = seis_config["general"]["PAD_DOWN_TIME"]
 DENSE_CRITERIUM = seis_config["general"]["DENSE_CRITERIUM"]
 GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
 EPSG_PROJECT = seis_config["general"]["EPSG"]
+REMOVE_DUPLICATES = seis_config["general"]["REMOVE_DUPLICATES"]
 
 
 class VpType(Enum):
@@ -67,12 +68,12 @@ LINK_VP_TO_VAPS = False
 DATABASE_TABLE = "VAPS"
 PROGRESS_SKIPS = 750
 GMT_OFFSET = datetime.timedelta(hours=+GMT_OFFSET)
-GPS_TIME_OFFSET = 0  # 315964782
+GPS_TIME_OFFSET = 315964782
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
 TOL_COLOR = "red"
-EPSG_PSD93 = 3440
-EPSG_UTM38N = 32638
+# EPSG_PSD93 = 3440
+# EPSG_UTM38N = 32638
 
 vp_plt_settings = seis_config["vp_plt_settings"]
 node_plt_settings = seis_config["node_plt_settings"]

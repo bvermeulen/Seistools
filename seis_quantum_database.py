@@ -12,12 +12,15 @@ class QuantumDb:
     table_node_files = "node_quantum_files"
     table_node_attributes = "node_quantum_attributes"
     table_receivers = "rcvr_points"
-    srid_projection = DbUtils().get_geometry_projection() 
+    srid_projection = DbUtils().get_geometry_projection()
 
     @classmethod
     @DbUtils.connect
     def delete_table_rcvr_points(cls, cursor):
         sql_string = f"DROP TABLE {cls.table_rcvr_points};"
+        cursor.execute(sql_string)
+
+        sql_string = f"delete from geometry_columns where f_table_name = '{cls.table_rcvr_points}';"
         cursor.execute(sql_string)
         print(f"delete table {cls.table_rcvr_points}")
 
@@ -38,7 +41,6 @@ class QuantumDb:
     @classmethod
     @DbUtils.connect
     def create_table_rcvr_points(cls, cursor):
-
         """create table with receiver positions"""
         sql_string = (
             f"CREATE TABLE {cls.table_rcvr_points} ("

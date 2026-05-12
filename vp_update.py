@@ -17,6 +17,7 @@ from seis_settings import (
     LINK_VP_TO_VAPS,
     GMT_OFFSET,
     GPS_TIME_OFFSET,
+    REMOVE_DUPLICATES,
     FilesVpTable,
     VpTable,
     FilesVapsTable,
@@ -84,12 +85,12 @@ class Vaps:
                     cls.vp_db.update_vp_distance(
                         "VAPS", vaps_records[0].time_break.date(), 0
                     )
-                    fleets = cls.vp_db.update_ep_table_by_date(
-                        "VAPS", vaps_records[0].time_break.date()
-                    )
-                    cls.vp_db.update_vp_distance(
-                        "EP", vaps_records[0].time_break.date(), len(fleets)
-                    )
+                    # fleets = cls.vp_db.update_ep_table_by_date(
+                    #     "VAPS", vaps_records[0].time_break.date()
+                    # )
+                    # cls.vp_db.update_vp_distance(
+                    #     "EP", vaps_records[0].time_break.date(), len(fleets)
+                    # )
                 progress_bar.finish()
 
     @classmethod
@@ -98,7 +99,7 @@ class Vaps:
 
         try:
             time_break = datetime.datetime.fromtimestamp(
-                int(vaps_line[130:151]) * 0.001 + GPS_TIME_OFFSET, tz=datetime.UTC
+                int(vaps_line[130:150]) * 1e-6 + GPS_TIME_OFFSET, tz=datetime.UTC
             )
             time_break += GMT_OFFSET
             time_break = time_break.replace(tzinfo=None)
@@ -149,6 +150,10 @@ class Vaps:
             duplicates: np array of indexes of type int
         """
         if not vp_record.line:
+            return vp_records, record_signatures
+
+        if not REMOVE_DUPLICATES:
+            vp_records.append(vp_record)
             return vp_records, record_signatures
 
         # search duplicate records and remove
@@ -267,51 +272,13 @@ class Vp:
 
         return vp_record
 
-    @staticmethod
-    def update_vp_records(vp_records, record_signatures, vp_record):
-        """function to add vp_record to the list vp_records. For each record it makes a 10
-        digits 'signature' being <line (4)><stations (4)><vibrator (2)>. It keeps a list
-        of the indexes of duplicates
-        arguments:
-            vp_records: list of vp_records
-            record_signatures: np array of record signatures
-            duplicates: np array of duplicae indexes
-            vp_record: vp attributes of type VpRecord
-        return:
-            vp_records: list of vp_records of type VpRecord
-            record_signatures: np array of record signatures of type string
-            duplicates: np array of indexes of type int
-        """
-        if not vp_record.line:
-            return vp_records, record_signatures
-
-        # search duplicate records and remove
-        line, station, vib = vp_record.line, vp_record.station, vp_record.vibrator
-        record_signature = f"{line:04}" + f"{station:04}" + f"{vib:02}"
-
-        # remove a duplicate. Note there should only be zero or one duplicate, as a duplicate
-        # gets removed on first instance
-        duplicate = np.where(record_signatures == record_signature)[0]
-
-        # bug fix: if duplicate: returns False if first and only element of the array has a
-        # a value of 0!! Therefore test on numpy size the array.
-        if duplicate.size != 0:
-            vp_records.pop(duplicate[0])
-            record_signatures = np.delete(record_signatures, duplicate)
-
-        # add the record ...
-        vp_records.append(vp_record)
-        record_signatures = np.append(record_signatures, record_signature)
-
-        return vp_records, record_signatures
-
 
 if __name__ == "__main__":
     # seis_utils.check_expiry_date()
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
-    vp_db.create_table_ep()
+    # vp_db.create_table_ep()
     # vp_db.create_table_vp_files()
     # vp_db.create_table_vp()
 

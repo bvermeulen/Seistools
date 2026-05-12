@@ -42,6 +42,11 @@ class VpDb:
     def delete_table_vaps(cls, cursor):
         sql_string = f"DROP TABLE {cls.table_vaps};"
         cursor.execute(sql_string)
+
+        sql_string = (
+            f"delete from geometry_columns where f_table_name = '{cls.table_vaps}';"
+        )
+        cursor.execute(sql_string)
         print(f"delete table {cls.table_vaps}")
 
     @classmethod
@@ -50,6 +55,18 @@ class VpDb:
         sql_string = f"DROP TABLE {cls.table_vaps_files};"
         cursor.execute(sql_string)
         print(f"delete table {cls.table_vaps_files}")
+
+    @classmethod
+    @DbUtils.connect
+    def delete_table_ep(cls, cursor):
+        sql_string = f"DROP TABLE {cls.table_ep};"
+        cursor.execute(sql_string)
+
+        sql_string = (
+            f"delete from geometry_columns where f_table_name = '{cls.table_ep}';"
+        )
+        cursor.execute(sql_string)
+        print(f"delete table {cls.table_ep}")
 
     @classmethod
     @DbUtils.connect
@@ -150,7 +167,8 @@ class VpDb:
             f"distance REAL, "
             f"time REAL, "
             f"velocity REAL, "
-            f"dense_flag BOOLEAN); "
+            f"dense_flag BOOLEAN "
+            f"); "
         )
         cursor.executescript(sql_string)
 
