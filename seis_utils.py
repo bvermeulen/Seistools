@@ -1,5 +1,5 @@
-""" utility functions for vp application
-"""
+"""utility functions for vp application"""
+
 import warnings
 import sys
 import datetime
@@ -44,7 +44,7 @@ def status_message_generator(key):
         "NodeAttr": "Node attributes",
         "Done": "Done",
         "NoVpData": "No VP data ...",
-        "NoNodeData": "No Node data ..."
+        "NoNodeData": "No Node data ...",
     }
     current_key = None
     progress_dots = "."
@@ -91,17 +91,13 @@ def status_message_generator(key):
                     )
                 count = 0
 
-            elif key  == "NoVpData":
+            elif key == "NoVpData":
                 status_message = "\n".join(status_message.split("\n")[:-1])
-                status_message = "\n".join(
-                    [status_message, status_lines[key]]
-                )
+                status_message = "\n".join([status_message, status_lines[key]])
 
             elif key == "NoNodeData":
                 status_message = "\n".join(status_message.split("\n")[:-1])
-                status_message = "\n".join(
-                    [status_message, status_lines[key]]
-                )
+                status_message = "\n".join([status_message, status_lines[key]])
 
             elif key == "Wait":
                 status_message = "".join([status_message, status_lines[key]])
@@ -301,3 +297,38 @@ def find_max_subsets(sets_collection):
             maximal_sets.add(current_set)
 
     return [set(fs) for fs in maximal_sets]
+
+
+def determine_sweeps(time_diff):
+    """
+    select a valid sweep with multiple vibrators, if there is a time difference of zero between the sweeps
+    the sweeps are counted in reversed order, i.e., the last ones are the valid ones
+    if there is a time delay between sweeps of more than 3 minutes the sweep count start again as it is
+    assumed the sweeps are unrelated
+    if no valid sweep is identified, all sweeps are returned
+    """
+    threshold = 0.01
+    sweep_recount_time = 180
+    time_diff = [float(td) for td in time_diff]
+    td_reversed = list(reversed(time_diff))
+    sweeps = []
+    sweep_count = 0
+    start_index = -1
+    n_el = len(td_reversed) - 1
+    for index, (v1, v2) in enumerate(zip(td_reversed, td_reversed[1:])):
+        if v1 <= threshold:
+            if start_index == -1:
+                start_index = index
+
+            if v2 > threshold:
+                sweep_count += 1
+                end_index = index + 1
+                sweeps.append((n_el - end_index, n_el - start_index, sweep_count))
+                start_index = -1
+
+                if v2 > sweep_recount_time:
+                    sweep_count = 0
+
+    if not sweeps:
+        sweeps.append((0, n_el, 0))
+    return sweeps

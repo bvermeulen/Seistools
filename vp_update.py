@@ -18,6 +18,7 @@ from seis_settings import (
     GMT_OFFSET,
     GPS_TIME_OFFSET,
     REMOVE_DUPLICATES,
+    FLEETS,
     FilesVpTable,
     VpTable,
     FilesVapsTable,
@@ -85,17 +86,18 @@ class Vaps:
                     cls.vp_db.update_vp_distance(
                         "VAPS", vaps_records[0].time_break.date(), 0
                     )
-                    # fleets = cls.vp_db.update_ep_table_by_date(
-                    #     "VAPS", vaps_records[0].time_break.date()
-                    # )
-                    # cls.vp_db.update_vp_distance(
-                    #     "EP", vaps_records[0].time_break.date(), len(fleets)
-                    # )
+                    cls.vp_db.update_ep_table_by_date(
+                        "VAPS", vaps_records[0].time_break.date()
+                    )
+                    cls.vp_db.update_vp_distance(
+                        "EP", vaps_records[0].time_break.date(), FLEETS
+                    )
                 progress_bar.finish()
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
         vaps_record = VapsTable(*[None] * 26)
+        empty_record = VapsTable(*[None] * 26)
 
         try:
             time_break = datetime.datetime.fromtimestamp(
@@ -106,7 +108,7 @@ class Vaps:
 
             vaps_record.line = int(float(vaps_line[1:17]))
             vaps_record.station = int(float(vaps_line[17:25]))
-            vaps_record.fleet_nr = vaps_line[26:27]
+            vaps_record.fleet_nr = int(vaps_line[26:27])
             vaps_record.vibrator = int(vaps_line[27:29])
             vaps_record.drive = int(vaps_line[29:32])
             vaps_record.avg_phase = int(vaps_line[32:36])
@@ -129,8 +131,11 @@ class Vaps:
 
             vaps_record.file_id = file_id
 
+            if sum([vaps_record.avg_force, vaps_record.peak_force]) == 0:
+                vaps_record = empty_record
+
         except ValueError:
-            vaps_record = VapsTable(*[None] * 26)
+            vaps_record = empty_record
 
         return vaps_record
 
@@ -244,7 +249,6 @@ class Vp:
                 + "000",
                 "%d-%m-%y %H:%M:%S.%f",
             )
-
             time_break += GMT_OFFSET
 
             vp_record.line = int(vp_line[0:9])
@@ -264,7 +268,6 @@ class Vp:
             vp_record.peak_phase = int(vp_line[214:226])
             vp_record.avg_phase = int(vp_line[226:238])
             vp_record.qc_flag = vp_line[238:248].strip()
-
             vp_record.file_id = file_id
 
         except ValueError:
@@ -278,7 +281,7 @@ if __name__ == "__main__":
     vp_db = VpDb()
     vp_db.create_table_vaps_files()
     vp_db.create_table_vaps()
-    # vp_db.create_table_ep()
+    vp_db.create_table_ep()
     # vp_db.create_table_vp_files()
     # vp_db.create_table_vp()
 

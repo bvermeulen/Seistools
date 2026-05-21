@@ -192,7 +192,6 @@ class VpDb:
             f"point INTEGER, "
             f"fleet_nr INTEGER, "
             f"vib_count INTEGER, "
-            f"vp_type VARCHAR(3), "
             f"avg_phase INTEGER, "
             f"peak_phase INTEGER, "
             f"avg_dist INTEGER, "
@@ -205,9 +204,11 @@ class VpDb:
             f"northing DOUBLE PRECISION, "
             f"elevation REAL, "
             f"drive INTEGER, "
+            f"vptype VARCHAR(2), "
             f"time_break TIMESTAMP, "
             f"tb_date VARCHAR(30), "
             f"vibs VARCHAR(20), "
+            f"deltatime_ep REAL, "
             f"distance_fleet REAL, "
             f"time_fleet REAL, "
             f"velocity_fleet REAL, "
@@ -392,39 +393,10 @@ class VpDb:
     def update_ep_table_by_date(
         cls, database_table: str, prod_date: datetime.datetime, cursor: any
     ) -> None:
+
         progress_message = seis_utils.progress_message_generator(
             f"populate database for table: {cls.table_ep}                             "
         )
-
-        def calc_avg(value_list: list[str]) -> float:
-            val = np.mean([float(v) for v in value_list])
-            return float(val)
-
-        def convert_to_list(val_string: str) -> list[str]:
-            return [v for v in val_string.split(",")]
-
-        def elstrtolist_and_select(sweeps: list, attribute_txt: str) -> list:
-            attribute_list = convert_to_list(attribute_txt)
-            selected_attribute_list = []
-            for sweep in sweeps:
-                selected_attribute_list += attribute_list[sweep[0] : sweep[1] + 1]
-            return selected_attribute_list
-
-        def determine_vp_type(sweeps, drive):
-            ep_type = "V_"
-            if len(sweeps) == VpType.V1.value[0] and drive == VpType.V1.value[2]:
-                ep_type = "V1"
-
-            if len(sweeps) == VpType.V2.value[0] and drive == VpType.V2.value[2]:
-                ep_type = "V2"
-
-            if len(sweeps) == VpType.V3.value[0] and drive == VpType.V3.value[2]:
-                ep_type = "V3"
-
-            if len(sweeps) == VpType.V4.value[0] and drive == VpType.V4.value[2]:
-                ep_type = "V4"
-
-            return ep_type
 
         sql_string = (
             f"DELETE FROM {cls.table_ep} "
@@ -434,55 +406,83 @@ class VpDb:
 
         sql_string = (
             f"INSERT INTO {cls.table_ep} ("
-            f"file_id, line, point, fleet_nr, vibs, vib_count, vp_type, "
+            f"file_id, line, point, fleet_nr, vib_count, "
             f"avg_phase, peak_phase, avg_dist, peak_dist, "
             f"avg_force, peak_force, avg_stiffness, avg_viscosity, "
-            f"easting, northing, elevation, drive, "
-            f"time_break, tb_date, geom) "
-            f"VALUES ({",".join(["?"]*21)}, MakePoint(?, ?, ?));"
+            f"easting, northing, elevation, drive, vptype, "
+            f"time_break, tb_date, vibs, deltatime_ep, geom) "
+            f"VALUES ({",".join(["?"]*22)}, MakePoint(?, ?, ?));"
         )
-        vp_df = cls.get_ep_data_by_date(database_table, prod_date)
+        vp_df = cls.create_ep_data_by_date(database_table, prod_date)
+        vibsets = []
+        for _, row in vp_df.iterrows():
+            vibset = {int(v) for v in row["vibs"].split(",")}
+            vibsets.append(vibset)
 
-        for _, vp in vp_df.iterrows():
-            time_diff = convert_to_list(vp.time_diff)
-            sweeps = seis_utils.determine_sweeps(time_diff)[: VpType.V1.value[0]]
-            easting = calc_avg(elstrtolist_and_select(sweeps, vp.easting))
-            northing = calc_avg(elstrtolist_and_select(sweeps, vp.northing))
-            point = Point(easting, northing)
+        fleets = seis_utils.find_max_subsets(vibsets)
+
+        def get_next_time_break(index):
+            try:
+                time_break_next = vp_df.iloc[index].time_break
+                time_break_next = datetime.datetime.strptime(
+                    time_break_next, "%Y-%m-%d %H:%M:%S.%f"
+                )
+            except IndexError:
+                time_break_next = None
+
+            return time_break_next
+
+        for index, vp in vp_df.iterrows():
+            point = Point(vp.easting, vp.northing)
             time_break = datetime.datetime.strptime(
-                elstrtolist_and_select(sweeps, vp.time_break)[-1],
-                "%Y-%m-%d %H:%M:%S.%f",
+                vp.time_break, "%Y-%m-%d %H:%M:%S.%f"
             )
-            drive = round(calc_avg(elstrtolist_and_select(sweeps, vp.drive)), 0)
-            ep_type = determine_vp_type(sweeps, drive)
+            time_break_next = get_next_time_break(index + 1)
+            deltatime_ep = (
+                (time_break_next - time_break).seconds if time_break_next else None
+            )
+            vibset = {int(v) for v in vp["vibs"].split(",")}
+            for fleet_nr, fleet in enumerate(fleets):
+                if vibset.issubset(fleet):
+                    break
+
+            match (vp.vib_count, vp.drive):
+                case VpType.V1.value:
+                    vtype = "V1"
+                case VpType.V2.value:
+                    vtype = "V2"
+                case VpType.V3.value:
+                    vtype = "V3"
+                case VpType.V4.value:
+                    vtype = "V4"
+                case other:
+                    vtype = "V_"
+
             cursor.execute(
                 sql_string,
                 (
                     vp.file_id,
                     vp.line,
                     vp.point,
-                    vp.fleet_nr,
-                    ", ".join(elstrtolist_and_select(sweeps, vp.vibs)),
+                    fleet_nr + 1,
                     vp.vib_count,
-                    ep_type,
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.avg_phase)), 0),
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.peak_phase)), 0),
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.avg_dist)), 0),
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.peak_dist)), 0),
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.avg_force)), 0),
-                    round(calc_avg(elstrtolist_and_select(sweeps, vp.peak_force)), 0),
-                    round(
-                        calc_avg(elstrtolist_and_select(sweeps, vp.avg_stiffness)), 0
-                    ),
-                    round(
-                        calc_avg(elstrtolist_and_select(sweeps, vp.avg_viscosity)), 0
-                    ),
-                    easting,
-                    northing,
-                    calc_avg(elstrtolist_and_select(sweeps, vp.elevation)),
-                    drive,
+                    round(vp.avg_phase, 0),
+                    round(vp.peak_phase, 0),
+                    round(vp.avg_dist, 0),
+                    round(vp.peak_dist, 0),
+                    round(vp.avg_force, 0),
+                    round(vp.peak_force, 0),
+                    round(vp.avg_stiffness, 0),
+                    round(vp.avg_viscosity, 0),
+                    vp.easting,
+                    vp.northing,
+                    vp.elevation,
+                    vp.drive,
+                    vtype,
                     time_break,
-                    elstrtolist_and_select(sweeps, vp.tb_date)[-1],
+                    vp.tb_date,
+                    vp.vibs,
+                    deltatime_ep,
                     point.x,
                     point.y,
                     cls.srid_projection,
@@ -490,10 +490,12 @@ class VpDb:
             )
             next(progress_message)
 
+        return fleets
+
     @classmethod
     @DbUtils.connect
     def update_vp_distance(
-        cls, database_table: str, prod_date: datetime.datetime, fleets: int, cursor: any
+        cls, database_table: str, prod_date: datetime.datetime, fleets, cursor: any
     ) -> None:
         """Add values for distance, time, velocity, denseflag to the database_table
         This can only be done after all vps have been added to the database
@@ -662,7 +664,7 @@ class VpDb:
         return pd.read_sql_query(sql_string, con=engine)
 
     @classmethod
-    def get_ep_data_by_date(
+    def create_ep_data_by_date(
         cls, database_table: str, production_date: datetime.datetime
     ) -> pd.DataFrame:
         engine = DbUtils().get_db_engine()
@@ -674,33 +676,26 @@ class VpDb:
             f"file_id, "
             f"line, "
             f"point, "
-            f"fleet_nr, "
-            f"group_concat(vibrator) vibs, "
-            f"count(*) vib_count, "
-            f"group_concat(avg_phase) avg_phase, "
-            f"group_concat(peak_phase) peak_phase, "
-            f"group_concat(avg_dist) avg_dist, "
-            f"group_concat(peak_dist) peak_dist, "
-            f"group_concat(avg_force) avg_force, "
-            f"group_concat(peak_force) peak_force, "
-            f"group_concat(avg_stiffness) avg_stiffness, "
-            f"group_concat(avg_viscosity) avg_viscosity, "
-            f"group_concat(easting) easting, "
-            f"group_concat(northing) northing, "
-            f"group_concat(elevation) elevation, "
-            f"group_concat(drive) drive, "
-            f"group_concat(time_break) time_break, "
-            f"group_concat(tb_date) tb_date, "
-            f"group_concat(time_diff) time_diff "
-            f"FROM (SELECT "
-            f"*, "
-            f"(julianday(time_break) - julianday(lag(time_break) over (ORDER BY time_break)))* 86400 as time_diff "
+            f"sum(fleet_nr) vib_count, "
+            f"avg(avg_phase) avg_phase, "
+            f"avg(peak_phase) peak_phase, "
+            f"avg(avg_dist) avg_dist, "
+            f"avg(peak_dist) peak_dist, "
+            f"avg(avg_force) avg_force, "
+            f"avg(peak_force) peak_force, "
+            f"avg(avg_stiffness) avg_stiffness, "
+            f"avg(avg_viscosity) avg_viscosity, "
+            f"avg(easting) easting, "
+            f"avg(northing) northing, "
+            f"avg(elevation) elevation, "
+            f"avg(drive) drive, "
+            f"time_break, "
+            f"tb_date, "
+            f"group_concat(vibrator, ',')  vibs "
             f"FROM {table} "
-            f"ORDER BY time_break "
-            f") "
             f"WHERE DATE(time_break) = '{production_date.strftime("%Y-%m-%d")}' "
-            f"GROUP BY line, point "
-            f"ORDER BY time_break; "
+            f"GROUP BY tb_date "
+            f"ORDER BY tb_date; "
         )
         return pd.read_sql_query(sql_string, con=engine)
 
@@ -720,9 +715,6 @@ class VpDb:
             return -1
 
         sql_string = f"delete from {cls.table_vaps} " f"where file_id = {id}"
-        cursor.execute(sql_string)
-
-        sql_string = f"delete from {cls.table_ep} " f"where file_id = {id}"
         cursor.execute(sql_string)
 
         sql_string = f"delete from {cls.table_vaps_files} " f"where id = {id}"

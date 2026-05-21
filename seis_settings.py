@@ -55,14 +55,6 @@ GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
 EPSG_PROJECT = seis_config["general"]["EPSG"]
 REMOVE_DUPLICATES = seis_config["general"]["REMOVE_DUPLICATES"]
 
-
-class VpType(Enum):
-    V1 = tuple(seis_config["general"]["V1"])
-    V2 = tuple(seis_config["general"]["V2"])
-    V3 = tuple(seis_config["general"]["V3"])
-    V4 = tuple(seis_config["general"]["V4"])
-
-
 EXPIRY_DATE = datetime.date(2026, 8, 31)
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = "VAPS"
@@ -72,12 +64,26 @@ GPS_TIME_OFFSET = 315964782
 MARKERSIZE_VP = 0.2
 MARKERSIZE_NODE = 1.0
 TOL_COLOR = "red"
-# EPSG_PSD93 = 3440
-# EPSG_UTM38N = 32638
 
 vp_plt_settings = seis_config["vp_plt_settings"]
 node_plt_settings = seis_config["node_plt_settings"]
 
+if vp_plt_settings["vib_activity"]["activity_type"] == "EP":
+    FLEETS = vp_plt_settings["vib_activity"]["fleets"]
+
+else:
+    FLEETS = VIBRATORS
+
+NUMBER_VP_TYPES = seis_config["general"]["NUMBER_VP_TYPES"]
+
+
+# type is (number of sweeps, number of vibrators, drive level)
+
+vp_types = {
+    f"V{i+1}": tuple(seis_config["general"][f"V{i+1}"])
+    for i in range(NUMBER_VP_TYPES)
+}
+VpType = Enum("VpType", vp_types)
 
 @dataclass
 class FilesNodeTable:
