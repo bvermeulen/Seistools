@@ -451,10 +451,11 @@ class VpActivity:
     """methods to plot vibrator acticity"""
 
     def __init__(self, vp_records_df, production_date, activity_type):
+        fleet = "fleet" if "fleet" in vp_records_df.columns else "fleet_nr"
         match activity_type:
             case "EP":
                 self.fleets = vp_plt_settings["vib_activity"]["fleets"]
-                self.fleet_type = "fleet_nr"
+                self.fleet_type = fleet
 
             case "VP":
                 self.fleets = VIBRATORS

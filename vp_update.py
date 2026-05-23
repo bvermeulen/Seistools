@@ -96,8 +96,8 @@ class Vaps:
 
     @classmethod
     def parse_vaps_line(cls, vaps_line, file_id):
-        vaps_record = VapsTable(*[None] * 26)
-        empty_record = VapsTable(*[None] * 26)
+        vaps_record = VapsTable(*[None] * 47)
+        empty_record = VapsTable(*[None] * 47)
 
         try:
             time_break = datetime.datetime.fromtimestamp(
@@ -106,9 +106,11 @@ class Vaps:
             time_break += GMT_OFFSET
             time_break = time_break.replace(tzinfo=None)
 
+            vaps_record.file_id = file_id
             vaps_record.line = int(float(vaps_line[1:17]))
-            vaps_record.station = int(float(vaps_line[17:25]))
-            vaps_record.fleet_nr = int(vaps_line[26:27])
+            vaps_record.point = int(float(vaps_line[17:25]))
+            vaps_record.point_index = int(float(vaps_line[25:26]))
+            vaps_record.fleet = int(vaps_line[26:27])
             vaps_record.vibrator = int(vaps_line[27:29])
             vaps_record.drive = int(vaps_line[29:32])
             vaps_record.avg_phase = int(vaps_line[32:36])
@@ -122,14 +124,31 @@ class Vaps:
             vaps_record.easting = float(vaps_line[55:64])
             vaps_record.northing = float(vaps_line[64:74])
             vaps_record.elevation = float(vaps_line[74:80])
+            vaps_record.shot_nb = int(float(vaps_line[81:86]))
+            vaps_record.acq_nb = int(float(vaps_line[86:88]))
+            vaps_record.fleet_nb = int(float(vaps_line[88:90]))
+            vaps_record.vib_status = int(float(vaps_line[90:92]))
+            vaps_record.m1_warning = vaps_line[93:94]
+            vaps_record.m2_warning = vaps_line[94:95]
+            vaps_record.m3_warning = vaps_line[95:96]
+            vaps_record.p1_warning = vaps_line[99:100]
+            vaps_record.p2_warning = vaps_line[100:101]
+            vaps_record.p3_warning = vaps_line[101:102]
+            vaps_record.p4_warning = vaps_line[102:103]
+            vaps_record.p5_warning = vaps_line[103:104]
+            vaps_record.p6_warning = vaps_line[104:105]
+            vaps_record.force_overload = vaps_line[105:106]
+            vaps_record.pressure_overload = vaps_line[106:107]
+            vaps_record.mass_overload = vaps_line[107:108]
+            vaps_record.valve_overload = vaps_line[108:109]
+            vaps_record.excitation_overload = vaps_line[109:110]
+            vaps_record.stack_fold = int(float(vaps_line[110:112]))
+            vaps_record.compute_domain = vaps_line[112:113]
+            vaps_record.ve432 = vaps_line[113:117]
             vaps_record.time_break = time_break
-            vaps_record.hdop = (
-                None if vaps_line[126:130] == "" else float(vaps_line[126:130])
-            )
+            vaps_record.hdop = float(vaps_line[126:130])
             vaps_record.tb_date = vaps_line[130:150]
-            vaps_record.positioning = vaps_line[150:225]
-
-            vaps_record.file_id = file_id
+            vaps_record.gpgga = vaps_line[150:349]
 
             if sum([vaps_record.avg_force, vaps_record.peak_force]) == 0:
                 vaps_record = empty_record

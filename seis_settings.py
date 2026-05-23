@@ -201,8 +201,9 @@ class VapsTable:
     id: int
     file_id: int
     line: int
-    station: int
-    fleet_nr: str
+    point: int
+    point_index: int
+    fleet: int
     vibrator: int
     drive: int
     avg_phase: int
@@ -216,15 +217,34 @@ class VapsTable:
     easting: float
     northing: float
     elevation: float
+    shot_nb: int
+    acq_nb: int
+    fleet_nb: int
+    m1_warning: str
+    m2_warning: str
+    m3_warning: str
+    p1_warning: str
+    p2_warning: str
+    p3_warning: str
+    p4_warning: str
+    p5_warning: str
+    p6_warning: str
+    force_overload: str
+    pressure_overload: str
+    mass_overload: str
+    valve_overload: str
+    excitation_overload: str
+    stack_fold: int
+    compute_domain: str
+    ve432: str
     time_break: datetime.datetime
     hdop: float
     tb_date: str
-    positioning: str
     distance: float
     time: float
     velocity: float
     dense_flag: bool
-
+    gpgga: str
 
 @dataclass
 class FilesSpsTable:

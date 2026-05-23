@@ -146,8 +146,9 @@ class VpDb:
             f"file_id INTEGER REFERENCES {cls.table_vaps_files}(id) ON DELETE CASCADE, "
             f"line INTEGER, "
             f"point INTEGER, "
-            f"fleet_nr VARCHAR(2), "
+            f"point_index INTEGER, "
             f"vibrator INTEGER, "
+            f"fleet INTEGER, "
             f"drive INTEGER, "
             f"avg_phase INTEGER, "
             f"peak_phase INTEGER, "
@@ -160,14 +161,35 @@ class VpDb:
             f"easting DOUBLE PRECISION, "
             f"northing DOUBLE PRECISION, "
             f"elevation REAL, "
+            f"shot_nb INTEGER, "
+            f"acq_nb INTEGER, "
+            f"fleet_nb INTEGER, "
+            f"vib_status INTEGER, "
+            f"m1_warning VARCHAR(1), "
+            f"m2_warning VARCHAR(1), "
+            f"m3_warning VARCHAR(1), "
+            f"p1_warning VARCHAR(1), "
+            f"p2_warning VARCHAR(1), "
+            f"p3_warning VARCHAR(1), "
+            f"p4_warning VARCHAR(1), "
+            f"p5_warning VARCHAR(1), "
+            f"p6_warning VARCHAR(1), "
+            f"force_overload VARCHAR(1), "
+            f"pressure_overload VARCHAR(1), "
+            f"mass_overload VARCHAR(1), "
+            f"valve_overload VARCHAR(1), "
+            f"excitation_overload VARCHAR(1), "
+            f"stack_fold INTEGER, "
+            f"compute_domain VARCHAR(1), "
+            f"ve432 VARCHAR(4), "
             f"time_break TIMESTAMP, "
             f"hdop REAL, "
             f"tb_date VARCHAR(30), "
-            f"positioning VARCHAR(75), "
             f"distance REAL, "
             f"time REAL, "
             f"velocity REAL, "
-            f"dense_flag BOOLEAN "
+            f"dense_flag BOOLEAN,  "
+            f"gpgga VARCHAR(200) "
             f"); "
         )
         cursor.executescript(sql_string)
@@ -190,7 +212,7 @@ class VpDb:
             f"file_id INTEGER REFERENCES {cls.table_vaps_files}(id) ON DELETE CASCADE, "
             f"line INTEGER, "
             f"point INTEGER, "
-            f"fleet_nr INTEGER, "
+            f"fleet INTEGER, "
             f"vib_count INTEGER, "
             f"vp_type VARCHAR(3), "
             f"avg_phase INTEGER, "
@@ -222,7 +244,6 @@ class VpDb:
             f'"geom", {cls.srid_projection}, "POINT", "XY");'
         )
         cursor.execute(sql_string)
-
         print(f"create table {cls.table_ep}")
 
     @classmethod
@@ -255,7 +276,6 @@ class VpDb:
             f"VALUES (?, ?); "
         )
         cursor.execute(sql_string, (vp_file.file_name, vp_file.file_date))
-
         return cursor.lastrowid
 
     @classmethod
@@ -347,23 +367,28 @@ class VpDb:
         )
         sql_string = (
             f"INSERT INTO {cls.table_vaps} ("
-            f"file_id, line, point, fleet_nr, vibrator, drive, "
+            f"file_id, line, point, point_index, vibrator, fleet, drive, "
             f"avg_phase, peak_phase, avg_dist, peak_dist, avg_force, peak_force, "
             f"avg_stiffness, avg_viscosity, easting, northing, elevation, "
-            f"time_break, hdop, tb_date, positioning, geom) "
-            f'VALUES ({", ".join(["?"]*21)}, MakePoint(?, ?, ?));'
+            f"shot_nb, acq_nb, fleet_nb, vib_status, "
+            f"m1_warning, m2_warning, m3_warning, p1_warning, p2_warning, "
+            f"p3_warning, p4_warning, p5_warning, p6_warning, force_overload, "
+            f"pressure_overload, mass_overload, valve_overload, "
+            f"excitation_overload, stack_fold, compute_domain, ve432, "
+            f"time_break, hdop, tb_date, gpgga, geom) "
+            f'VALUES ({", ".join(["?"]*43)}, MakePoint(?, ?, ?));'
         )
         for vaps_record in vaps_records:
             point = Point(vaps_record.easting, vaps_record.northing)
-
             cursor.execute(
                 sql_string,
                 (
                     vaps_record.file_id,
                     vaps_record.line,
-                    vaps_record.station,
-                    vaps_record.fleet_nr,
+                    vaps_record.point,
+                    vaps_record.point_index,
                     vaps_record.vibrator,
+                    vaps_record.fleet,
                     vaps_record.drive,
                     vaps_record.avg_phase,
                     vaps_record.peak_phase,
@@ -376,10 +401,31 @@ class VpDb:
                     vaps_record.easting,
                     vaps_record.northing,
                     vaps_record.elevation,
+                    vaps_record.shot_nb,
+                    vaps_record.acq_nb,
+                    vaps_record.fleet_nb,
+                    vaps_record.vib_status,
+                    vaps_record.m1_warning,
+                    vaps_record.m2_warning,
+                    vaps_record.m3_warning,
+                    vaps_record.p1_warning,
+                    vaps_record.p2_warning,
+                    vaps_record.p3_warning,
+                    vaps_record.p4_warning,
+                    vaps_record.p5_warning,
+                    vaps_record.p6_warning,
+                    vaps_record.force_overload,
+                    vaps_record.pressure_overload,
+                    vaps_record.mass_overload,
+                    vaps_record.valve_overload,
+                    vaps_record.excitation_overload,
+                    vaps_record.stack_fold,
+                    vaps_record.compute_domain,
+                    vaps_record.ve432,
                     vaps_record.time_break.strftime("%Y-%m-%d %H:%M:%S.%f"),
                     vaps_record.hdop,
                     vaps_record.tb_date,
-                    vaps_record.positioning,
+                    vaps_record.gpgga,
                     point.x,
                     point.y,
                     cls.srid_projection,
@@ -434,7 +480,7 @@ class VpDb:
 
         sql_string = (
             f"INSERT INTO {cls.table_ep} ("
-            f"file_id, line, point, fleet_nr, vibs, vib_count, vp_type, "
+            f"file_id, line, point, fleet, vibs, vib_count, vp_type, "
             f"avg_phase, peak_phase, avg_dist, peak_dist, "
             f"avg_force, peak_force, avg_stiffness, avg_viscosity, "
             f"easting, northing, elevation, drive, "
@@ -461,7 +507,7 @@ class VpDb:
                     vp.file_id,
                     vp.line,
                     vp.point,
-                    vp.fleet_nr,
+                    vp.fleet,
                     ", ".join(elstrtolist_and_select(sweeps, vp.vibs)),
                     vp.vib_count,
                     ep_type,
@@ -515,7 +561,7 @@ class VpDb:
 
             case "EP":
                 table = cls.table_ep
-                fleet_or_vibe = "fleet_nr"
+                fleet_or_vibe = "fleet"
                 distance = "distance_fleet"
                 time = "time_fleet"
                 velocity = "velocity_fleet"
@@ -674,7 +720,7 @@ class VpDb:
             f"file_id, "
             f"line, "
             f"point, "
-            f"fleet_nr, "
+            f"fleet, "
             f"group_concat(vibrator) vibs, "
             f"count(*) vib_count, "
             f"group_concat(avg_phase) avg_phase, "
