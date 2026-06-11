@@ -22,6 +22,7 @@ from seis_settings import (
     MARKERSIZE_NODE,
     vp_plt_settings,
     node_plt_settings,
+    RESULTS_FOLDER,
 )
 
 FONTSIZE_6 = 6
@@ -471,6 +472,10 @@ class VpActivity:
         self.vps_by_interval_df = None
         self.populate_vps_by_second()
         self.aggregate_vps_by_interval()
+        results_file = (
+            RESULTS_FOLDER / f'vp_activity_{production_date.strftime("%y%m%d")}.xlsx'
+        )
+        self.results_to_excel(results_file)
 
     def populate_vps_by_second(self):
         for fleet in range(1, self.fleets + 1):
@@ -538,6 +543,9 @@ class VpActivity:
                 + ["total", "vps_hour", "num_vibs"]
             ),
         )
+
+    def results_to_excel(self, file_name):
+        self.vps_by_interval_df.to_excel(file_name)
 
     def plot_vps_by_interval(self, interval: int = INTERVAL):
         fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2, figsize=FIGSIZE_ACTIVITY_ALL)

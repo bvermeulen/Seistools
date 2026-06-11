@@ -64,12 +64,16 @@ qc_columns = [
 ]
 
 
-def get_int(val):
+def get_float(val):
     try:
-        return int(float(val))
+        return float(val)
 
     except ValueError:
         return -1
+
+
+def get_int(val):
+    return int(get_float(val))
 
 
 def get_datetime(val, fmt):
@@ -111,14 +115,14 @@ def read_line_generator(filename):
 
 
 def parse_line(ext_qc, line):
-    if matches := re.match(r"^(% VE464 V4.1.13)\s*$", line):
+    if matches := re.match(r"^(% VE464 V3.0.12)\s*$", line):
         return ext_qc, "complete"
 
     elif matches := re.match(r"^% SL\s*:(.+)$", line):
-        ext_qc.source_line = get_int(matches.group(1))
+        ext_qc.source_line = get_float(matches.group(1))
 
     elif matches := re.match(r"^% SN\s*:(.+)$", line):
-        ext_qc.station_number = get_int(matches.group(1))
+        ext_qc.station_number = get_float(matches.group(1))
 
     elif matches := re.match(r"^% SI\s*:(.+)$", line):
         ext_qc.source_index = get_int(matches.group(1))
@@ -160,7 +164,7 @@ def parse_line(ext_qc, line):
         ext_qc.time_inhibit = get_int(matches.group(1))
 
     elif matches := re.match(r"^% time end of prev sweep to up\s*:(.+)ms.*$", line):
-        ext_qc.time_end_to_up = get_int(matches.group(1))
+        ext_qc.time_end_to_up = get_float(matches.group(1))
 
     elif matches := re.match(r"^% pad up\s*:(.+)$", line):
         ext_qc.pad_up_time = get_datetime(matches.group(1), "%y/%m/%d %H:%M:%S:%f")
@@ -169,16 +173,16 @@ def parse_line(ext_qc, line):
         ext_qc.pad_down_time = get_datetime(matches.group(1), "%y/%m/%d %H:%M:%S:%f")
 
     elif matches := re.match(r"^% time up to down\s*:(.+)ms.*$", line):
-        ext_qc.time_up_to_down = get_int(matches.group(1))
+        ext_qc.time_up_to_down = get_float(matches.group(1))
 
     elif matches := re.match(r"^% time down to pressure switch ON\s*:(.+)ms.*$", line):
-        ext_qc.time_down_to_switch_on = get_int(matches.group(1))
+        ext_qc.time_down_to_switch_on = get_float(matches.group(1))
 
     elif matches := re.match(r"^% time down to ready\s*:(.+)ms.*$", line):
-        ext_qc.time_down_to_ready = get_int(matches.group(1))
+        ext_qc.time_down_to_ready = get_float(matches.group(1))
 
     elif matches := re.match(r"^% time down to sweep\s*:(.+)ms.*$", line):
-        ext_qc.time_down_to_sweep = get_int(matches.group(1))
+        ext_qc.time_down_to_sweep = get_float(matches.group(1))
 
     elif matches := re.match(r"^% sweep length\s*:(.+)ms.*$", line):
         ext_qc.sweep_length = get_int(matches.group(1))
@@ -204,7 +208,7 @@ def extended_qc_generator(fn: Path):
 
 
 if __name__ == "__main__":
-    filename = Path("./data_files/dsd05_250202.txt")
+    filename = Path("./data_files/Addaimah/dsd08_260609.txt")
     extended_qc_iterator = extended_qc_generator(filename)
 
     for i, extended_qc_record in enumerate(extended_qc_iterator):

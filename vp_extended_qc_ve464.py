@@ -93,7 +93,7 @@ class VpExtendedQc:
             avg_visc.fillna(0, inplace=True)
             peak_visc.fillna(0, inplace=True)
             production_date = (extended_qc_record.time_break + GMT_OFFSET).date()
-            vibrator_id = extended_qc_record.fleet_number
+            vibrator_id = extended_qc_record.dsd_number
             tb_ext_qc = extended_qc_record.time_break
             tb_vaps = tb_ext_qc + GMT_OFFSET
             easting, northing, elevation = (
@@ -104,7 +104,7 @@ class VpExtendedQc:
             attributes_list = [
                 extended_qc_record.source_line,
                 extended_qc_record.station_number,
-                extended_qc_record.fleet_number,
+                vibrator_id,
                 round(avg_vals["phase"]),
                 round(peak_vals["phase"]),
                 round(avg_vals["dist"]),
@@ -150,6 +150,6 @@ class VpExtendedQc:
 
 
 if __name__ == "__main__":
-    filename = Path("./data_files/250223_dsd03.txt")
+    filename = Path("./data_files/Addaimah/dsd08_260609.txt")
     extended_qc = VpExtendedQc(filename)
     extended_qc.vp_attributes(location=False)
