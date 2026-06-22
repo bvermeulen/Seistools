@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1350</width>
-    <height>950</height>
+    <height>880</height>
    </rect>
   </property>
   <property name="font">
@@ -36,15 +36,15 @@
      <rect>
       <x>10</x>
       <y>10</y>
-      <width>1161</width>
-      <height>871</height>
+      <width>1160</width>
+      <height>801</height>
      </rect>
     </property>
     <property name="frameShape">
      <enum>QFrame::Box</enum>
     </property>
     <property name="currentIndex">
-     <number>5</number>
+     <number>1</number>
     </property>
     <widget class="QWidget" name="page_1">
      <widget class="QWidget" name="formLayoutWidget">
@@ -52,8 +52,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1160</width>
-        <height>870</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_01"/>
@@ -65,8 +65,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1160</width>
-        <height>870</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_02"/>
@@ -78,8 +78,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_03"/>
@@ -91,8 +91,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_04"/>
@@ -104,8 +104,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_05"/>
@@ -117,8 +117,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>1161</width>
-        <height>871</height>
+        <width>1155</width>
+        <height>800</height>
        </rect>
       </property>
       <layout class="QFormLayout" name="FormLayoutType_06"/>
@@ -130,7 +130,7 @@
      <rect>
       <x>1180</x>
       <y>20</y>
-      <width>139</width>
+      <width>161</width>
       <height>221</height>
      </rect>
     </property>
@@ -268,7 +268,7 @@
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>250</y>
+      <y>550</y>
       <width>161</width>
       <height>261</height>
      </rect>
@@ -287,8 +287,8 @@
          <rect>
           <x>10</x>
           <y>0</y>
-          <width>141</width>
-          <height>16</height>
+          <width>151</width>
+          <height>21</height>
          </rect>
         </property>
         <property name="font">
@@ -307,7 +307,7 @@
          <rect>
           <x>10</x>
           <y>40</y>
-          <width>141</width>
+          <width>151</width>
           <height>211</height>
          </rect>
         </property>
@@ -329,7 +329,7 @@
          <rect>
           <x>10</x>
           <y>20</y>
-          <width>141</width>
+          <width>151</width>
           <height>16</height>
          </rect>
         </property>
@@ -352,9 +352,9 @@
     <property name="geometry">
      <rect>
       <x>10</x>
-      <y>890</y>
+      <y>810</y>
       <width>621</width>
-      <height>16</height>
+      <height>21</height>
      </rect>
     </property>
     <property name="font">

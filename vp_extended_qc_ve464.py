@@ -150,6 +150,6 @@ class VpExtendedQc:
 
 
 if __name__ == "__main__":
-    filename = Path("./data_files/Addaimah/dsd08_260609.txt")
+    filename = Path("./data_files/Addaimah/dsd08_260611.txt")
     extended_qc = VpExtendedQc(filename)
     extended_qc.vp_attributes(location=False)
