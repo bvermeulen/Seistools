@@ -8,27 +8,38 @@ admin@howdiweb.nl
 import sys
 import time
 import datetime
+import re
 from functools import partial
 import warnings
 from pathlib import Path
-
-# import ptvsd -- for debugging the thread
 from seis_plots_module import DbUtils, VpAttributes, VpActivity, NodeAttributes
 from PyQt6 import uic, QtWidgets
 from PyQt6.QtCore import QDate, QObject, QThread, pyqtSignal, pyqtSlot, QTimer
 import matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
-from seis_settings import PROJECT_PATH, PLOT_RESULTS, vp_plt_settings
+from seis_settings import PROJECT_PATH, PLOT_RESULTS, VIBRATORS, vp_plt_settings
+
 
 matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25b6"
 LEFT_ARROW_SYMBOL = "\u25c0"
+REFRESH_SYMBOL = "\u27f3"
 TIMER_DELAY = 750
 STATUS_DELAY = 0.750
 destination_folder_description = "Saved plots are stored in: "
 base_database = Path(PROJECT_PATH.parent)
+qcb_empty_style = """
+    QCheckBox::indicator {padding: 2px; width: 14px; height: 14px; color: grey; border: 2px solid grey; border-radius: 4px;} 
+    QCheckBox::indicator:checked {image: url(seis_plots_images/check.png);} 
+    QCheckBox {padding: 2px 2px; color: black; background-color: transparent;}
+"""
+qcb_color_style = """
+    QCheckBox::indicator {{padding: 2px; width: 14px; height: 14px; border: 2px solid lightblue; border-radius: 4px;}} 
+    QCheckBox::indicator:checked {{image: url(seis_plots_images/check-color.png);}} 
+    QCheckBox {{padding: 2px 2px; color: lightblue; background-color: {color};}}
+"""
 
 
 class MplCanvas(FigureCanvas):
@@ -41,9 +52,8 @@ class SeisAttrWorker(QObject):
     progress = pyqtSignal(str)
     database = pyqtSignal(str)
 
-    @pyqtSlot(object, object)
-    def run(self, project, production_date):
-        # ptvsd.debug_this_thread()
+    @pyqtSlot(object, object, object)
+    def run(self, project, production_date, vp_mask):
         db_utils = DbUtils(database=project) if project else DbUtils()
         self.database.emit(db_utils.database_name)
         figure_dict = {}
@@ -56,7 +66,7 @@ class SeisAttrWorker(QObject):
         activity_type = vp_plt_settings["vib_activity"]["activity_type"]
 
         if not vp_df.empty:
-            vp_plot_attributes = VpAttributes(vp_df, production_date)
+            vp_plot_attributes = VpAttributes(vp_df, production_date, vp_mask)
             match activity_type:
                 case "EP":
                     ep_plot_activity = VpActivity(ep_df, production_date, activity_type)
@@ -64,7 +74,7 @@ class SeisAttrWorker(QObject):
                 case "VP":
                     ep_plot_activity = VpActivity(vp_df, production_date, activity_type)
 
-                case other:
+                case _:
                     print(f"invalid option: {activity_type}")
 
             self.progress.emit("VpAttr")
@@ -107,7 +117,7 @@ class SeisAttrWorker(QObject):
 class PyqtViewControl(QtWidgets.QMainWindow):
     """PyQt view and control"""
 
-    request_seis_attributes = pyqtSignal(object, object)
+    request_seis_attributes = pyqtSignal(object, object, object)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -120,7 +130,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_01,
                 "save": self.ActionSaveType_01,
                 "file_name": "vp_attributes",
-                "fig": {},
+                "fig": None,
             },
             "VpHist": {
                 "index": 2,
@@ -129,7 +139,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_02,
                 "save": self.ActionSaveType_02,
                 "file_name": "vp_histograms",
-                "fig": {},
+                "fig": None,
             },
             "VpErr": {
                 "index": 3,
@@ -138,7 +148,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_03,
                 "save": self.ActionSaveType_03,
                 "file_name": "vp_error_bars",
-                "fig": {},
+                "fig": None,
             },
             "ActAll": {
                 "index": 4,
@@ -147,7 +157,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_04,
                 "save": self.ActionSaveType_04,
                 "file_name": "vp_activity_all",
-                "fig": {},
+                "fig": None,
             },
             "ActEach": {
                 "index": 5,
@@ -156,7 +166,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_05,
                 "save": self.ActionSaveType_05,
                 "file_name": "vp_activity_each",
-                "fig": {},
+                "fig": None,
             },
             "NodeAttr": {
                 "index": 6,
@@ -165,7 +175,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 "layout": self.FormLayoutType_06,
                 "save": self.ActionSaveType_06,
                 "file_name": "node_attributes",
-                "fig": {},
+                "fig": None,
             },
         }
         self.ActionQuit.triggered.connect(self.quit)
@@ -184,8 +194,22 @@ class PyqtViewControl(QtWidgets.QMainWindow):
 
         self.PB_Next.setText(RIGHT_ARROW_SYMBOL)
         self.PB_Prev.setText(LEFT_ARROW_SYMBOL)
+        self.PB_Refresh.setText(REFRESH_SYMBOL)
         self.PB_Next.clicked.connect(self.next_date)
         self.PB_Prev.clicked.connect(self.previous_date)
+        self.PB_Refresh.clicked.connect(self.refresh)
+        self.vib_checkboxes = []
+        for vib in range(VIBRATORS):
+            v_checkbox = QtWidgets.QCheckBox(f"V{vib + 1}", self.SelectionFrame)
+            v_checkbox.setStyleSheet(qcb_empty_style)
+            v_checkbox.setChecked(True)
+            v_checkbox.toggled.connect(self.handle_vib_toggle)
+            self.vib_checkboxes.append(v_checkbox)
+            self.SelectionFrameLayout.addWidget(v_checkbox)
+
+        self.v_label = QtWidgets.QLabel("Total: ")
+        self.SelectionFrameLayout.addWidget(self.v_label)
+        self.vib_mask = [False for _ in range(VIBRATORS)]
         self.figure_dict = {}
         self.production_date = None
         self.progress_key = None
@@ -215,7 +239,9 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.worker.progress.connect(self.get_progress_key)
         self.worker.database.connect(self.get_database_name)
         self.request_seis_attributes.connect(self.worker.run)
-        self.request_seis_attributes.emit(self.project, self.production_date)
+        self.request_seis_attributes.emit(
+            self.project, self.production_date, self.vib_mask
+        )
         self.enable_disable_buttons(enabled=False)
         self.thread.start()
         self.progress_key = "Wait"
@@ -241,10 +267,56 @@ class PyqtViewControl(QtWidgets.QMainWindow):
                 value["canvas"] = MplCanvas(value["fig"])
                 value["layout"].addWidget(value["canvas"])
 
+        if fig := self.plot_dict["VpAttr"]["fig"]:
+            handles, vib_labels = fig.axes[0].get_legend_handles_labels()
+            self.handle_vib_colors(handles, vib_labels)
+
+        else:
+            self.clear_vib_checkboxes()
+
+    def handle_vib_toggle(self, _):
+        for i, v_checkbox in enumerate(self.vib_checkboxes):
+            self.vib_mask[i] = False if v_checkbox.isChecked() else True
+
+    def handle_vib_colors(self, handles, labels):
+        vib_colors = [handle.get_color() for handle in handles]
+        set_label_totals = False
+        for cb_index in range(VIBRATORS):
+            label_index = next(
+                (i for i, s in enumerate(labels[:-1]) if int(s[1:3]) == cb_index + 1),
+                None,
+            )
+            if label_index is not None:
+                self.vib_checkboxes[cb_index].setStyleSheet(
+                    qcb_color_style.format(color=vib_colors[label_index])
+                )
+                self.vib_checkboxes[cb_index].setText(labels[label_index])
+                set_label_totals = True
+
+            else:
+                self.vib_checkboxes[cb_index].setStyleSheet(qcb_empty_style)
+                self.vib_checkboxes[cb_index].setChecked(False)
+                self.vib_checkboxes[cb_index].setText(f"V{cb_index + 1}")
+
+        self.v_label.setText(
+            f"Total: {re.search(r"\((.*)\)",labels[-1]).group(1)}"
+            if set_label_totals
+            else "Total: "
+        )
+
+    def clear_vib_checkboxes(self):
+        for cb_index in range(VIBRATORS):
+            self.vib_checkboxes[cb_index].setStyleSheet(qcb_empty_style)
+            self.vib_checkboxes[cb_index].setChecked(True)
+            self.vib_checkboxes[cb_index].setText(f"V{cb_index + 1}")
+            self.vib_mask[cb_index] = False
+            self.v_label.setText("Total: ")
+
     def enable_disable_buttons(self, enabled=False):
         self.DateEdit.setEnabled(enabled)
         self.PB_Next.setEnabled(enabled)
         self.PB_Prev.setEnabled(enabled)
+        self.PB_Refresh.setEnabled(enabled)
 
     def get_progress_key(self, key):
         self.progress_key = key
@@ -274,6 +346,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         self.StatusHeaderLabel.setText(
             ": ".join(["Status", self.production_date.strftime("%d %b %Y")])
         )
+        self.clear_vib_checkboxes()
         self.run_plot_thread()
         self.select_plot()
 
@@ -286,6 +359,9 @@ class PyqtViewControl(QtWidgets.QMainWindow):
         if self.production_date:
             self.production_date += datetime.timedelta(days=1)
             self.DateEdit.setDate(QDate(self.production_date))
+
+    def refresh(self):
+        self.run_plot_thread()
 
     def show_plot(self, plot_index: int):
         if not self.production_date:
@@ -318,14 +394,26 @@ class PyqtViewControl(QtWidgets.QMainWindow):
     def save_plot(self, plot_key):
         base_file_name = "".join([self.production_date.strftime("%y%m%d"), "_"])
         for key, value in self.plot_dict.items():
-            if not value["fig"]:
+            if not (fig := value["fig"]):
                 continue
+
+            if key == "VpAttr":
+                handles, labels = fig.axes[0].get_legend_handles_labels()
+                fig.legend(
+                    handles,
+                    labels,
+                    loc="upper right",
+                    frameon=True,
+                    fontsize="small",
+                    framealpha=1,
+                    markerscale=40,
+                )
 
             file_name = self.destination_folder / "".join(
                 [base_file_name, value.get("file_name"), ".png"]
             )
             if plot_key == "All" or key == plot_key:
-                value["fig"].savefig(file_name)
+                fig.savefig(file_name)
 
     def quit(self):
         sys.exit()

@@ -116,9 +116,10 @@ class DbUtils:
 class VpAttributes:
     """methods to plot attributes"""
 
-    def __init__(self, vp_records_df, production_date):
+    def __init__(self, vp_records_df, production_date, vib_mask):
         self.production_date = production_date
         self.vp_records_df = vp_records_df
+        self.vib_mask = vib_mask
         self.total_vps = self.vp_records_df.shape[0]
 
     def plot_vp_data(self, figsize=FIGSIZE, dpi=100):
@@ -147,7 +148,7 @@ class VpAttributes:
                     ax_index = 2
                 case "peak_force":
                     ax_index = 5
-                case other:
+                case _:
                     continue
             self.total_records = 0
             ax0[ax_index] = self.plot_attribute(ax0[ax_index], key, plt_setting)
@@ -155,16 +156,6 @@ class VpAttributes:
 
         # add total vp's as extra label in the legend
         ax0[0].plot([], [], " ", label=f"Ttl ({self.total_records:,})")
-        handles, labels = ax0[0].get_legend_handles_labels()
-        fig.legend(
-            handles,
-            labels,
-            loc="upper right",
-            frameon=True,
-            fontsize="small",
-            framealpha=1,
-            markerscale=40,
-        )
         fig.tight_layout()
         plt.close()
         return fig
@@ -177,6 +168,10 @@ class VpAttributes:
 
         plt_tol_lines = True
         for vib in range(1, VIBRATORS + 1):
+            # skip if vibrator is masked
+            if self.vib_mask[vib-1]:
+                continue
+
             vib_data = self.vp_records_df[self.vp_records_df["vibrator"] == vib][
                 key
             ].to_list()
@@ -190,7 +185,7 @@ class VpAttributes:
                 ]
                 self.total_records += len(vib_data)
                 vib_data = np.array(vib_data)
-                label_vib = f"{vib} ({len(records)})"
+                label_vib = f"V{vib} ({len(records)})"
                 axis.plot(
                     records, vib_data, ".", label=label_vib, markersize=MARKERSIZE_VP
                 )
@@ -212,6 +207,10 @@ class VpAttributes:
         plt_tol_lines = True
 
         for vib in range(1, VIBRATORS + 1):
+            # skip if vibrator is masked
+            if self.vib_mask[vib - 1]:
+                continue
+
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
@@ -292,6 +291,10 @@ class VpAttributes:
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
+            # remove data if vibrator is masked
+            if self.vib_mask[vib - 1]:
+                vib_data = np.array([])
+
             if vib_data.size > 0:
                 if key in max_tol_keys:
                     data_in_spec = vib_data[vib_data <= setting["tol_max"]]
@@ -390,9 +393,14 @@ class VpAttributes:
         y_vals = np.arange(1, VIBRATORS + 1) * y_step
         y_labels = [None for _ in range(VIBRATORS)]
         for vib in range(1, VIBRATORS + 1):
+
             vib_data = np.array(
                 self.vp_records_df[self.vp_records_df["vibrator"] == vib][key].to_list()
             )
+            # remove data if vibrator is masked
+            if self.vib_mask[vib - 1]:
+                vib_data = np.array([])
+
             if key in max_tol_keys:
                 data_out_spec = vib_data[vib_data > setting["tol_max"]]
                 x_label = f"Limit < {setting['tol_max'] + 1}"
@@ -444,7 +452,6 @@ class VpAttributes:
         axis.yaxis.set_tick_params(length=0)
         axis.set_yticks(y_vals, y_labels, fontsize=FONTSIZE_6)
         axis.set_title(f"        {key}", fontsize=FONTSIZE_6, loc="left")
-
         return axis
 
 

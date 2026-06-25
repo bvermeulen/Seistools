@@ -17,7 +17,7 @@
    </font>
   </property>
   <property name="windowTitle">
-   <string>VP Plots</string>
+   <string>Seis Plots</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="horizontalLayoutWidget_2">
@@ -29,7 +29,154 @@
       <height>231</height>
      </rect>
     </property>
-    <layout class="QHBoxLayout" name="ControlArea"/>
+    <layout class="QHBoxLayout" name="ControlPanel">
+     <item>
+      <widget class="QFrame" name="ControlFrame">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <widget class="QRadioButton" name="RB_Type_01">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>50</y>
+          <width>111</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>VP attributes</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="RB_Type_02">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>70</y>
+          <width>121</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>VP histograms</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="PB_Next">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>190</y>
+          <width>41</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Next</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="PB_Prev">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>190</y>
+          <width>41</width>
+          <height>23</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Prev</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="RB_Type_04">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>110</y>
+          <width>121</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Vib activity (all)</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="RB_Type_05">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>130</y>
+          <width>131</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Vib activity (each)</string>
+        </property>
+       </widget>
+       <widget class="QDateEdit" name="DateEdit">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>10</y>
+          <width>110</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <italic>false</italic>
+         </font>
+        </property>
+        <property name="calendarPopup">
+         <bool>true</bool>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="RB_Type_03">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>90</y>
+          <width>121</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>VP error bars</string>
+        </property>
+       </widget>
+       <widget class="QRadioButton" name="RB_Type_06">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>150</y>
+          <width>131</width>
+          <height>20</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Node attributes</string>
+        </property>
+       </widget>
+       <widget class="QPushButton" name="PB_Refresh">
+        <property name="geometry">
+         <rect>
+          <x>90</x>
+          <y>190</y>
+          <width>51</width>
+          <height>24</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Refresh</string>
+        </property>
+       </widget>
+      </widget>
+     </item>
+    </layout>
    </widget>
    <widget class="QStackedWidget" name="stackedWidget">
     <property name="geometry">
@@ -125,157 +272,18 @@
      </widget>
     </widget>
    </widget>
-   <widget class="QFrame" name="ControlFrame">
-    <property name="geometry">
-     <rect>
-      <x>1180</x>
-      <y>20</y>
-      <width>161</width>
-      <height>221</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-    <widget class="QRadioButton" name="RB_Type_01">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>50</y>
-       <width>111</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>VP attributes</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="RB_Type_02">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>70</y>
-       <width>121</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>VP histograms</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="PB_Next">
-     <property name="geometry">
-      <rect>
-       <x>50</x>
-       <y>190</y>
-       <width>41</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Next</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="PB_Prev">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>190</y>
-       <width>41</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Prev</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="RB_Type_04">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>110</y>
-       <width>121</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Vib activity (all)</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="RB_Type_05">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>130</y>
-       <width>131</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Vib activity (each)</string>
-     </property>
-    </widget>
-    <widget class="QDateEdit" name="DateEdit">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>110</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>10</pointsize>
-       <italic>false</italic>
-      </font>
-     </property>
-     <property name="calendarPopup">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="RB_Type_03">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>90</y>
-       <width>121</width>
-       <height>16</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>VP error bars</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="RB_Type_06">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>150</y>
-       <width>131</width>
-       <height>20</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Node attributes</string>
-     </property>
-    </widget>
-   </widget>
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>550</y>
+      <y>560</y>
       <width>161</width>
-      <height>261</height>
+      <height>251</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
+    <layout class="QVBoxLayout" name="StatusPanel">
      <item>
-      <widget class="QFrame" name="frame">
+      <widget class="QFrame" name="StatusFrame">
        <property name="frameShape">
         <enum>QFrame::StyledPanel</enum>
        </property>
@@ -308,7 +316,7 @@
           <x>10</x>
           <y>40</y>
           <width>151</width>
-          <height>211</height>
+          <height>201</height>
          </rect>
         </property>
         <property name="font">
@@ -367,6 +375,32 @@
     <property name="text">
      <string>Destination folder</string>
     </property>
+   </widget>
+   <widget class="QWidget" name="verticalLayoutWidget_2">
+    <property name="geometry">
+     <rect>
+      <x>1180</x>
+      <y>250</y>
+      <width>161</width>
+      <height>301</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="SelectionPanel">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
+     <item>
+      <widget class="QFrame" name="SelectionFrame">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+       <layout class="QFormLayout" name="SelectionFrameLayout"/>
+      </widget>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
