@@ -48,7 +48,7 @@ def status_message_generator(key):
     }
     current_key = None
     progress_dots = "."
-    progress_done = "...   done"
+    progress_done = "... done"
     count = 0
     status_message = ""
     while True:

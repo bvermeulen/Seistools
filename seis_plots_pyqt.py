@@ -20,7 +20,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from seis_utils import status_message_generator
 from seis_settings import PROJECT_PATH, PLOT_RESULTS, VIBRATORS, vp_plt_settings
 
-
 matplotlib.use("QtAgg")
 warnings.filterwarnings("ignore", category=UserWarning)
 RIGHT_ARROW_SYMBOL = "\u25b6"
@@ -397,6 +396,7 @@ class PyqtViewControl(QtWidgets.QMainWindow):
             if not (fig := value["fig"]):
                 continue
 
+            # add a legend to the plot
             if key == "VpAttr":
                 handles, labels = fig.axes[0].get_legend_handles_labels()
                 fig.legend(

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1350</width>
-    <height>880</height>
+    <height>884</height>
    </rect>
   </property>
   <property name="font">
@@ -26,7 +26,7 @@
       <x>1180</x>
       <y>10</y>
       <width>161</width>
-      <height>231</height>
+      <height>211</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="ControlPanel">
@@ -68,7 +68,7 @@
         <property name="geometry">
          <rect>
           <x>50</x>
-          <y>190</y>
+          <y>180</y>
           <width>41</width>
           <height>23</height>
          </rect>
@@ -81,7 +81,7 @@
         <property name="geometry">
          <rect>
           <x>10</x>
-          <y>190</y>
+          <y>180</y>
           <width>41</width>
           <height>23</height>
          </rect>
@@ -165,7 +165,7 @@
         <property name="geometry">
          <rect>
           <x>90</x>
-          <y>190</y>
+          <y>180</y>
           <width>51</width>
           <height>24</height>
          </rect>
@@ -276,9 +276,9 @@
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>560</y>
+      <y>620</y>
       <width>161</width>
-      <height>251</height>
+      <height>191</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="StatusPanel">
@@ -295,7 +295,7 @@
          <rect>
           <x>10</x>
           <y>0</y>
-          <width>151</width>
+          <width>141</width>
           <height>21</height>
          </rect>
         </property>
@@ -316,7 +316,7 @@
           <x>10</x>
           <y>40</y>
           <width>151</width>
-          <height>201</height>
+          <height>280</height>
          </rect>
         </property>
         <property name="font">
@@ -328,6 +328,12 @@
         <property name="text">
          <string>TextLabel</string>
         </property>
+        <property name="textFormat">
+         <enum>Qt::PlainText</enum>
+        </property>
+        <property name="scaledContents">
+         <bool>false</bool>
+        </property>
         <property name="alignment">
          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
         </property>
@@ -337,7 +343,7 @@
          <rect>
           <x>10</x>
           <y>20</y>
-          <width>151</width>
+          <width>141</width>
           <height>16</height>
          </rect>
         </property>
@@ -380,9 +386,9 @@
     <property name="geometry">
      <rect>
       <x>1180</x>
-      <y>250</y>
+      <y>230</y>
       <width>161</width>
-      <height>301</height>
+      <height>381</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="SelectionPanel">
