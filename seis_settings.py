@@ -55,7 +55,7 @@ GMT_OFFSET = seis_config["general"]["GMT_OFFSET"]
 EPSG_PROJECT = seis_config["general"]["EPSG"]
 REMOVE_DUPLICATES = seis_config["general"]["REMOVE_DUPLICATES"]
 
-EXPIRY_DATE = datetime.date(2026, 8, 31)
+EXPIRY_DATE = datetime.date(2027, 12, 31)
 LINK_VP_TO_VAPS = False
 DATABASE_TABLE = "VAPS"
 PROGRESS_SKIPS = 750
@@ -74,16 +74,13 @@ if vp_plt_settings["vib_activity"]["activity_type"] == "EP":
 else:
     FLEETS = VIBRATORS
 
-NUMBER_VP_TYPES = seis_config["general"]["NUMBER_VP_TYPES"]
-
-
 # type is (number of sweeps, number of vibrators, drive level)
-
+NUMBER_VP_TYPES = seis_config["general"]["NUMBER_VP_TYPES"]
 vp_types = {
-    f"V{i+1}": tuple(seis_config["general"][f"V{i+1}"])
-    for i in range(NUMBER_VP_TYPES)
+    f"V{i+1}": tuple(seis_config["general"][f"V{i+1}"]) for i in range(NUMBER_VP_TYPES)
 }
 VpType = Enum("VpType", vp_types)
+
 
 @dataclass
 class FilesNodeTable:
@@ -245,6 +242,7 @@ class VapsTable:
     velocity: float
     dense_flag: bool
     gpgga: str
+
 
 @dataclass
 class FilesSpsTable:

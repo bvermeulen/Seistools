@@ -30,12 +30,12 @@ STATUS_DELAY = 0.750
 destination_folder_description = "Saved plots are stored in: "
 base_database = Path(PROJECT_PATH.parent)
 qcb_empty_style = """
-    QCheckBox::indicator {padding: 2px; width: 14px; height: 14px; color: grey; border: 2px solid grey; border-radius: 4px;} 
+    QCheckBox::indicator {padding: 2px; width: 8px; height: 8px; color: grey; border: 2px solid grey; border-radius: 4px;} 
     QCheckBox::indicator:checked {image: url(seis_plots_images/check.png);} 
     QCheckBox {padding: 2px 2px; color: black; background-color: transparent;}
 """
 qcb_color_style = """
-    QCheckBox::indicator {{padding: 2px; width: 14px; height: 14px; border: 2px solid lightblue; border-radius: 4px;}} 
+    QCheckBox::indicator {{padding: 2px; width: 8px; height: 8px; border: 2px solid lightblue; border-radius: 4px;}} 
     QCheckBox::indicator:checked {{image: url(seis_plots_images/check-color.png);}} 
     QCheckBox {{padding: 2px 2px; color: lightblue; background-color: {color};}}
 """
