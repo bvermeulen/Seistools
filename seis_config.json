@@ -20,7 +20,7 @@
         "NUMBER_VP_TYPES": 1,
         "GMT_OFFSET": 4,
         "REMOVE_DUPLICATES": true,
-        "EPSG": 32xxx,
+        "EPSG": 32000,
         "V1": [1, 1, 70]
     },
     "vp_plt_settings": {
