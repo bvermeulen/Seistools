@@ -1,22 +1,27 @@
 {
-    "prefix": "23XX",
+    "prefix": "myproject",
     "file_paths": {
-        "PROJECT_PATH": "D:/client/project",
+        "PROJECT_PATH": "/home/Work/myproject",
         "DATA_FILES_VP": null,
-        "DATA_FILES_VAPS": "QC/data/vaps",
-        "DATA_FILES_QUANTUM": "QC/data/quantum_nodes",
+        "DATA_FILES_VAPS": "06 QC/data/VAPS",
+        "DATA_FILES_QUANTUM": "06 QC/vib_node_data/Quantum_Nodes",
         "DATA_FILES_NUSEIS": null,
-        "DATA_FILES_SPS": "QC/data/sps_final",
-        "DATA_FILES_WEATHER": "QC/wind_logs",
-        "RESULTS_FOLDER": "QC/vibe_activity",
-        "DATABASE": "QC/database/procect_db.sqlite3",
-        "PLOT_FILES": "QC/data/plot_results"
+        "DATA_FILES_SPS": null,
+        "DATA_FILES_WEATHER": null,
+        "RESULTS_FOLDER": "06 QC/vib_node_data/daily_vibe_activity",
+        "DATABASE": "05 GIS/myproject_db.sqlite3",
+        "PLOT_RESULTS": "QC/data/vib_node_data/attribute_plots"
     },
     "general": {
-        "FLEETS": 10,
-        "SWEEP_TIME": 12,
-        "PAD_DOWN_TIME": 1.5,
-        "DENSE_CRITERIUM": 10
+        "VIBRATORS": 8,
+        "SWEEP_TIME": 18,
+        "PAD_DOWN_TIME": 0,
+        "DENSE_CRITERIUM": 0,
+        "NUMBER_VP_TYPES": 1,
+        "GMT_OFFSET": 4,
+        "REMOVE_DUPLICATES": true,
+        "EPSG": 32xxx,
+        "V1": [1, 1, 70]
     },
     "vp_plt_settings": {
         "avg_phase": {
@@ -123,12 +128,17 @@
         },
         "vib_activity": {
             "fig_title": "Vibrator activity: ",
-            "max_vp_hour": 1800,
-            "tick_intval_vp_hour": 100,
-            "vp_hour_target": 900,
-            "max_vibs": 15,
+            "activity_type": "EP",
+            "fleets": 4,
+            "max_vp_hour": 150,
+            "tick_intval_vp_hour": 25,
+            "vp_hour_target": 70,
+            "max_vibs": 4,
             "tick_intval_vibs": 1,
-            "vibs_target": 0
+            "vibs_target": 2,
+            "max_vp_hour_fleet": 80,
+            "tick_intval_vp_hour_fleet": 10,
+            "vp_hour_fleet_target": 40
         }
     },
     "node_plt_settings": {
