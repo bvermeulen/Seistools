@@ -14,7 +14,6 @@ import numpy as np
 from shapely.geometry import Point
 from pyproj import Proj
 
-
 degree_symbol = "\u00b0"
 
 match os.name:
@@ -49,6 +48,8 @@ class GridOrigin:
     y: float = origin["y"]
     interval: float = origin["interval"]
     sl_direction: int = origin.get("sl", 1)
+    rl_direction: int = origin.get("rl", 1)
+    sps_factor: int = origin.get("sps_factor", 1)
 
 
 class ConvertTools:
@@ -191,9 +192,21 @@ class ConvertTools:
         orgn = GridOrigin()
         sin_azm, cos_azm = self.transformation()
         # step 1 move to origin with respect to the line number
-        new_origin_x = (line - orgn.line) * cos_azm * orgn.interval + orgn.x
+        new_origin_x = (
+            orgn.rl_direction
+            * (line - orgn.line)
+            * cos_azm
+            * orgn.interval
+            * orgn.sps_factor
+            + orgn.x
+        )
         new_origin_y = (
-            -orgn.sl_direction * (line - orgn.line) * sin_azm * orgn.interval + orgn.y
+            -orgn.sl_direction
+            * (line - orgn.line)
+            * sin_azm
+            * orgn.interval
+            * orgn.sps_factor
+            + orgn.y
         )
         # step 2 calculate x, y with respect to the new origin
         easting = (station - orgn.station) * sin_azm * orgn.interval + new_origin_x
@@ -205,9 +218,10 @@ class ConvertTools:
         orgn = GridOrigin()
         sin_azm, cos_azm = self.transformation()
         x1 = (easting - orgn.x) * sin_azm + (northing - orgn.y) * cos_azm
-        y1 = (easting - orgn.x) * cos_azm - orgn.sl_direction * (
-            northing - orgn.y
-        ) * sin_azm
+        y1 = (
+            orgn.rl_direction * (easting - orgn.x) * cos_azm
+            - orgn.sl_direction * (northing - orgn.y) * sin_azm
+        )
         station = round(x1 / orgn.interval + orgn.station, 0)
-        line = round(y1 / orgn.interval + orgn.line, 0)
+        line = round(y1 / (orgn.interval * orgn.sps_factor) + orgn.line, 0)
         return line, station

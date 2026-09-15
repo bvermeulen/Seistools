@@ -81,11 +81,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.action_connect()
 
     def action_connect(self):
-        self.pb1_wgs84_local.disconnect()
-        self.pb2_local_wgs84.disconnect()
-        self.pb3_wgs84_utm.disconnect()
-        self.pb4_utm_wgs84.disconnect()
-        self.pb7_lon_lat.disconnect()
+        try:
+            self.pb1_wgs84_local.disconnect()
+            self.pb2_local_wgs84.disconnect()
+            self.pb3_wgs84_utm.disconnect()
+            self.pb4_utm_wgs84.disconnect()
+            self.pb7_lon_lat.disconnect()
+        except TypeError:
+            pass
 
         if self.actionDegrees.isChecked():
             self.pb1_wgs84_local.clicked.connect(
