@@ -456,10 +456,12 @@ class VpDb:
                 selected_attribute_list += attribute_list[sweep[0] : sweep[1]]
             return selected_attribute_list
 
-        def determine_sweeps(vp) -> list[tuple[int,int,int]]:
+        def determine_sweeps(vp) -> list[tuple[int, int, int]]:
             """
-            from the sequence of sweeps get the last acq_nb of sweeps with vibrators sweeping simultaneously
-            output: list of tuples (start_index, end_index, sweep_nr)
+            from all the sweeps done on one location get the last acq_nb of sweeps with the fleet of vibrators
+            sweeping simultaneously
+            output: list of tuples for each sweep (start_index, end_index, sweep_nr), where start_index, and
+            end_index are the indexes in the list of all sweeps at the location
             """
             threshold = 0.01
             time_diff = [float(td) for td in vp.time_diff.split(",")]
@@ -488,10 +490,13 @@ class VpDb:
             return sweeps
 
         def determine_vp_type(sweeps, drive):
+            # note: Enum VpType must have 4 entries
             number_sweeps = sweeps[-1][2]
             number_vibes = sweeps[-1][1] - sweeps[-1][0]
             ep_type = "V_"
-            all_sweeps_same_number_vibes = all(s[1] - s[0] == number_vibes for s in sweeps)
+            all_sweeps_same_number_vibes = all(
+                s[1] - s[0] == number_vibes for s in sweeps
+            )
             if not all_sweeps_same_number_vibes:
                 return ep_type
 
