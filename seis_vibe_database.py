@@ -453,22 +453,63 @@ class VpDb:
             attribute_list = convert_to_list(attribute_txt)
             selected_attribute_list = []
             for sweep in sweeps:
-                selected_attribute_list += attribute_list[sweep[0] : sweep[1] + 1]
+                selected_attribute_list += attribute_list[sweep[0] : sweep[1]]
             return selected_attribute_list
 
+        def determine_sweeps(vp) -> list[tuple[int,int,int]]:
+            """
+            from the sequence of sweeps get the last acq_nb of sweeps with vibrators sweeping simultaneously
+            output: list of tuples (start_index, end_index, sweep_nr)
+            """
+            threshold = 0.01
+            time_diff = [float(td) for td in vp.time_diff.split(",")]
+            acq_nb = max(int(v) for v in vp.acq_nb.split(","))
+            td_reversed = list(reversed(time_diff))
+            sweeps = []
+            sweep_count = 0
+            start_index = -1
+            n_el = len(td_reversed)
+            for index, v1 in enumerate(td_reversed):
+                if v1 <= threshold:
+                    if start_index == -1:
+                        start_index = index
+
+                else:
+                    if start_index == -1:
+                        start_index = index
+                    sweep_count += 1
+                    end_index = index + 1
+                    sweeps.append((n_el - end_index, n_el - start_index, sweep_count))
+                    start_index = -1
+
+                if sweep_count == acq_nb:
+                    break
+
+            return sweeps
+
         def determine_vp_type(sweeps, drive):
+            number_sweeps = sweeps[-1][2]
+            number_vibes = sweeps[-1][1] - sweeps[-1][0]
             ep_type = "V_"
-            if len(sweeps) == VpType.V1.value[0] and drive == VpType.V1.value[2]:
-                ep_type = "V1"
+            all_sweeps_same_number_vibes = all(s[1] - s[0] == number_vibes for s in sweeps)
+            if not all_sweeps_same_number_vibes:
+                return ep_type
 
-            if len(sweeps) == VpType.V2.value[0] and drive == VpType.V2.value[2]:
-                ep_type = "V2"
+            match tuple((number_vibes, number_sweeps, int(drive))):
+                case VpType.V1.value:
+                    ep_type = "V1"
 
-            if len(sweeps) == VpType.V3.value[0] and drive == VpType.V3.value[2]:
-                ep_type = "V3"
+                case VpType.V2.value:
+                    ep_type = "V2"
 
-            if len(sweeps) == VpType.V4.value[0] and drive == VpType.V4.value[2]:
-                ep_type = "V4"
+                case VpType.V3.value:
+                    ep_type = "V3"
+
+                case VpType.V4.value:
+                    ep_type = "V4"
+
+                case _:
+                    pass
 
             return ep_type
 
@@ -490,8 +531,7 @@ class VpDb:
         vp_df = cls.get_ep_data_by_date(database_table, prod_date)
 
         for _, vp in vp_df.iterrows():
-            time_diff = convert_to_list(vp.time_diff)
-            sweeps = seis_utils.determine_sweeps(time_diff)[: VpType.V1.value[0]]
+            sweeps = determine_sweeps(vp)
             easting = calc_avg(elstrtolist_and_select(sweeps, vp.easting))
             northing = calc_avg(elstrtolist_and_select(sweeps, vp.northing))
             point = Point(easting, northing)
@@ -734,6 +774,7 @@ class VpDb:
             f"group_concat(easting) easting, "
             f"group_concat(northing) northing, "
             f"group_concat(elevation) elevation, "
+            f"group_concat(acq_nb) acq_nb, "
             f"group_concat(drive) drive, "
             f"group_concat(time_break) time_break, "
             f"group_concat(tb_date) tb_date, "
