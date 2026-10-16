@@ -490,7 +490,6 @@ class VpDb:
             return sweeps
 
         def determine_vp_type(sweeps, drive):
-            # note: Enum VpType must have 4 entries
             number_sweeps = sweeps[-1][2]
             number_vibes = sweeps[-1][1] - sweeps[-1][0]
             ep_type = "V_"
@@ -500,21 +499,11 @@ class VpDb:
             if not all_sweeps_same_number_vibes:
                 return ep_type
 
-            match tuple((number_vibes, number_sweeps, int(drive))):
-                case VpType.V1.value:
-                    ep_type = "V1"
-
-                case VpType.V2.value:
-                    ep_type = "V2"
-
-                case VpType.V3.value:
-                    ep_type = "V3"
-
-                case VpType.V4.value:
-                    ep_type = "V4"
-
-                case _:
-                    pass
+            type_sweeps = (number_vibes, number_sweeps, int(drive))
+            for index, vp_type in enumerate(VpType):
+                if vp_type.value == type_sweeps:
+                    ep_type = f"V{index + 1}"
+                    break
 
             return ep_type
 
@@ -533,9 +522,9 @@ class VpDb:
             f"time_break, tb_date, geom) "
             f"VALUES ({",".join(["?"]*21)}, MakePoint(?, ?, ?));"
         )
-        vp_df = cls.get_ep_data_by_date(database_table, prod_date)
+        ep_df = cls.get_ep_data_by_date(database_table, prod_date)
 
-        for _, vp in vp_df.iterrows():
+        for _, vp in ep_df.iterrows():
             sweeps = determine_sweeps(vp)
             easting = calc_avg(elstrtolist_and_select(sweeps, vp.easting))
             northing = calc_avg(elstrtolist_and_select(sweeps, vp.northing))
