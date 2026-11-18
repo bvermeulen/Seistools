@@ -453,7 +453,7 @@ class VpDb:
             attribute_list = convert_to_list(attribute_txt)
             selected_attribute_list = []
             for sweep in sweeps:
-                selected_attribute_list += attribute_list[sweep[0] : sweep[1]]
+                selected_attribute_list += attribute_list[sweep[0] : sweep[1] + 1]
             return selected_attribute_list
 
         def determine_sweeps(vp) -> list[tuple[int, int, int]]:
@@ -474,15 +474,17 @@ class VpDb:
             for index, v1 in enumerate(td_reversed):
                 if v1 <= threshold:
                     if start_index == -1:
-                        start_index = index
+                        start_index = index + 1
 
                 else:
                     if start_index == -1:
-                        start_index = index
-                    sweep_count += 1
-                    end_index = index + 1
-                    sweeps.append((n_el - end_index, n_el - start_index, sweep_count))
-                    start_index = -1
+                        pass
+                    else:
+                        if v1 > threshold:
+                            sweep_count += 1
+                            end_index = index + 1
+                            sweeps.append((n_el - end_index, n_el - start_index, sweep_count))
+                            start_index = -1
 
                 if sweep_count == acq_nb:
                     break
@@ -491,10 +493,10 @@ class VpDb:
 
         def determine_vp_type(sweeps, drive):
             number_sweeps = sweeps[-1][2]
-            number_vibes = sweeps[-1][1] - sweeps[-1][0]
+            number_vibes = sweeps[-1][1] - sweeps[-1][0] + 1
             ep_type = "V_"
             all_sweeps_same_number_vibes = all(
-                s[1] - s[0] == number_vibes for s in sweeps
+                s[1] - s[0] + 1 == number_vibes for s in sweeps
             )
             if not all_sweeps_same_number_vibes:
                 return ep_type
