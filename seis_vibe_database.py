@@ -483,11 +483,23 @@ class VpDb:
                         if v1 > threshold:
                             sweep_count += 1
                             end_index = index + 1
-                            sweeps.append((n_el - end_index, n_el - start_index, sweep_count))
+                            sweeps.append(
+                                (n_el - end_index, n_el - start_index, sweep_count)
+                            )
                             start_index = -1
 
                 if sweep_count == acq_nb:
                     break
+
+            # sweeps are done with one vibrator and there are no zero time diffs
+            if not sweeps:
+                sweep_count = 0
+                for index, v1 in enumerate(td_reversed):
+                    sweep_count += 1
+                    start_index = index + 1
+                    sweeps.append((n_el - start_index, n_el - start_index, sweep_count))
+                    if sweep_count == acq_nb:
+                        break
 
             return sweeps
 
